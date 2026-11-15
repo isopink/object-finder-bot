@@ -54,7 +54,7 @@ ros2 launch objmem_ros objmem.launch.py \
 In another tmux pane:
 
 ```bash
-ros2 run objmem_ros ask            # or: ask --voice
+ros2 run objmem_ros ask            # or: ask --voice --config <yaml>  (whisper_model, mic_device)
 > q where is the blue mug
   [status] query: where is the blue mug
   [status] candidates: id=3 sim=0.31 p=0.82 score=0.79; ...

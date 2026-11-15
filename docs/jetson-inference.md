@@ -33,6 +33,6 @@ Setup: Jetson Xavier NX (ASUS PE1000N), Logitech C920, jetson-inference built in
 
 ## How this project uses it
 
-- `detectNet` proposes object boxes. Each box is cropped and embedded with CLIP ([`vision/jetson_find_object.py`](../vision/jetson_find_object.py)).
+- `detectNet` proposes object boxes. Each box is cropped and embedded with CLIP ([`objmem.crops`](../src/objmem/crops.py), [`vision/find_object.py`](../vision/find_object.py)).
 - `videoSource` / `videoOutput` provide the camera input and the WebRTC view in the browser.
 - SSD-Mobilenet-v2 only knows the COCO classes, and it misses objects in poor conditions. This is why the project adds CLIP for free-text search, tiles and sliding windows for objects the detector does not know, and a CLIP re-check on arrival ([proposal](proposal.md), section 4.4).
