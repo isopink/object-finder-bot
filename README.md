@@ -2,7 +2,7 @@
 
 > "Where is the blue mug?" → 로봇이 기억을 검색해 그 물건이 있던 곳으로 데려간다.
 
-TurtleBot3 Waffle Pi가 공간을 돌아다니며 본 물체를 **CLIP 임베딩 + 지도상 위치 + 관측 시각**으로 기억한다. 사용자가 영어 문장으로 물체를 묘사하면, 텍스트-이미지 유사도로 가장 그럴듯한 기억을 찾아 그 위치로 자율 주행한다.
+TurtleBot3 Waffle Pi가 공간을 돌아다니며 본 **책상 위 물체**를 **CLIP 임베딩 + 지도상 위치 + 관측 시각**으로 기억한다. 사용자가 영어 문장으로 물체를 묘사하면, 텍스트-이미지 유사도로 가장 그럴듯한 기억을 찾아 그 위치로 자율 주행한다.
 
 서울시립대학교 2026-2학기 지능형로봇 수업의 2인 팀 프로젝트이다.
 
@@ -47,6 +47,7 @@ TurtleBot3 Waffle Pi가 공간을 돌아다니며 본 물체를 **CLIP 임베딩
 - TurtleBot3 Waffle Pi (LiDAR, OpenCR, Raspberry Pi)
 - NVIDIA Jetson Xavier NX (ASUS PE1000N, 8 GB) — Ubuntu 20.04, JetPack 5.1.5
 - Logitech C920 웹캠, Intel RealSense (깊이)
+- 카메라 거치대: 와플파이 기본 카메라 높이로는 책상 위가 보이지 않아 카메라를 높여 장착
 
 ## 폴더 안내
 
