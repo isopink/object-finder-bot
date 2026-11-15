@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "objmem"
+version = "0.1.0"
+description = "Probabilistic object memory and search for an object-finding robot"
+requires-python = ">=3.8"
+dependencies = ["numpy", "pyyaml"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pillow", "matplotlib"]
+viz = ["pillow", "matplotlib"]
+# torch is not listed on purpose: the Jetson has its own CUDA build of PyTorch.
+clip = ["open_clip_torch", "pillow"]
+speech = ["openai-whisper"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
