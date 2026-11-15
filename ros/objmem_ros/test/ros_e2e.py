@@ -58,7 +58,7 @@ def main():
     memory = helpers.preload(compat.memory_class()(params), time.time())
     core.save_memory(memory, mem_path)
     print("memory: {} items in {} (stand-ins: {})".format(len(memory.items), mem_path,
-                                                        compat.FALLBACKS or "none"), flush=True)
+                                                        compat.probe_all() or "none"), flush=True)
 
     worker = FakeWorker(0, [False, True]).start()
     print("fake worker: " + worker.url, flush=True)

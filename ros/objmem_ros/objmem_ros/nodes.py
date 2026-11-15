@@ -74,8 +74,9 @@ class Shared(object):
         logger.info("config={} memory_file={} ({} memories{})".format(
             config or "<defaults>", memory_file or "<none>", len(self.memory.items),
             ", loaded" if loaded else ", new"))
-        if compat.FALLBACKS:
-            logger.warn("using stand-ins for: {}".format(", ".join(compat.FALLBACKS)))
+        missing = compat.probe_all()
+        if missing:
+            logger.warn("objmem modules missing, using stand-ins for: {}".format(", ".join(missing)))
 
 
 def _common_params(node):

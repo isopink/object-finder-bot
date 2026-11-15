@@ -439,3 +439,16 @@ def fallback_draw_map(items, robot_pose=None, occupancy=None, path=None):
 
 
 __all__ = ["FALLBACKS", "Params", "Pose2D"]
+
+
+def probe_all():
+    """Resolve every getter once so FALLBACKS lists all stand-ins in use. Returns FALLBACKS."""
+    for getter in (memory_class, observe_fn, make_in_view_fn, median_depth_fn, find_fn, goal_for_fn,
+                   draw_map_fn):
+        getter()
+    try:
+        from objmem.worker import ClientVerifier, VisionClient  # noqa: F401
+    except ImportError:
+        _note("worker.VisionClient")
+        _note("worker.ClientVerifier")
+    return list(FALLBACKS)

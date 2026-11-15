@@ -371,3 +371,14 @@ def test_ask_parse_command():
     assert parse_command("c")[0] == "cancel"
     assert parse_command("exit")[0] == "exit"
     assert parse_command("")[0] == "empty"
+
+
+def test_probe_all_lists_only_missing_modules():
+    missing = compat.probe_all()
+    for name in missing:
+        assert name.split(".")[0] in ("memory", "geometry", "search", "worker", "viz")
+    try:
+        import objmem.memory  # noqa: F401
+        assert "memory" not in missing
+    except ImportError:
+        assert "memory" in missing
