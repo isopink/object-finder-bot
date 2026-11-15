@@ -107,13 +107,17 @@ curl -X POST -d '{"text": "a blue mug"}' http://127.0.0.1:8600/verify
 Follow [robot/README.md](robot/README.md) stage by stage. It says what to plug
 in, what to type, what the output should look like, and what to copy back.
 
-The first three commands on the Jetson (over SSH):
+The first three commands on the Jetson (over SSH, no conda env active):
 
 ```bash
-cd ~/object-finder-bot && git pull
-source robot/env.sh
-bash robot/check_stage1.sh
+cd ~/object-finder-bot && git pull     # first time: git clone https://github.com/isopink/object-finder-bot.git ~/object-finder-bot
+./robot/install_foxy_jetson.sh         # once; Humble in Docker instead: see robot/README.md, stage 0
+./robot/check_stage1.sh                # OpenCR, LiDAR, /scan, /odom, /tf, a short teleop turn
 ```
+
+After stage 4, `./robot/start_all.sh <map> depth` (or `nodepth`) starts
+everything in one tmux session; type `q where is the blue mug` in the `ask`
+pane and watch the map at `http://<jetson-ip>:8555`.
 
 Never reinstall `torch` on the Jetson; it has its own CUDA build. Use the
 package with `pip install -e . --no-deps` or `PYTHONPATH=$PWD/src`.
