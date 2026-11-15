@@ -75,12 +75,11 @@ def test_depth_reprojects_known_point_from_several_poses(pose):
 
 def test_depth_integer_box_is_close():
     params = Params()
-    pose = Pose2D(0.0, 0.0, 0.0)
-    det = detection_of(TARGET, Pose2D(0.0, 0.0, math.atan2(1.5, 2.0)), params)
+    pose = Pose2D(0.0, 0.0, math.atan2(1.5, 2.0))
+    det = detection_of(TARGET, pose, params)
     det.box = tuple(int(round(c)) for c in det.box)
-    obs = observe(det, Pose2D(0.0, 0.0, math.atan2(1.5, 2.0)), params, t=0.0)
+    obs = observe(det, pose, params, t=0.0)
     assert np.linalg.norm(obs.mu - TARGET[:2]) < 0.01
-    assert pose.x == 0.0
 
 
 def test_mount_offset_yaw_and_pitch_are_applied():
@@ -211,7 +210,7 @@ def test_in_view_depth_mode():
     f = make_in_view(params)
     pose = Pose2D(0.0, 0.0, 0.0)
     assert f(np.array([2.0, 0.0]), pose)
-    assert f(np.array([2.0, 2.0 * math.tan(0.59)]) / 1.0, pose)          # just inside hfov/2 = 0.6
+    assert f(np.array([2.0, 2.0 * math.tan(0.59)]), pose)          # just inside hfov/2 = 0.6
     assert not f(np.array([2.0, 2.0 * math.tan(0.61)]), pose)           # just outside
     assert not f(np.array([-2.0, 0.0]), pose)                           # behind
     assert not f(np.array([0.2, 0.0]), pose)                            # closer than depth_min
