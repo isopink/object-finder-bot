@@ -1,0 +1,105 @@
+"""Vision worker: camera + detector + CLIP behind an HTTP/JSON server (no ROS).
+
+Run on the Jetson (conda env test1001):
+  python scripts/vision_worker.py --config config/default.yaml
+  python scripts/vision_worker.py --config config/default.yaml --detector yolo --camera c920
+On a PC, without hardware or CLIP:
+  python scripts/vision_worker.py --fake
+
+Check it:  curl http://127.0.0.1:8600/health
+
+--camera defaults from camera_mode in the config (depth -> realsense, nodepth -> c920).
+--camera none serves only requests that send an image (image_source:=ros).
+"""
+import argparse
+import inspect
+import os
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.join(os.path.dirname(HERE), "src")
+if os.path.isdir(SRC) and SRC not in sys.path:
+    sys.path.insert(0, SRC)
+
+from objmem.types import Params  # noqa: E402
+
+
+def _call_with_supported(fn, *args, **kw):
+    """Call fn with only the keyword arguments its signature accepts."""
+    try:
+        sig = inspect.signature(fn)
+    except (TypeError, ValueError):
+        return fn(*args, **kw)
+    if any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values()):
+        return fn(*args, **kw)
+    return fn(*args, **{k: v for k, v in kw.items() if k in sig.parameters})
+
+
+def build_parser():
+    ap = argparse.ArgumentParser(description="objmem vision worker (HTTP server)")
+    ap.add_argument("--config", default=None, help="YAML with Params keys (config/default.yaml)")
+    ap.add_argument("--fake", action="store_true", help="FakeEmbedder, FakeDetector, FakeCamera (runs on a PC)")
+    ap.add_argument("--host", default="0.0.0.0")
+    ap.add_argument("--port", type=int, default=8600)
+    ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "fake"])
+    ap.add_argument("--camera", default=None, choices=["realsense", "c920", "fake", "none"],
+                    help="default: realsense when camera_mode is depth, c920 when nodepth")
+    ap.add_argument("--clip-model", default="ViT-B-32")
+    ap.add_argument("--clip-pretrained", default="laion2b_s34b_b79k")
+    ap.add_argument("--no-fp16", action="store_true")
+    ap.add_argument("--verbose", action="store_true", help="log every request")
+    return ap
+
+
+def build_parts(args, params):
+    """(embedder, detector, camera or None)."""
+    kind = args.camera
+    if kind is None:
+        if args.fake:
+            kind = "fake"
+        else:
+            kind = "realsense" if params.camera_mode == "depth" else "c920"
+    mode = params.camera_mode
+
+    if args.fake:
+        from objmem.embed import FakeEmbedder
+        from objmem.fakes import FakeCamera, FakeDetector
+        embedder = FakeEmbedder()
+        detector = FakeDetector()
+        camera = None if kind == "none" else FakeCamera(mode=mode, size=(params.img_w, params.img_h))
+        return embedder, detector, camera
+
+    from objmem.embed import ClipEmbedder
+    from objmem.detectors import make_detector
+    from objmem.camera import make_camera
+
+    print("Loading CLIP {} / {} ... (about 15 s)".format(args.clip_model, args.clip_pretrained), flush=True)
+    t0 = time.time()
+    embedder = ClipEmbedder(model=args.clip_model, pretrained=args.clip_pretrained, fp16=not args.no_fp16)
+    print("CLIP ready on {} (fp16={}) in {:.1f} s".format(embedder.device, embedder.fp16, time.time() - t0), flush=True)
+    detector = make_detector(args.detector)
+    camera = None
+    if kind != "none":
+        if kind == "fake":
+            camera = make_camera("fake", mode=mode, size=(params.img_w, params.img_h))
+        else:
+            camera = _call_with_supported(make_camera, kind, width=params.img_w, height=params.img_h)
+    return embedder, detector, camera
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    params = Params.load(args.config)
+    embedder, detector, camera = build_parts(args, params)
+
+    from objmem.worker import serve
+
+    print("Vision worker on http://{}:{}  (camera_mode={}, camera={}, detector={}, fake={})".format(
+        args.host, args.port, params.camera_mode, type(camera).__name__ if camera else "none",
+        type(detector).__name__, args.fake), flush=True)
+    serve(embedder, detector, camera, params, host=args.host, port=args.port, quiet=not args.verbose)
+
+
+if __name__ == "__main__":
+    main()
