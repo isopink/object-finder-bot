@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Ubuntu 22.04 (WSL2 또는 실습실 PC)에 ROS 2 Humble + TurtleBot3 + SLAM 패키지 설치.
+# Install ROS 2 Humble, TurtleBot3, and SLAM packages on Ubuntu 22.04 (WSL2 or a lab PC).
 set -euo pipefail
 
 if [ "$(lsb_release -cs)" != "jammy" ]; then
-  echo "Ubuntu 22.04 (jammy)에서 실행하세요. 현재: $(lsb_release -ds)" >&2
+  echo "Run this on Ubuntu 22.04 (jammy). Current: $(lsb_release -ds)" >&2
   exit 1
 fi
 
@@ -34,4 +34,4 @@ sudo apt install -y \
 LINE="source $(cd "$(dirname "$0")" && pwd)/env.sh"
 grep -qxF "$LINE" ~/.bashrc || echo "$LINE" >> ~/.bashrc
 
-echo "설치 완료. 새 터미널을 열거나 'source ~/.bashrc' 후 sim_slam.sh 를 실행하세요."
+echo "Done. Open a new terminal or run 'source ~/.bashrc', then run sim_slam.sh."

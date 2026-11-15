@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 집(노트북)에서: Gazebo 가상 와플파이로 SLAM 지도 만들기.
-# 사용법: ./sim_slam.sh [cartographer|slam_toolbox] [world|house]
-# 로봇 조종은 다른 터미널에서: ros2 run turtlebot3_teleop teleop_keyboard
+# Build a SLAM map with a simulated Waffle Pi in Gazebo.
+# Usage: ./sim_slam.sh [cartographer|slam_toolbox] [world|house]
+# Drive the robot from another terminal: ros2 run turtlebot3_teleop teleop_keyboard
 set -eo pipefail
 source "$(dirname "$0")/env.sh"
 
@@ -23,7 +23,7 @@ case "$METHOD" in
     ros2 launch slam_toolbox online_async_launch.py use_sim_time:=True
     ;;
   *)
-    echo "알 수 없는 방식: $METHOD (cartographer | slam_toolbox)" >&2
+    echo "Unknown method: $METHOD (cartographer | slam_toolbox)" >&2
     exit 1
     ;;
 esac
