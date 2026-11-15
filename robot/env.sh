@@ -69,7 +69,9 @@ if [ -n "${ROS_DISTRO:-}" ] && [ -f "/opt/ros/$ROS_DISTRO/setup.bash" ]; then
   # objmem_ros, built by robot/build_ws.sh into a per-distro workspace.
   export OFB_WS="${OFB_WS:-$OFB_ROBOT_DIR/.ws_$ROS_DISTRO}"
   # shellcheck disable=SC1091
-  if [ -f "$OFB_WS/install/setup.bash" ]; then source "$OFB_WS/install/setup.bash"; fi
+  if [ -f "$OFB_WS/install/setup.bash" ]; then source "$OFB_WS/install/setup.bash"
+  # Fallback: built by hand in ros/ as ros/README.md describes.
+  elif [ -f "$OFB_REPO/ros/install/setup.bash" ]; then source "$OFB_REPO/ros/install/setup.bash"; fi
 elif command -v docker >/dev/null 2>&1 && [ ! -f /.dockerenv ]; then
   export ROS_DISTRO="${ROS_DISTRO:-humble}"
   OFB_ROS_MODE=docker
