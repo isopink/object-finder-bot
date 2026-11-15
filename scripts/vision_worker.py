@@ -3,6 +3,7 @@
 Run on the Jetson (conda env test1001):
   python scripts/vision_worker.py --config config/default.yaml
   python scripts/vision_worker.py --config config/default.yaml --detector yolo --camera c920
+  python scripts/vision_worker.py --config config/default.yaml --detector yolo       --yolo-engine ~/models/yolov8n.engine --threshold 0.4 --camera c920 --camera-device /dev/video2
 On a PC, without hardware or CLIP:
   python scripts/vision_worker.py --fake
 
@@ -45,6 +46,11 @@ def build_parser():
     ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "fake"])
     ap.add_argument("--camera", default=None, choices=["realsense", "c920", "fake", "none"],
                     help="default: realsense when camera_mode is depth, c920 when nodepth")
+    ap.add_argument("--camera-device", default="/dev/video0", help="C920 device (c920 camera only)")
+    ap.add_argument("--threshold", type=float, default=None,
+                    help="detector confidence threshold (default: 0.5 detectnet, 0.4 yolo)")
+    ap.add_argument("--yolo-model", default="yolov8n.pt", help="ultralytics weights (yolo detector only)")
+    ap.add_argument("--yolo-engine", default=None, help="TensorRT .engine built on the Jetson (yolo detector only)")
     ap.add_argument("--clip-model", default="ViT-B-32")
     ap.add_argument("--clip-pretrained", default="laion2b_s34b_b79k")
     ap.add_argument("--no-fp16", action="store_true")
@@ -78,13 +84,23 @@ def build_parts(args, params):
     t0 = time.time()
     embedder = ClipEmbedder(model=args.clip_model, pretrained=args.clip_pretrained, fp16=not args.no_fp16)
     print("CLIP ready on {} (fp16={}) in {:.1f} s".format(embedder.device, embedder.fp16, time.time() - t0), flush=True)
-    detector = make_detector(args.detector)
+    det_kw = {}
+    if args.threshold is not None:
+        det_kw["threshold"] = args.threshold
+    if args.detector == "yolo":
+        det_kw["model"] = args.yolo_model
+        if args.yolo_engine:
+            det_kw["engine"] = args.yolo_engine
+    detector = make_detector(args.detector, **det_kw)
     camera = None
     if kind != "none":
         if kind == "fake":
             camera = make_camera("fake", mode=mode, size=(params.img_w, params.img_h))
         else:
-            camera = _call_with_supported(make_camera, kind, width=params.img_w, height=params.img_h)
+            cam_kw = {"width": params.img_w, "height": params.img_h}
+            if kind == "c920":
+                cam_kw["device"] = args.camera_device
+            camera = _call_with_supported(make_camera, kind, **cam_kw)
     return embedder, detector, camera
 
 
