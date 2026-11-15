@@ -8,8 +8,9 @@ test does not depend on the internals of objmem.sim:
   objmem.memory.ObjectMemory     -> update_frame / query / mark_*
   objmem.search.find             -> navigate + re-check loop
 
-Both camera modes are covered. The last test runs search.find with
-objmem.worker.ClientVerifier against the fake vision worker on a free port.
+Both camera modes are covered. The same scenarios also run through the
+objmem.sim toy world, and search.find runs with objmem.worker.ClientVerifier
+against the fake vision worker on a free port.
 """
 import math
 import socket
