@@ -394,6 +394,7 @@ def draw_map_fn():
     """objmem.viz.draw_map, or a dependency-free stand-in."""
     try:
         from objmem.viz import draw_map
+        import PIL  # noqa: F401  (viz imports it lazily; check now, not on the first request)
         return draw_map
     except ImportError:
         _note("viz.draw_map")

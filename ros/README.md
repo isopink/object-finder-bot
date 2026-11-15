@@ -22,7 +22,7 @@ Foxy on the Jetson:
 ```bash
 source /opt/ros/foxy/setup.bash
 export PYTHONPATH=~/object-finder-bot/src:$PYTHONPATH   # robot/env.sh does this
-sudo apt install ros-foxy-nav2-msgs python3-numpy python3-yaml
+sudo apt install ros-foxy-nav2-msgs python3-numpy python3-yaml python3-pil   # PIL: mapview drawing
 cd ~/object-finder-bot/ros
 colcon build --packages-select objmem_ros
 source install/setup.bash

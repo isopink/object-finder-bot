@@ -555,6 +555,7 @@ def main_all(args=None):
     shared = observer.shared
     finder = FinderNode(shared=shared)
     mapview = MapviewNode(shared=shared)
+    finder.core.on_change = observer.core.mark_dirty  # confidences changed by a search get saved
 
     def on_exit():
         observer.save_now()

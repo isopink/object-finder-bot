@@ -38,7 +38,7 @@ jobs:
           apt-get install -y --no-install-recommends \
             ros-${{ matrix.distro }}-nav2-msgs ros-${{ matrix.distro }}-tf2-ros \
             ros-${{ matrix.distro }}-visualization-msgs ros-${{ matrix.distro }}-launch-ros \
-            python3-pip python3-numpy python3-yaml python3-pytest python3-colcon-common-extensions
+            python3-pip python3-numpy python3-yaml python3-pil python3-pytest python3-colcon-common-extensions
           # numpy and pyyaml come from apt, as on the Jetson. The distro pip on
           # Jammy builds pyproject-only packages as "UNKNOWN"; a newer pip does not.
           python3 -m pip install -U "pip<25"

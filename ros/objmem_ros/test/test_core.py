@@ -135,6 +135,15 @@ def test_periodic_and_forced_save(tmp_path):
     assert len(mem.saved) == 2
 
 
+def test_mark_dirty_triggers_periodic_save(tmp_path):
+    mem = RecordingMemory()
+    oc = core.ObserverCore(mem, Params(), save_path=str(tmp_path / "m.npz"), save_period_s=1.0)
+    oc.maybe_save(0.0)
+    assert not oc.maybe_save(2.0)
+    oc.mark_dirty()
+    assert oc.maybe_save(3.0)
+
+
 def test_no_save_without_path():
     oc = core.ObserverCore(RecordingMemory(), Params())
     assert not oc.maybe_save(100.0, force=True)

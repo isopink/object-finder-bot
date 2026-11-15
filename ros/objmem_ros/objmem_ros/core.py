@@ -263,6 +263,10 @@ class ObserverCore(object):
             return None
         return self.step(dets, pose, t)
 
+    def mark_dirty(self):
+        """Something else (the finder) changed the memory; include it in the next periodic save."""
+        self._dirty = True
+
     def maybe_save(self, t, force=False):
         """Save when the period elapsed and something changed (or force). Returns True if saved."""
         if not self.save_path:
