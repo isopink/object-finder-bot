@@ -20,4 +20,4 @@ speech = ["openai-whisper"]
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "ros/objmem_ros/test"]

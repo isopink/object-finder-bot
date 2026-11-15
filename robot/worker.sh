@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Start the vision worker (camera + detector + CLIP, HTTP on port 8600) in the
+# conda env. Runs on the host, never in Docker. Leave it running; Ctrl+C stops it.
+#
+# Usage: ./robot/worker.sh depth|nodepth [--fake] [--camera none] [extra vision_worker.py args]
+#   depth    RealSense (color + depth)       -> --camera realsense
+#   nodepth  Logitech C920 (color only)      -> --camera c920
+#   --fake   fake camera, detector, CLIP (tests the HTTP path, no GPU)
+#   OFB_DETECTOR=yolo ./robot/worker.sh depth    to use YOLO instead of detectNet
+#   OFB_IMAGE_SOURCE=ros: the camera belongs to a ROS node, so --camera none
+set -uo pipefail
+source "$(dirname "$0")/env.sh"
+ofb_log_init "worker"
+
+MODE="${1:-}"
+case "$MODE" in
+  depth|nodepth) shift ;;
+  *) echo "usage: $0 depth|nodepth [--fake] [extra args]"; exit 2 ;;
+esac
+CONFIG="$(ofb_make_config "$MODE")"
+ARGS=(--config "$CONFIG" --port "$OFB_WORKER_PORT")
+if [ "${1:-}" = "--fake" ]; then
+  shift; ARGS+=(--fake)
+else
+  CAM="$(ofb_camera_for "$MODE")"
+  if [ "$OFB_IMAGE_SOURCE" = ros ]; then CAM=none; fi
+  ARGS+=(--detector "$OFB_DETECTOR" --camera "$CAM")
+fi
+ARGS+=("$@")
+
+# The conda env has PyTorch with CUDA (never reinstall torch).
+if ofb_conda_activate; then ok "conda env $OFB_CONDA_ENV"; else ofb_summary; exit 1; fi
+if curl -sf -m 2 "$OFB_WORKER_URL/health" >/dev/null 2>&1; then
+  fail "a worker already answers on $OFB_WORKER_URL" "stop it first (Ctrl+C in its pane, or ./robot/stop_all.sh)"
+  ofb_summary; exit 1
+fi
+info "python $(command -v python) ($(python --version 2>&1))"
+info "config $CONFIG (camera_mode $MODE)"
+echo "== python scripts/vision_worker.py ${ARGS[*]}"
+echo "   first start loads CLIP and may build a TensorRT engine: allow 1-5 minutes"
+cd "$OFB_REPO" || exit 1
+exec python scripts/vision_worker.py "${ARGS[@]}"

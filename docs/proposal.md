@@ -1,4 +1,4 @@
-# Object-Finding Robot with Natural-Language Queries: Design (v3)
+# Object-Finding Robot with Natural-Language Queries: Design (v4)
 
 > "Where is the blue mug?" The robot searches its memory and drives to where it last saw the mug.
 
@@ -21,25 +21,26 @@ A TurtleBot3 Waffle Pi patrols a room and remembers each object it sees on a des
 | Query language | English | CLIP (ViT-B/32, laion2b) is trained on English; Korean queries work poorly |
 | Speech queries | Extension (Whisper, mini USB microphone) | Text input is the baseline |
 | Detector | detectNet (SSD-Mobilenet-v2) vs YOLO (TensorRT), pick after comparison | Extension: NanoOWL |
-| Cameras | Logitech C920 + Intel RealSense | The C920 has no depth |
-| Object range | RealSense depth; fallback: store the observation pose, or bearing-only triangulation (EKF) | A 2D LiDAR cannot range objects on a desk |
-| Compute | Jetson off-board over Wi-Fi | No extra battery or power converter on the robot |
-| ROS 2 distro | Match the Waffle Pi | Mixed distros are not guaranteed to communicate |
+| Cameras | Two supported versions, selected by `camera_mode`: `depth` (Intel RealSense, color + aligned depth) and `nodepth` (Logitech C920, color only) | Both run end to end; the C920 has no depth, so it uses bearing-only fusion |
+| Object range | `depth`: RealSense depth back-projection. `nodepth`: bearing-only EKF fusion, and the observation pose is the goal while the position is uncertain | A 2D LiDAR cannot range objects on a desk |
+| Compute | Jetson Xavier NX **mounted on the robot**; it runs everything (bringup, SLAM, AMCL, Nav2, vision, memory) | No camera or depth stream over Wi-Fi |
+| ROS 2 distro | Foxy native on the Jetson (Ubuntu 20.04), or Humble in Docker; chosen in the classroom | Must work with the robot's OpenCR firmware and TurtleBot3 packages |
+| Operation | Over SSH from a laptop, long-running programs in tmux; queries typed in a terminal, video and map in a browser | No monitor or RViz in the classroom |
 
 ## 3. System
 
 ```
-[Waffle Pi (Raspberry Pi)]                      [Jetson Xavier NX (remote)]
- LiDAR ───────────────┐                        ┌─ SLAM (slam_toolbox) / AMCL / Nav2
- Odometry ────────────┤                        ├─ Object detection (detectNet / YOLO, TensorRT)
- C920 (compressed) ───┼── ROS 2 over Wi-Fi ──▶ ├─ Object range from RealSense depth
- RealSense (depth) ───┘                        ├─ CLIP embedding (FP16)
- Motor control ◀────────────────────────────── ├─ Probabilistic object memory
-                                               └─ Query: English text (+ Whisper speech)
+[TurtleBot3 Waffle Pi with the Jetson Xavier NX on board]
+ LiDAR, OpenCR ──▶ turtlebot3_bringup ──▶ SLAM (slam_toolbox) / AMCL / Nav2
+                                          objmem_ros: observer, finder, mapview  (ROS 2)
+ RealSense or C920 ──▶ vision worker (conda, no ROS): detector + CLIP, HTTP :8600
+
+ laptop ── SSH (tmux) ── `ask` terminal         browser: video :8554, map :8555
 ```
 
-- Video is sent compressed (JPEG) at reduced resolution and frame rate. Depth is sent aligned to color at low resolution.
-- The Jetson stays off the robot on mains power. Carrying it would need a boost converter or a separate battery (the PE1000N needs 12-24 VDC, the robot battery is 11.1 V), so on-board operation is not planned.
+- Everything runs on the Jetson, which rides on the robot. Camera frames never cross Wi-Fi; only SSH and the browser views do.
+- The ROS side (Foxy native or Humble in Docker) and the vision worker (conda Python 3.8 with CUDA PyTorch) talk over HTTP with JSON on port 8600, so the vision code does not depend on the ROS distro.
+- `camera_mode: depth` uses the RealSense color and aligned depth; `camera_mode: nodepth` uses the C920 color only.
 
 ### Camera mount
 
@@ -170,14 +171,14 @@ Software:
 
 ### Development workflow
 
-The Jetson and the robot are reachable only on the lab network, so development happens off-site and the lab is used for verification.
+The Jetson and the robot are reachable only on the lab network, so development happens off-site and the lab is used for verification. In the lab, the team logs in to the Jetson over SSH and runs each step from a script in `robot/`.
 
 ```
-develop → push → pull in the lab → run a verification script → save results and rosbags → analyze off-site
+develop → push → git pull on the Jetson (SSH) → run robot/check_stageN.sh → scp logs and rosbags back → analyze off-site
 ```
 
 - Keep code changes in the lab minimal. Bring back logs and rosbags instead.
-- Each verification runs from a single script (for example `slam/scripts/verify_stage0.sh`).
+- Each verification runs from a single script (`robot/check_stage1.sh` to `robot/check_stage5.sh`).
 - Maps, calibration values, and TensorRT engines can only be produced on the hardware, so they are saved as files.
 - TensorRT engines are built on the Jetson. Engines built on a laptop do not work.
 - Large files (model weights, rosbags) are kept out of Git.
@@ -187,9 +188,10 @@ develop → push → pull in the lab → run a verification script → save resu
 | Risk | Mitigation |
 |------|------------|
 | ROS 2 distro mismatch (Waffle Pi vs Jetson) | Check `ROS_DISTRO` first, then unify (Docker on the Jetson if needed) |
-| Wi-Fi bandwidth and latency (color + depth) | Compression, lower resolution and frame rate, send only the frames needed |
-| 8 GB memory limit on the Jetson | TensorRT / FP16, run CLIP only on detections, load Whisper only for queries |
-| RealSense unavailable | Observation-pose revisit, bearing-only triangulation with an EKF |
+| Jetson power and weight on the robot | Check the battery runtime early; keep the vision rate at 1 to 2 Hz |
+| Wi-Fi or SSH drops during a run | Everything runs on the robot; programs run in tmux, so an SSH drop does not stop them |
+| 8 GB memory limit on the Jetson, shared with SLAM and Nav2 | TensorRT / FP16, run CLIP only on detections, load Whisper only for queries |
+| RealSense unavailable | `camera_mode: nodepth` with the C920: bearing-only EKF, observation-pose revisit |
 | Raised camera: vibration and center of mass | Rigid mast, speed and acceleration limits, record memories while stopped |
 | Camera-robot calibration error | Allocate calibration time early; Kalman fusion averages repeated observations |
 | CLIP window search unstable on small objects | Move closer before re-checking, add smaller windows, (extension) NanoOWL |
@@ -209,8 +211,8 @@ develop → push → pull in the lab → run a verification script → save resu
 - [ ] ROS 2 distro on the Waffle Pi
 - [ ] Waffle Pi LiDAR model (LDS-01 / LDS-02)
 - [ ] Camera mount height and tilt, mast fixture
-- [ ] RealSense model and depth stream on the Waffle Pi or the Jetson
-- [ ] Multicast on the lab Wi-Fi
+- [ ] Camera used in the demo: RealSense (`depth`) or C920 (`nodepth`)
+- [ ] Jetson power on the robot and battery runtime
 
 ## References
 
@@ -221,6 +223,17 @@ develop → push → pull in the lab → run a verification script → save resu
 5. S. Thrun, W. Burgard, D. Fox, *Probabilistic Robotics*, MIT Press, 2005.
 
 ## Changelog
+
+### v4 (2026-11-16)
+
+| Item | v3 | v4 |
+|------|----|----|
+| Compute | Jetson off-board over Wi-Fi | **Jetson mounted on the robot**; it runs bringup, SLAM, AMCL, Nav2, vision, and memory |
+| Cameras | C920 + RealSense | **Both versions supported end to end**, selected by `camera_mode` (`depth` / `nodepth`) |
+| Position without depth | Fallback | Bearing-only EKF fusion; the observation pose is the goal while the position is uncertain |
+| Operation | Not specified | **Over SSH**, programs in tmux, queries in a terminal, video and map in a browser |
+| ROS 2 distro | Match the Waffle Pi | Foxy native or Humble in Docker, chosen in the classroom |
+| Code | `slam/`, `vision/` scripts | `objmem` package, `ros/objmem_ros`, `robot/` scripts, rewritten `vision/` |
 
 ### v3 (2026-11-16)
 

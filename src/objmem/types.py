@@ -119,7 +119,7 @@ class Params:
     fy: float = 615.0
     cx: float = 320.0
     cy: float = 240.0
-    hfov: float = 1.2           # horizontal field of view (rad)
+    hfov: float = 0.96          # horizontal field of view (rad); 2 atan(img_w / 2 fx) for the defaults
     depth_min: float = 0.3      # usable depth range (m); depth_max is also the max range in nodepth mode
     depth_max: float = 4.0
     # Camera mount T_base<-cam: position (m) and angles (rad) of the camera in base_link
@@ -141,6 +141,10 @@ class Params:
     # Processes
     worker_url: str = "http://127.0.0.1:8600"
     mapview_port: int = 8555
+    search_log: str = ""        # JSON-lines log of every query (scripts/evaluate.py reads it); "" = no log
+    # Speech queries (extension)
+    whisper_model: str = "base.en"
+    mic_device: str = ""        # ALSA device for arecord, e.g. plughw:2,0; "" = default
 
     @classmethod
     def load(cls, path: Optional[str] = None) -> "Params":
