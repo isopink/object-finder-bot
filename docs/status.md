@@ -213,4 +213,13 @@ fake worker on a free port), `tests/test_py38_syntax.py`,
 
 ## CI result
 
-Filled in after the push to `main`.
+On `main` after the integration merge (GitHub Actions, 2026-11-16):
+
+| Workflow | Job | Result |
+|---|---|---|
+| `tests.yml` | Python 3.8 | passed (373 tests) |
+| `tests.yml` | Python 3.10 | passed (373 tests) |
+| `ros.yml` | `ros:foxy` | passed: `colcon build`, 28 unit tests, `E2E PASSED`, `LAUNCH SMOKE PASSED`, no stand-ins |
+| `ros.yml` | `ros:humble` | passed: same steps; no `draw_map` fallback warning after the Pillow fix |
+
+Check the current state with `gh run list --branch main`.

@@ -57,7 +57,7 @@ def main():
     params = Params()
     memory = helpers.preload(compat.memory_class()(params), time.time())
     core.save_memory(memory, mem_path)
-    print("memory: {} items in {} (stand-ins: {})".format(len(memory.items), mem_path,
+    print("memory: {} items in {} (missing optional parts: {})".format(len(memory.items), mem_path,
                                                         compat.probe_all() or "none"), flush=True)
 
     worker = FakeWorker(0, [False, True]).start()
