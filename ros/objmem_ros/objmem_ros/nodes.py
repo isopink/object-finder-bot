@@ -534,6 +534,10 @@ def _spin(nodes, on_exit=None):
             raise
     finally:
         if on_exit is not None:
+            # Ctrl-C in tmux reaches this process twice (terminal + ros2 launch);
+            # ignore further SIGINTs so the final save completes.
+            import signal
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
             on_exit()
         for n in nodes:
             n.destroy_node()

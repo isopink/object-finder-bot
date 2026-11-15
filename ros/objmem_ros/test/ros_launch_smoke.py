@@ -76,8 +76,9 @@ def main():
         assert png is not None and png[:4] == b"\x89PNG"
         assert items is not None and len(items["items"]) == 1, items
         assert seen["markers"] >= 3, seen  # DELETEALL + ellipse + label
+        # Like Ctrl-C in a terminal: SIGINT to the whole group (launch forwards another one).
         os.killpg(os.getpgid(launch.pid), signal.SIGINT)
-        launch.wait(20)
+        launch.wait(30)
         assert os.path.exists(mem_path), "memory not saved on shutdown"
         ok = True
     finally:
