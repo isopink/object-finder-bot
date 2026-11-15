@@ -44,5 +44,5 @@ def test_nodepth_three_poses_converge(rounds):
             t += 1.0
     assert errors[-1] < errors[0]
     assert variances[-1] < variances[0]
-    assert errors[-1] < 0.15
+    assert errors[-1] < 0.02
     assert mem.items[0].n_obs == 3 * rounds
