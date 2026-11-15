@@ -168,7 +168,7 @@ def find(
     none passed; ``nav_failed`` when no candidate could be reached at all.
     """
     if log_path is None:
-        log_path = getattr(params, "search_log", None) or None
+        log_path = params.search_log or None
 
     def say(message: str) -> None:
         if on_status is not None:

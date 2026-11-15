@@ -210,8 +210,9 @@ def test_in_view_depth_mode():
     f = make_in_view(params)
     pose = Pose2D(0.0, 0.0, 0.0)
     assert f(np.array([2.0, 0.0]), pose)
-    assert f(np.array([2.0, 2.0 * math.tan(0.59)]), pose)          # just inside hfov/2 = 0.6
-    assert not f(np.array([2.0, 2.0 * math.tan(0.61)]), pose)           # just outside
+    half = params.hfov / 2.0
+    assert f(np.array([2.0, 2.0 * math.tan(half - 0.01)]), pose)        # just inside hfov/2
+    assert not f(np.array([2.0, 2.0 * math.tan(half + 0.01)]), pose)    # just outside
     assert not f(np.array([-2.0, 0.0]), pose)                           # behind
     assert not f(np.array([0.2, 0.0]), pose)                            # closer than depth_min
     assert not f(np.array([4.5, 0.0]), pose)                            # beyond depth_max

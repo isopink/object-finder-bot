@@ -33,9 +33,8 @@ def sim_params(mode: str = "depth", base: Optional[Params] = None) -> Params:
     """Params for the toy world.
 
     hfov is clipped to the field of view the intrinsics actually give
-    (2 atan(img_w / 2 fx), 0.96 rad for the defaults). With the default
-    hfov = 1.2, in_view() reports points the image cannot contain, and those
-    memories get negative updates every time they are "in view" but not detected.
+    (2 atan(img_w / 2 fx)), so in_view() never reports points the image cannot
+    contain even when a config sets a wider hfov.
     """
     p = copy.deepcopy(base) if base is not None else Params()
     p.camera_mode = mode

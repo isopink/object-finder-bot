@@ -26,7 +26,7 @@ fx: 615.0
 fy: 615.0
 cx: 320.0
 cy: 240.0
-hfov: 1.2           # horizontal field of view (rad)
+hfov: 0.96          # horizontal field of view (rad); 2 atan(img_w / 2 fx); print_intrinsics.py prints it
 depth_min: 0.3      # usable range (m)
 depth_max: 4.0
 
@@ -61,3 +61,8 @@ background_prompts:
 # Processes
 worker_url: http://127.0.0.1:8600
 mapview_port: 8555
+search_log: ""      # JSON-lines search log for scripts/evaluate.py; "" = none (the launch file can set it)
+
+# Speech queries (ros2 run objmem_ros ask --voice)
+whisper_model: base.en
+mic_device: ""      # e.g. plughw:2,0 (see arecord -l); "" = ALSA default

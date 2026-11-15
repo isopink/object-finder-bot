@@ -76,7 +76,7 @@ class Shared(object):
             ", loaded" if loaded else ", new"))
         missing = compat.probe_all()
         if missing:
-            logger.warn("objmem modules missing, using stand-ins for: {}".format(", ".join(missing)))
+            logger.warn("missing: {} (mapview draws a plain map without labels; install python3-pil)".format(", ".join(missing)))
 
 
 def _common_params(node):
@@ -476,7 +476,7 @@ class MapviewNode(Node):
             self.get_logger().warn(text)
 
     def _draw(self, items, pose):
-        """objmem.viz.draw_map; on failure retry without the grid, then the plain stand-in."""
+        """objmem.viz.draw_map; on failure retry without the grid, then the plain drawing."""
         occ = self._occupancy()
         if occ is not None:
             try:
@@ -486,9 +486,9 @@ class MapviewNode(Node):
         try:
             return self.draw_map(items, robot_pose=pose)
         except Exception as exc:
-            self._warn_once("draw", "draw_map failed ({}: {}); using the plain stand-in drawing".format(
+            self._warn_once("draw", "draw_map failed ({}: {}); using the plain drawing".format(
                 type(exc).__name__, exc))
-            return compat.fallback_draw_map(items, robot_pose=pose)
+            return compat.plain_draw_map(items, robot_pose=pose)
 
     def render_png(self):
         items = self.shared.memory.items

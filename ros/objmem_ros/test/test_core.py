@@ -87,7 +87,7 @@ def test_observer_not_gated_when_disabled_and_paused():
 def test_observer_step_places_detections_depth_mode():
     mem = RecordingMemory()
     p = Params()
-    oc = core.ObserverCore(mem, p, observe=compat.fallback_observe, make_in_view=compat.fallback_make_in_view)
+    oc = core.ObserverCore(mem, p)
     pose = Pose2D(1.0, 2.0, math.pi / 2)
     s = oc.step([det(u=int(p.cx), depth=2.0), det(depth=None), det(depth=10.0)], pose, 3.0)
     obs, pose_seen, t = mem.calls[0]
@@ -98,8 +98,8 @@ def test_observer_step_places_detections_depth_mode():
     assert s == "observe: detections=3 observations=1 memories=0"
 
 
-def test_observer_step_with_real_or_fallback_geometry():
-    """Whatever geometry is installed: one centered detection, 2 m ahead, ends near x = 2 + cam_x."""
+def test_observer_step_real_geometry():
+    """objmem.geometry: one centered detection, 2 m ahead, ends near x = 2 + cam_x."""
     mem = RecordingMemory()
     p = Params()
     oc = core.ObserverCore(mem, p)
@@ -174,20 +174,20 @@ def test_file_watcher(tmp_path):
     assert not w.changed()
 
 
-def test_fallback_memory_roundtrip_and_updates(tmp_path):
+def test_memory_roundtrip_and_updates(tmp_path):
     p = Params()
-    m = helpers.preload(compat.FallbackMemory(p), 0.0)
+    m = helpers.preload(compat.memory_class()(p), 0.0)
     q = m.query(helpers.EMB_A, 0.0)
-    assert q[0].item.mu.tolist() == list(helpers.POS_A)
+    assert q[0].item.mu.tolist() == pytest.approx(list(helpers.POS_A))
     first = q[0].item.id
     p0 = q[0].item.p
     m.mark_not_found(first, 1.0)
-    assert m._get(first).p < p0
+    assert m.get(first).p < p0
     m.mark_found(first, 2.0)
-    m.save(str(tmp_path / "f.npz"))
-    m2 = compat.FallbackMemory.load(str(tmp_path / "f.npz"), p)
+    core.save_memory(m, str(tmp_path / "f.npz"))
+    m2 = compat.memory_class().load(str(tmp_path / "f.npz"), p)
     assert [i.p for i in m2.items] == pytest.approx([i.p for i in m.items])
-    assert m2._next_id == m._next_id
+    assert [i.id for i in m2.items] == [i.id for i in m.items]
 
 
 # ---------------------------------------------------------------- depth and camera_info
@@ -213,7 +213,7 @@ def test_fill_depth_uses_median_and_scale():
     depth = np.zeros((240, 320), dtype=np.float32)
     depth[100:140, 150:170] = 1.8
     d = Detection(box=(300, 200, 340, 280), label="x", conf=1.0, embedding=EMB_A.copy(), depth_m=None)
-    core.fill_depth([d], depth, median_depth=compat.fallback_median_depth, scale_xy=(0.5, 0.5))
+    core.fill_depth([d], depth, scale_xy=(0.5, 0.5))
     assert d.depth_m == pytest.approx(1.8)
     core.fill_depth([d], None)
     assert d.depth_m == pytest.approx(1.8)
@@ -271,10 +271,9 @@ def _kinds(lines):
     return [l.split(":")[0] for l in lines]
 
 
-@pytest.mark.parametrize("find", [None, compat.fallback_find], ids=["installed", "fallback"])
-def test_finder_status_sequence_fail_then_found(find):
+def test_finder_status_sequence_fail_then_found():
     nav = ScriptNav([True, True])
-    fc, lines = _finder(nav, ScriptVerifier([False, True]), find)
+    fc, lines = _finder(nav, ScriptVerifier([False, True]))
     res = fc.run("where is the mug")
     assert res.status == "found"
     assert _kinds(lines) == ["query", "candidates", "goal_sent", "goal_reached", "recheck",
@@ -286,11 +285,15 @@ def test_finder_status_sequence_fail_then_found(find):
     assert math.hypot(nav.goals[1].x - helpers.POS_B[0], nav.goals[1].y - helpers.POS_B[1]) < 1.0
 
 
+def boom_find(*args, **kw):
+    raise RuntimeError("nav down")
+
+
 def test_finder_reports_errors_and_busy():
     class Boom(object):
         def go_to(self, pose):
             raise RuntimeError("nav down")
-    fc, lines = _finder(Boom(), ScriptVerifier([True]), compat.fallback_find)
+    fc, lines = _finder(Boom(), ScriptVerifier([True]), find=boom_find)
     assert fc.run("mug") is None
     assert lines[-1] == "error: RuntimeError: nav down"
     fc._busy.acquire()
@@ -306,27 +309,27 @@ def test_status_result_strings():
         "result: nav_failed tried=[3:nav_failed]"
 
 
-def test_fallback_find_empty_and_nav_retry():
+def test_find_empty_and_nav_retry():
     p = Params()
-    empty = compat.FallbackMemory(p)
-    r = compat.fallback_find("x", empty, FixedEmbedder(), ScriptNav([]), ScriptVerifier([]), p)
+    empty = compat.memory_class()(p)
+    r = compat.find_fn()("x", empty, FixedEmbedder(), ScriptNav([]), ScriptVerifier([]), p)
     assert r.status == "empty"
-    mem = helpers.preload(compat.FallbackMemory(p), 0.0)
+    mem = helpers.preload(compat.memory_class()(p), 0.0)
     nav = ScriptNav([False, True, False, False])
-    r = compat.fallback_find("x", mem, FixedEmbedder(), nav, ScriptVerifier([False]), p, clock=lambda: 1.0)
+    r = compat.find_fn()("x", mem, FixedEmbedder(), nav, ScriptVerifier([False]), p, clock=lambda: 1.0)
     assert [o for _, o in r.tried] == ["not_found", "nav_failed"]
     assert r.status == "not_found"
 
 
-def test_fallback_goal_for():
+def test_goal_for():
     p = Params()
-    mem = helpers.preload(compat.FallbackMemory(p), 0.0)
+    mem = helpers.preload(compat.memory_class()(p), 0.0)
     a = [i for i in mem.items if i.mu[0] > 0][0]
-    g = compat.fallback_goal_for(a, p)
+    g = compat.goal_for_fn()(a, p)
     assert (g.x, g.y) == pytest.approx((2.0 - p.standoff, 0.0))
     assert g.yaw == pytest.approx(0.0)
     a.cov = np.diag([1.0, 0.01])
-    assert compat.fallback_goal_for(a, p) == a.view_pose
+    assert compat.goal_for_fn()(a, p) == a.view_pose
 
 
 # ---------------------------------------------------------------- worker client
@@ -354,15 +357,15 @@ def test_worker_client_against_fake_worker():
 
 
 # ---------------------------------------------------------------- mapview helpers
-def test_fallback_draw_map_png():
-    mem = helpers.preload(compat.FallbackMemory(Params()), 0.0)
-    png = compat.fallback_draw_map(mem.items, robot_pose=Pose2D(0, 0, 0))
+def test_plain_draw_map_png():
+    mem = helpers.preload(compat.memory_class()(Params()), 0.0)
+    png = compat.plain_draw_map(mem.items, robot_pose=Pose2D(0, 0, 0))
     assert png[:8] == b"\x89PNG\r\n\x1a\n"
-    assert compat.fallback_draw_map([])[:4] == b"\x89PNG"
+    assert compat.plain_draw_map([])[:4] == b"\x89PNG"
 
 
 def test_items_json_and_ellipse():
-    mem = helpers.preload(compat.FallbackMemory(Params()), 0.0)
+    mem = helpers.preload(compat.memory_class()(Params()), 0.0)
     j = core.items_json(mem.items)
     assert len(j) == 2 and set(j[0]) >= {"id", "x", "y", "p", "cov", "label"}
     major, minor, ang = core.ellipse_axes(np.diag([0.04, 0.01]))

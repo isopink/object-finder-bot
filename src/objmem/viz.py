@@ -178,7 +178,7 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
     def label(xy, text, fill=(20, 20, 20)):
         try:
             box = draw.textbbox(xy, text, font=font)
-        except AttributeError:  # Pillow < 8
+        except (AttributeError, ValueError):  # Pillow < 8; Pillow 8-9 with the bitmap default font
             w, h = draw.textsize(text, font=font)
             box = (xy[0], xy[1], xy[0] + w, xy[1] + h)
         draw.rectangle([box[0] - 1, box[1] - 1, box[2] + 1, box[3] + 1], fill=(255, 255, 255))

@@ -108,7 +108,7 @@ def observe(det: Detection, pose: Pose2D, params: Params, t: float) -> Optional[
     u, v = box_center(det.box)
     view_pose = Pose2D(float(pose.x), float(pose.y), float(pose.yaw))
     emb = np.asarray(det.embedding, dtype=np.float32)
-    mode = getattr(params, "camera_mode", "depth")
+    mode = params.camera_mode
 
     if mode == "nodepth":
         b = pixel_bearing(u, v, pose, params)
@@ -168,7 +168,7 @@ def in_view(mu: np.ndarray, pose: Pose2D, params: Params) -> bool:
     dx = float(mu[0]) - cam[0]
     dy = float(mu[1]) - cam[1]
     r = math.hypot(dx, dy)
-    lo = params.depth_min if getattr(params, "camera_mode", "depth") == "depth" else 0.0
+    lo = params.depth_min if params.camera_mode == "depth" else 0.0
     if r < lo or r > params.depth_max:
         return False
     if r < 1e-9:

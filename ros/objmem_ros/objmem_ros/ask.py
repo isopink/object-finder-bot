@@ -46,7 +46,9 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     ap = argparse.ArgumentParser(prog="ask")
     ap.add_argument("--voice", action="store_true", help="enable the v command (Whisper speech to text)")
-    ap.add_argument("--whisper-model", default="base.en")
+    ap.add_argument("--config", default="", help="YAML with Params keys (whisper_model, mic_device)")
+    ap.add_argument("--whisper-model", default=None, help="default: whisper_model in the config (base.en)")
+    ap.add_argument("--mic", default=None, help="ALSA device, e.g. plughw:2,0; default: mic_device in the config")
     args, ros_args = ap.parse_known_args(argv)
 
     rclpy.init(args=[sys.argv[0]] + ros_args)
@@ -57,7 +59,10 @@ def main(argv=None):
     stt = None
     if args.voice:
         from objmem.speech import WhisperSTT
-        stt = WhisperSTT(model=args.whisper_model)
+        from objmem.types import Params
+        params = Params.load(args.config or None)
+        stt = WhisperSTT(model=args.whisper_model or params.whisper_model,
+                         mic=(args.mic or params.mic_device) or None)
 
     spinner = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
     spinner.start()
