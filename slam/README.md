@@ -1,6 +1,6 @@
 # SLAM (ROS 2 + TurtleBot3 Waffle Pi)
 
-기획안 0단계 목표: **와플파이 LiDAR로 지도 만들기** (~10/15 실습완료 보고서).
+[물건 찾기 로봇](../README.md)의 0단계: **와플파이 LiDAR로 지도 만들기**.
 
 - ROS 2 **Humble** (Ubuntu 22.04)
 - SLAM: `slam_toolbox` (기본), `cartographer` (TurtleBot3 공식 예제) — 두 결과를 비교해서 보고서에 사용

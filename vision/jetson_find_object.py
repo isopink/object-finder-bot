@@ -24,7 +24,7 @@ jetson_find_object.py — Jetson 에서 돌아가는 "미니 물건 찾기" (카
   conda activate test1001
   cd ~/uos_ir/vision
   python jetson_find_object.py
-  → 노트북 브라우저에서 http://192.168.1.206:8554 를 열고, 터미널에 s, q a cup 처럼 입력
+  → 노트북 브라우저에서 http://<JETSON-IP>:8554 를 열고, 터미널에 s, q a cup 처럼 입력
 """
 import argparse
 import os
