@@ -469,6 +469,27 @@ class MapviewNode(Node):
     def _occupancy(self):
         return self.map_yaml or None
 
+    def _warn_once(self, key, text):
+        warned = self.__dict__.setdefault("_warned", set())
+        if key not in warned:
+            warned.add(key)
+            self.get_logger().warn(text)
+
+    def _draw(self, items, pose):
+        """objmem.viz.draw_map; on failure retry without the grid, then the plain stand-in."""
+        occ = self._occupancy()
+        if occ is not None:
+            try:
+                return self.draw_map(items, robot_pose=pose, occupancy=occ)
+            except Exception as exc:
+                self._warn_once("occ", "draw_map with map_yaml={} failed ({}); drawing without it".format(occ, exc))
+        try:
+            return self.draw_map(items, robot_pose=pose)
+        except Exception as exc:
+            self._warn_once("draw", "draw_map failed ({}: {}); using the plain stand-in drawing".format(
+                type(exc).__name__, exc))
+            return compat.fallback_draw_map(items, robot_pose=pose)
+
     def render_png(self):
         items = self.shared.memory.items
         pose = self.shared.robot_pose
@@ -476,11 +497,7 @@ class MapviewNode(Node):
                                                                       round(pose.yaw, 2)))
         with self._png_lock:
             if self._png is None or key != self._png_key:
-                try:
-                    self._png = self.draw_map(items, robot_pose=pose, occupancy=self._occupancy())
-                except Exception as exc:
-                    self.get_logger().warn("draw_map failed ({}); drawing without the occupancy grid".format(exc))
-                    self._png = self.draw_map(items, robot_pose=pose)
+                self._png = self._draw(items, pose)
                 self._png_key = key
             return self._png
 
