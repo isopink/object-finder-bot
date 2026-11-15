@@ -32,6 +32,7 @@ import numpy as np
 
 from objmem.crops import detection_crops, grid_crops
 from objmem.embed import CachedTextEmbedder
+from objmem.geometry import median_depth
 from objmem.types import Detection, Params
 from objmem.verify import check_frame
 
@@ -55,28 +56,6 @@ def decode_jpeg_b64(data: str) -> np.ndarray:
     raw = base64.b64decode(data)
     with Image.open(io.BytesIO(raw)) as im:
         return np.asarray(im.convert("RGB"), dtype=np.uint8).copy()
-
-
-def _median_depth(depth: np.ndarray, box, frac: float = 0.3) -> Optional[float]:
-    """objmem.geometry.median_depth when available (Session 2), else the same rule here:
-    median of valid (> 0) depth in the central `frac` of the box."""
-    try:
-        from objmem.geometry import median_depth
-    except ImportError:
-        median_depth = None
-    if median_depth is not None:
-        return median_depth(depth, box, frac)
-    l, t, r, b = box
-    cx, cy = (l + r) / 2.0, (t + b) / 2.0
-    hw, hh = max(1.0, (r - l) * frac / 2.0), max(1.0, (b - t) * frac / 2.0)
-    h, w = depth.shape[:2]
-    x0, x1 = int(max(0, np.floor(cx - hw))), int(min(w, np.ceil(cx + hw)))
-    y0, y1 = int(max(0, np.floor(cy - hh))), int(min(h, np.ceil(cy + hh)))
-    patch = depth[y0:y1, x0:x1]
-    valid = patch[np.isfinite(patch) & (patch > 0)]
-    if valid.size == 0:
-        return None
-    return float(np.median(valid))
 
 
 # ---------------------------------------------------------------- server
@@ -136,7 +115,7 @@ class VisionService:
         for (img, box, label, cf), vec in zip(kept, vecs):
             d = None
             if depth is not None:
-                d = _median_depth(depth, box)
+                d = median_depth(depth, box)
             out.append({"box": list(box), "label": str(label), "conf": cf,
                         "embedding": [float(x) for x in vec], "depth_m": d})
         return {"t": t, "detections": out}
