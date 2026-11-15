@@ -172,12 +172,6 @@ def _params(mode):
     return params
 
 
-def _best_for(mem, emb, name, world, t):
-    cands = mem.query(emb.embed_text(name), t)
-    assert cands, "no candidates"
-    return cands
-
-
 # ---------------------------------------------------------------- tests
 @pytest.mark.parametrize("mode", ["depth", "nodepth"])
 def test_patrol_query_found(mode):
@@ -241,39 +235,86 @@ def _free_port():
     return port
 
 
-def test_find_with_client_verifier_against_fake_worker():
+@pytest.fixture
+def fake_worker():
     worker = pytest.importorskip("objmem.worker")
     embed = pytest.importorskip("objmem.embed")
     fakes = pytest.importorskip("objmem.fakes")
-    from objmem.types import Observation
-
     params = Params()
     port = _free_port()
-    embedder = embed.FakeEmbedder()
-    server = worker.make_server(embedder=embedder, detector=fakes.FakeDetector(),
+    server = worker.make_server(embedder=embed.FakeEmbedder(), detector=fakes.FakeDetector(),
                                 camera=fakes.FakeCamera(mode="depth"), params=params,
                                 host="127.0.0.1", port=port)
     th = threading.Thread(target=server.serve_forever, daemon=True)
     th.start()
     try:
-        client = worker.VisionClient("http://127.0.0.1:{}".format(port))
-        assert client.health()["ok"] is True
-        dets = client.detect_embed()
-        assert dets and len(dets[0].embedding) == 512
-
-        mem = memory_mod.ObjectMemory(params)
-        pose = Pose2D(0.0, 0.0, 0.0)
-        e = client.embed_text("a blue mug")
-        obs = Observation(embedding=e, mu=np.array([1.5, 0.0]), cov=np.eye(2) * 0.01, t=100.0,
-                          view_pose=pose, label="cup")
-        mem.update_frame([obs], pose, lambda mu, p: False, 100.0)
-
-        nav = SimNavigator()
-        verifier = worker.ClientVerifier(client)
-        res = search.find("a blue mug", mem, embedder, nav, verifier, params, clock=lambda: 100.0)
-        assert res.status in ("found", "not_found")
-        assert len(nav.goals) >= 1
-        assert res.tried and res.tried[0][1] in ("found", "not_found")
+        yield worker.VisionClient("http://127.0.0.1:{}".format(port))
     finally:
         server.shutdown()
         server.server_close()
+
+
+@pytest.mark.parametrize("query, status", [("a red cup", "found"), ("a green plant", "not_found")])
+def test_find_with_client_verifier_against_fake_worker(fake_worker, query, status):
+    """Detections from the worker -> geometry -> memory -> search.find with ClientVerifier."""
+    from objmem.worker import ClientEmbedder, ClientVerifier
+
+    client = fake_worker
+    params = Params()
+    health = client.health()
+    assert health["ok"] is True and health["camera"] is True
+
+    pose = Pose2D(0.0, 0.0, 0.0)
+    dets = client.detect_embed()
+    assert dets and all(len(d.embedding) == 512 for d in dets)
+    assert all(d.depth_m is not None for d in dets)
+    obs = [o for o in (geometry.observe(d, pose, params, 100.0) for d in dets) if o is not None]
+    assert obs
+    mem = memory_mod.ObjectMemory(params)
+    mem.update_frame(obs, pose, geometry.make_in_view(params), 100.0)
+    assert len(mem.items) == len(obs)
+
+    nav = SimNavigator()
+    res = search.find(query, mem, ClientEmbedder(client), nav, ClientVerifier(client), params,
+                      clock=lambda: 101.0)
+    assert res.status == status
+    assert nav.goals, "no Nav2 goal was sent"
+    if status == "found":
+        assert res.tried[0][1] == "found"
+        assert res.item is not None and res.item.p > 0.7
+    else:
+        assert all(outcome == "not_found" for _, outcome in res.tried)
+        assert all(it.p < params.p_init for it in mem.items)
+
+
+# ---------------------------------------------------------------- objmem.sim toy world
+@pytest.mark.parametrize("mode", ["depth", "nodepth"])
+def test_sim_world_patrol_query_found(mode):
+    from objmem.sim.runner import Sim, distance
+
+    sim = Sim(mode=mode, seed=2)
+    sim.patrol()
+    res = sim.ask("Where is the blue mug?")
+    assert res.status == "found"
+    mug = sim.world.object("blue_mug")
+    assert distance(res.item, (mug.x, mug.y)) < 0.5
+
+
+@pytest.mark.parametrize("mode", ["depth", "nodepth"])
+def test_sim_world_moved_object(mode):
+    from objmem.sim.runner import Sim, distance
+
+    sim = Sim(mode=mode, seed=2)
+    sim.patrol()
+    first = sim.ask("Where is the blue mug?")
+    assert first.status == "found"
+    old_id = first.item.id
+
+    sim.world.move("blue_mug", 5.0, 0.65)
+    sim.patrol(part="south")
+    p_before = sim.memory.get(old_id).p
+    res = sim.ask("Where is the blue mug?")
+    assert res.status == "found"
+    assert (old_id, "not_found") in res.tried, res.tried
+    assert sim.memory.get(old_id).p < p_before
+    assert distance(res.item, (5.0, 0.65)) < 0.5
