@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Localize on a saved map (AMCL) and start Nav2. bringup.sh must be running;
+# slam.sh must NOT be running. Leave it running; stop with Ctrl+C.
+#
+# Usage: ./robot/nav.sh <map>        <map> = robot/maps/<map>.yaml, or a path to a .yaml
+# Then:  ./robot/set_initial_pose.sh x y yaw   (where the robot stands on the map)
+#        ./robot/goto.sh x y yaw              (one goal)
+#
+# Parameters: the TurtleBot3 Nav2 file for waffle_pi, copied into the log
+# folder with the forward speed capped at OFB_MAX_VEL (default 0.15 m/s).
+# Use your own file with NAV2_PARAMS=/path/to/params.yaml.
+set -uo pipefail
+source "$(dirname "$0")/env.sh"
+ofb_need_ros "$0" "$@"
+ofb_log_init nav
+
+ARG="${1:-}"
+if [ -z "$ARG" ]; then
+  echo "usage: $0 <map>     maps: $(cd "$OFB_ROBOT_DIR/maps" 2>/dev/null && ls -- *.yaml 2>/dev/null | sed 's/\.yaml$//' | tr '\n' ' ')"
+  exit 2
+fi
+MAP="$ARG"
+case "$MAP" in *.yaml) ;; *) MAP="$OFB_ROBOT_DIR/maps/$MAP.yaml" ;; esac
+MAP="$(cd "$(dirname "$MAP")" 2>/dev/null && pwd)/$(basename "$MAP")"
+
+echo "== Checks"
+if [ -f "$MAP" ]; then ok "map $MAP"; else
+  fail "no map file $MAP" "make one: ./robot/slam.sh then ./robot/save_map.sh <name>"
+fi
+if ofb_wait_topic /scan 10; then ok "/scan"; else fail "no /scan" "start ./robot/bringup.sh first"; fi
+if pgrep -f 'async_slam_toolbox|sync_slam_toolbox|cartographer_node' >/dev/null 2>&1; then
+  fail "SLAM is still running" "Ctrl+C slam.sh first (SLAM and AMCL both publish map->odom)"
+fi
+
+PARAMS="${NAV2_PARAMS:-}"
+if [ -z "$PARAMS" ]; then
+  TB3_NAV="$(ros2 pkg prefix turtlebot3_navigation2 2>/dev/null)/share/turtlebot3_navigation2/param"
+  for cand in "$TB3_NAV/$ROS_DISTRO/$TURTLEBOT3_MODEL.yaml" "$TB3_NAV/$TURTLEBOT3_MODEL.yaml"; do
+    if [ -f "$cand" ]; then PARAMS="$cand"; break; fi
+  done
+fi
+if [ -n "$PARAMS" ] && [ -f "$PARAMS" ]; then
+  ok "Nav2 params $PARAMS"
+  # Cap the forward speed (raised camera = top-heavy robot).
+  sed -E \
+    -e "s/^([[:space:]]*max_vel_x:[[:space:]]*)[0-9.]+/\1$OFB_MAX_VEL/" \
+    -e "s/^([[:space:]]*max_speed_xy:[[:space:]]*)[0-9.]+/\1$OFB_MAX_VEL/" \
+    -e "s/^([[:space:]]*max_velocity:[[:space:]]*)\[[[:space:]]*[0-9.]+/\1[$OFB_MAX_VEL/" \
+    "$PARAMS" > "$OFB_LOG_DIR/nav2_params.yaml"
+  PARAMS="$OFB_LOG_DIR/nav2_params.yaml"
+  info "speed cap $OFB_MAX_VEL m/s -> $PARAMS"
+else
+  fail "Nav2 params file not found" "install ros-$ROS_DISTRO-turtlebot3-navigation2, or set NAV2_PARAMS"
+fi
+if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
+cp "$MAP" "$OFB_LOG_DIR/" 2>/dev/null || true
+
+echo "== Starting AMCL + Nav2 on $(basename "$MAP"). Next, in another pane:"
+echo "     ./robot/set_initial_pose.sh 0 0 0    (if the robot stands where mapping started)"
+ros2 launch nav2_bringup bringup_launch.py \
+  map:="$MAP" params_file:="$PARAMS" use_sim_time:=False autostart:=True

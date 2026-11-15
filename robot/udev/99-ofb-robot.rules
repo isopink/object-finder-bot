@@ -1,0 +1,15 @@
+# TurtleBot3 devices on the Jetson. Installed by robot/install_foxy_jetson.sh to
+# /etc/udev/rules.d/. The Humble container gets /dev from the host, so install
+# these on the host in both cases:
+#   sudo cp robot/udev/99-ofb-robot.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# OpenCR (STM32 virtual COM port) -> /dev/ttyACM0 and /dev/opencr.
+# ID_MM_DEVICE_IGNORE keeps ModemManager away from it.
+ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="opencr"
+
+# LDS-01 / LDS-02 LiDAR (CP2102 USB-UART) -> /dev/ttyUSB0 and /dev/lidar.
+ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="lidar"
+
+# Intel RealSense (any model): user access for pyrealsense2 without sudo.
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="8086", MODE:="0666", GROUP:="plugdev"

@@ -1,0 +1,5 @@
+# shellcheck settings for robot/ (run: shellcheck -x robot/*.sh robot/*/*.sh)
+source-path=SCRIPTDIR
+source-path=SCRIPTDIR/..
+# "a && ok || fail" is used on purpose: ok/fail always succeed.
+disable=SC2015

@@ -1,0 +1,9 @@
+# Output written on the Jetson; copy it back with scp instead of committing.
+logs/
+bags/
+memory/*
+!memory/.gitkeep
+# Build output and the container home (robot/build_ws.sh, robot/docker/run.sh).
+.ws_*/
+.docker_home/
+maps/*.bak.*
