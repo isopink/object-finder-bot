@@ -1,0 +1,23 @@
+# 20 English queries with their target object (names match data/ground_truth.yaml).
+# Used by scripts/evaluate.py, both in the toy world and for real runs.
+queries:
+  - {text: "Where is the blue mug?", target: blue_mug}
+  - {text: "a blue ceramic coffee mug", target: blue_mug}
+  - {text: "Where is the red mug?", target: red_mug}
+  - {text: "find the red coffee cup", target: red_mug}
+  - {text: "a plastic cup with a straw", target: plastic_cup}
+  - {text: "Where is the clear plastic cup?", target: plastic_cup}
+  - {text: "a black charger next to the laptop", target: black_charger}
+  - {text: "Where is my phone charger?", target: black_charger}
+  - {text: "Where is the green tumbler?", target: green_tumbler}
+  - {text: "a green metal thermos", target: green_tumbler}
+  - {text: "Where is the silver laptop?", target: silver_laptop}
+  - {text: "find my laptop computer", target: silver_laptop}
+  - {text: "Where is the yellow book?", target: yellow_book}
+  - {text: "a yellow paper textbook", target: yellow_book}
+  - {text: "Where is the water bottle?", target: water_bottle}
+  - {text: "a clear plastic bottle of water", target: water_bottle}
+  - {text: "Where is the black phone?", target: black_phone}
+  - {text: "find my black smartphone", target: black_phone}
+  - {text: "Where are the white headphones?", target: white_headphones}
+  - {text: "a white headset", target: white_headphones}
