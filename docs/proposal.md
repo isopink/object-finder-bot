@@ -212,6 +212,14 @@ develop → push → pull in the lab → run a verification script → save resu
 - [ ] RealSense model and depth stream on the Waffle Pi or the Jetson
 - [ ] Multicast on the lab Wi-Fi
 
+## References
+
+1. D. Franklin, *jetson-inference: Hello AI World guide to deploying deep-learning inference networks and deep vision primitives with TensorRT and NVIDIA Jetson*, GitHub. https://github.com/dusty-nv/jetson-inference
+2. A. Radford et al., "Learning Transferable Visual Models From Natural Language Supervision," ICML, 2021.
+3. OpenCLIP, GitHub. https://github.com/mlfoundations/open_clip
+4. B. Chen et al., "Open-vocabulary Queryable Scene Representations for Real World Planning," ICRA, 2023.
+5. S. Thrun, W. Burgard, D. Fox, *Probabilistic Robotics*, MIT Press, 2005.
+
 ## Changelog
 
 ### v3 (2026-11-16)
