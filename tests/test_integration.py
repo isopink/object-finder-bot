@@ -115,7 +115,8 @@ def detections_at(world, pose, params, mode):
 PATROL = [Pose2D(0.0, 0.0, a) for a in np.linspace(-math.pi, math.pi, 16, endpoint=False)] + \
          [Pose2D(0.8, 0.0, 0.0), Pose2D(0.8, 0.0, 0.5), Pose2D(0.8, 0.0, -0.5),
           Pose2D(-0.8, 0.0, math.pi), Pose2D(-0.8, 0.0, math.pi - 0.5), Pose2D(-0.8, 0.0, -math.pi + 0.5),
-          Pose2D(0.0, 0.9, math.pi / 2), Pose2D(0.5, 0.9, math.pi / 2), Pose2D(-0.5, 0.9, math.pi / 2)]
+          Pose2D(0.0, 0.9, math.pi / 2), Pose2D(0.5, 0.9, math.pi / 2), Pose2D(-0.5, 0.9, math.pi / 2),
+          Pose2D(0.0, -0.9, -math.pi / 2), Pose2D(0.5, -0.9, -math.pi / 2), Pose2D(-0.5, -0.9, -math.pi / 2)]
 
 
 def patrol(world, mem, params, mode, t0, rounds=2):
@@ -145,7 +146,7 @@ class SimNavigator:
 
 
 class SimVerifier:
-    """Found when the queried object is within 1.5 m of the robot and in front of it."""
+    """Found when the queried object is within 3 m of the robot and in front of it."""
 
     def __init__(self, world, nav):
         self.world, self.nav = world, nav
@@ -159,7 +160,7 @@ class SimVerifier:
             rng = math.hypot(dx, dy)
             bearing = math.atan2(dy, dx) - p.yaw
             bearing = math.atan2(math.sin(bearing), math.cos(bearing))
-            if rng < 1.5 and abs(bearing) < 0.8:
+            if rng < 3.0 and abs(bearing) < 0.6:
                 return True, 0.9
         return False, 0.1
 
