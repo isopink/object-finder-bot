@@ -1,0 +1,28 @@
+# Ground-truth object positions for a real run in the classroom.
+#
+# How to fill it in:
+#   1. Build and save the map first (robot/README.md, stage 2). Positions are in
+#      that map's frame (meters), the same frame as the memory file.
+#   2. Put the robot on the spot of each object (or drive to it and read
+#      `ros2 run tf2_ros tf2_echo map base_link`), or measure from two walls
+#      whose map coordinates you know. The center of the object is what counts.
+#   3. Write x and y below. Leave an object at null if it is not used.
+#   4. If you move an object during the run, add it under `moved` with the time
+#      (unix seconds, `date +%s`) and the new position.
+#
+# Then:  python scripts/evaluate.py --memory <memory.npz> --log <search_log.jsonl> \
+#            --ground-truth data/ground_truth.yaml [--map <map.yaml>]
+frame: map
+objects:
+  blue_mug:         {x: null, y: null, description: "blue ceramic mug"}
+  red_mug:          {x: null, y: null, description: "red ceramic mug"}
+  plastic_cup:      {x: null, y: null, description: "clear plastic cup with a straw"}
+  black_charger:    {x: null, y: null, description: "black phone charger with cable"}
+  green_tumbler:    {x: null, y: null, description: "green metal tumbler"}
+  silver_laptop:    {x: null, y: null, description: "silver laptop"}
+  yellow_book:      {x: null, y: null, description: "yellow book"}
+  water_bottle:     {x: null, y: null, description: "clear plastic water bottle"}
+  black_phone:      {x: null, y: null, description: "black smartphone"}
+  white_headphones: {x: null, y: null, description: "white headphones"}
+moved: []
+#  - {object: blue_mug, t: 1763251800, x: 5.0, y: 0.65}
