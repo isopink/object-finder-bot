@@ -2,98 +2,118 @@
 
 > "Where is the blue mug?" The robot searches its memory and drives to where it last saw the mug.
 
-A TurtleBot3 Waffle Pi patrols a room and remembers the objects it sees on desks as a **CLIP embedding, a map position, and a timestamp**. Given an English description, it finds the best-matching memory by text-image similarity and navigates there.
+A TurtleBot3 Waffle Pi patrols a room and remembers the objects it sees on desks
+as a **CLIP embedding, a map position, a timestamp, and an existence
+confidence**. Given an English description, it picks the best memory, drives
+there with Nav2, and re-checks the live camera view. If the object is gone, the
+confidence drops and the robot tries the next candidate.
 
 Course project for Intelligent Robotics at the University of Seoul (Fall 2026).
+Design and equations: [docs/proposal.md](docs/proposal.md). What has been
+verified and what is still to check on the robot: [docs/status.md](docs/status.md).
 
-## Core idea: probabilistic object memory
+## How it works
 
-Unlike a fixed-class detector, the robot is queried with free-form descriptions such as "a red tumbler" or "a black charger next to the laptop" (open vocabulary). Each memory holds:
+Everything runs on the Jetson Xavier NX mounted on the robot. The team works
+over SSH from a laptop: queries are typed in a terminal, video and the map are
+viewed in a browser.
+
+```
+Jetson Xavier NX (on the robot)
+ ├─ robot bringup      turtlebot3_bringup (OpenCR, LiDAR)
+ ├─ ROS 2 side         slam_toolbox / AMCL / Nav2, objmem_ros nodes
+ │                     (Foxy native, or Humble in Docker)
+ └─ vision worker      conda Python 3.8, no ROS: camera + detector + CLIP
+                       HTTP JSON server on port 8600
+```
+
+| Port | What |
+|------|------|
+| 8554 | WebRTC video (`vision/find_object.py`) |
+| 8555 | Map view with remembered objects (`mapview` node) |
+| 8600 | Vision worker (`scripts/vision_worker.py`) |
+
+Each memory holds a position mean and covariance, a CLIP image embedding, the
+last-seen time, and an existence confidence `p`:
 
 | Field | Update |
 |-------|--------|
-| Position mean `μ = (x, y)` and covariance `Σ` | Fused with a **Kalman filter** on every re-observation |
-| CLIP image embedding `e` | Extracted from the object crop (OpenCLIP ViT-B/32, FP16) |
-| Existence confidence `p` | **Bayesian update** on seen / not seen, plus time decay |
-| Last-seen time `t_last` | Drives the time decay |
+| Position `μ`, `Σ` | Kalman update with depth (RealSense); EKF bearing update without depth (C920) |
+| Embedding `e` | Running mean of the CLIP crop embeddings |
+| Confidence `p` | Bayes update on seen / not seen while in view, time decay toward 0.5 |
 
-Search score = `softmax(query-memory similarity) × existence confidence`. The robot visits the top candidates in order and re-checks the live view on arrival. On a miss it lowers the confidence and moves to the next candidate.
+Search score = `softmax(cos(text, e) / T) × p`. The robot visits the top 3 in
+order and re-checks the live view with CLIP against background prompts.
 
-Equations and design rationale: [docs/proposal.md](docs/proposal.md).
-
-## System
-
-```
-[Waffle Pi (Raspberry Pi)]                      [Jetson Xavier NX (remote)]
- LiDAR ───────────────┐                        ┌─ SLAM (slam_toolbox) / AMCL / Nav2
- Odometry ────────────┤                        ├─ Object detection (detectNet / YOLO, TensorRT)
- C920 (compressed) ───┼── ROS 2 over Wi-Fi ──▶ ├─ Object range from RealSense depth
- RealSense (depth) ───┘                        ├─ CLIP embedding (FP16)
- Motor control ◀────────────────────────────── ├─ Probabilistic object memory
-                                               └─ Query: English text (+ Whisper speech)
-```
-
-| Module | Technology |
-|--------|------------|
-| Mapping, localization, navigation | slam_toolbox, AMCL (particle filter), Nav2 |
-| Object detection | detectNet (SSD-Mobilenet-v2) or YOLO (TensorRT) |
-| Object position | Depth back-projection, camera → base_link → map transform |
-| Object memory and search | CLIP, Kalman filter, Bayesian update |
-
-Mapping, localization, and navigation use existing packages. The project's contribution is the object memory and search module.
-
-## Hardware
-
-- TurtleBot3 Waffle Pi (LiDAR, OpenCR, Raspberry Pi)
-- NVIDIA Jetson Xavier NX (ASUS PE1000N, 8 GB), Ubuntu 20.04, JetPack 5.1.5
-- Logitech C920 webcam and Intel RealSense depth camera
-- Mini USB microphone (speech queries)
-- Camera mast: the stock camera height is too low to see desk tops, so the camera is mounted higher
+Two camera versions are supported end to end, selected by `camera_mode` in
+`config/default.yaml`: `depth` (Intel RealSense, color + aligned depth) and
+`nodepth` (Logitech C920, color only).
 
 ## Repository
 
 | Path | Contents |
 |------|----------|
-| [`slam/`](slam/README.md) | ROS 2 SLAM scripts: Gazebo simulation, real-robot verification, rosbag record/replay, map saving |
-| [`vision/`](vision/) | Jetson vision code: CLIP speed and memory benchmark, camera + detectNet + CLIP memory/search |
-| [`docs/proposal.md`](docs/proposal.md) | Design document: equations, schedule, evaluation metrics, risks |
-| [`docs/jetson-inference.md`](docs/jetson-inference.md) | jetson-inference summary and lab observations (detectNet at about 30 FPS) |
+| `src/objmem/` | The Python package (no ROS): memory, geometry, search, vision, toy world |
+| `config/default.yaml` | Every tunable value. In the classroom edit this file, not the code |
+| `scripts/` | `vision_worker.py`, `demo_offline.py`, `evaluate.py`, `tune_verify.py` |
+| `ros/objmem_ros/` | ROS 2 package: `observer`, `finder`, `mapview`, `ask`, launch file ([ros/README.md](ros/README.md)) |
+| `robot/` | Bash scripts for the Jetson on the robot, one per step ([robot/README.md](robot/README.md)) |
+| `vision/` | Camera-only demo and benchmarks for the Jetson ([vision/README.md](vision/README.md)) |
+| `data/` | Query set and ground-truth template for the evaluation |
+| `tests/` | `pytest` suite, runs on a PC with fakes |
+| `docs/` | Design document, status, jetson-inference notes |
 
-## Usage
+Package modules:
 
-### Mapping (`slam/`)
+| Module | Role |
+|--------|------|
+| `objmem.types` | Shared data types, `Params`, interfaces |
+| `objmem.memory` | `ObjectMemory`: association, Kalman / EKF fusion, Bayes update, decay, save/load |
+| `objmem.geometry`, `objmem.bearing` | Detection + robot pose -> map position and covariance |
+| `objmem.search` | Query -> candidates -> drive -> re-check loop |
+| `objmem.embed`, `crops`, `verify` | CLIP embedder, crop generators, live re-check |
+| `objmem.worker` | Vision worker HTTP server and client |
+| `objmem.detectors`, `objmem.camera` | detectNet / YOLO and RealSense / C920 adapters |
+| `objmem.speech` | Whisper speech queries (extension) |
+| `objmem.sim`, `objmem.viz` | Toy world for offline runs, map drawing |
 
-The same scripts run against Gazebo and the real robot. See [`slam/README.md`](slam/README.md) for setup.
+## On a PC: tests and the offline demo
+
+Python 3.8 or newer. No GPU, ROS, or camera needed.
 
 ```bash
-cd slam
-./scripts/sim_slam.sh slam_toolbox world      # Gazebo + SLAM + RViz
-./scripts/save_map.sh sim_world_toolbox       # save the map
+git clone https://github.com/isopink/object-finder-bot.git
+cd object-finder-bot
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+
+pytest                                         # whole test suite
+python scripts/demo_offline.py --camera depth  # patrol, query, move the mug, query again
+python scripts/demo_offline.py --camera nodepth
+python scripts/evaluate.py                     # report tables (proposal section 7)
+python scripts/vision_worker.py --fake         # vision worker with fakes on port 8600
 ```
 
-### Object memory and search (`vision/`)
-
-Runs the vision part on a Jetson and a camera, without the robot. Memories store an on-screen box instead of a map coordinate.
+With the fake worker running, from another terminal:
 
 ```bash
-cd vision
-python clip_jetson_test.py --fp16     # CLIP latency and GPU memory
-python jetson_find_object.py          # video at http://<JETSON_IP>:8554
+curl http://127.0.0.1:8600/health
+curl -X POST -d '{"text": "a blue mug"}' http://127.0.0.1:8600/verify
 ```
 
-| Command | Action |
-|---------|--------|
-| `s` | Remember the objects detected in the current frame |
-| `t` | Remember the frame as 3x3 tiles (for objects the detector does not know) |
-| `q a black bag` | Find the closest match in memory |
-| `f a black bag` | Search the current frame directly |
+## In the classroom
 
-## Status
+Follow [robot/README.md](robot/README.md) stage by stage. It says what to plug
+in, what to type, what the output should look like, and what to copy back.
 
-| Stage | Scope | Code |
-|-------|-------|------|
-| Mapping | SLAM scripts (simulation, real-robot verification, rosbag) | `slam/` |
-| Vision | CLIP on Jetson, screen-space memory and search | `vision/` |
-| Memory on the map | Project objects to map coordinates, AMCL and Nav2 navigation | In progress |
-| Integration | Query → drive to candidate → re-check loop, probabilistic updates | Planned |
-| Extensions | Whisper speech queries, re-finding moved objects | Planned |
+The first three commands on the Jetson (over SSH):
+
+```bash
+cd ~/object-finder-bot && git pull
+source robot/env.sh
+bash robot/check_stage1.sh
+```
+
+Never reinstall `torch` on the Jetson; it has its own CUDA build. Use the
+package with `pip install -e . --no-deps` or `PYTHONPATH=$PWD/src`.
