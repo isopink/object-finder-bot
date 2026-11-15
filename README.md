@@ -47,6 +47,7 @@ Mapping, localization, and navigation use existing packages. The project's contr
 - TurtleBot3 Waffle Pi (LiDAR, OpenCR, Raspberry Pi)
 - NVIDIA Jetson Xavier NX (ASUS PE1000N, 8 GB), Ubuntu 20.04, JetPack 5.1.5
 - Logitech C920 webcam and Intel RealSense depth camera
+- Mini USB microphone (speech queries)
 - Camera mast: the stock camera height is too low to see desk tops, so the camera is mounted higher
 
 ## Repository

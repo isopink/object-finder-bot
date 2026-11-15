@@ -19,11 +19,11 @@ A TurtleBot3 Waffle Pi patrols a room and remembers each object it sees on a des
 | Target objects | Objects on desks | Mugs, tumblers, chargers, and similar items |
 | Camera mount | Raised on a mast | The stock mount is too low to see desk tops |
 | Query language | English | CLIP (ViT-B/32, laion2b) is trained on English; Korean queries work poorly |
-| Speech queries | Extension (Whisper) | Text input is the baseline |
+| Speech queries | Extension (Whisper, mini USB microphone) | Text input is the baseline |
 | Detector | detectNet (SSD-Mobilenet-v2) vs YOLO (TensorRT), pick after comparison | Extension: NanoOWL |
 | Cameras | Logitech C920 + Intel RealSense | The C920 has no depth |
 | Object range | RealSense depth; fallback: store the observation pose, or bearing-only triangulation (EKF) | A 2D LiDAR cannot range objects on a desk |
-| Compute | Jetson off-board over Wi-Fi; fallback: on-board with a battery | |
+| Compute | Jetson off-board over Wi-Fi | No extra battery or power converter on the robot |
 | ROS 2 distro | Match the Waffle Pi | Mixed distros are not guaranteed to communicate |
 
 ## 3. System
@@ -39,7 +39,7 @@ A TurtleBot3 Waffle Pi patrols a room and remembers each object it sees on a des
 ```
 
 - Video is sent compressed (JPEG) at reduced resolution and frame rate. Depth is sent aligned to color at low resolution.
-- **On-board fallback**: if Wi-Fi bandwidth or latency is insufficient, the Jetson rides on the robot with the cameras on its USB ports. The PE1000N needs 12-24 VDC and the robot battery is 11.1 V, so this requires a boost converter or a separate battery.
+- The Jetson stays off the robot on mains power. Carrying it would need a boost converter or a separate battery (the PE1000N needs 12-24 VDC, the robot battery is 11.1 V), so on-board operation is not planned.
 
 ### Camera mount
 
@@ -142,7 +142,7 @@ Progression shown in the report:
 - **Fixed-class detector vs CLIP search** success rate
 - **With vs without probabilistic memory**: success rate after objects are moved
 - **Detector comparison**: detectNet vs YOLO, FPS and detection rate on 10 test objects
-- **Resources**: FPS, memory use, query latency (`jtop`), off-board vs on-board latency
+- **Resources**: FPS, memory use, query latency (`jtop`)
 
 ## 8. Demo scenario
 
@@ -157,8 +157,7 @@ Progression shown in the report:
 - TurtleBot3 Waffle Pi (LiDAR, OpenCR, Raspberry Pi)
 - NVIDIA Jetson Xavier NX (ASUS PE1000N, 8 GB, 256 GB SSD)
 - Logitech C920 webcam, Intel RealSense depth camera, camera mast
-- USB microphone (speech queries)
-- On-board mode: DC-DC boost converter or a dedicated Jetson battery
+- Mini USB microphone, plug-and-play (speech queries)
 - 10 test objects, 20 query sentences with ground-truth positions
 
 Software:
@@ -188,8 +187,7 @@ develop → push → pull in the lab → run a verification script → save resu
 | Risk | Mitigation |
 |------|------------|
 | ROS 2 distro mismatch (Waffle Pi vs Jetson) | Check `ROS_DISTRO` first, then unify (Docker on the Jetson if needed) |
-| Wi-Fi bandwidth and latency (color + depth) | Compression, lower resolution and frame rate; fall back to on-board mode |
-| On-board power (battery below 12 V) | Boost converter or dedicated battery, low-power `nvpmodel` mode |
+| Wi-Fi bandwidth and latency (color + depth) | Compression, lower resolution and frame rate, send only the frames needed |
 | 8 GB memory limit on the Jetson | TensorRT / FP16, run CLIP only on detections, load Whisper only for queries |
 | RealSense unavailable | Observation-pose revisit, bearing-only triangulation with an EKF |
 | Raised camera: vibration and center of mass | Rigid mast, speed and acceleration limits, record memories while stopped |
@@ -213,7 +211,6 @@ develop → push → pull in the lab → run a verification script → save resu
 - [ ] Camera mount height and tilt, mast fixture
 - [ ] RealSense model and depth stream on the Waffle Pi or the Jetson
 - [ ] Multicast on the lab Wi-Fi
-- [ ] USB microphone availability
 
 ## Changelog
 
@@ -224,6 +221,8 @@ develop → push → pull in the lab → run a verification script → save resu
 | Target objects | Not specified | **Objects on desks** |
 | Camera mount | Stock position | **Raised on a mast** |
 | Query language | English | English (confirmed; Korean queries work poorly with CLIP) |
+| Microphone | Availability unknown | **Mini USB microphone** added |
+| Compute | Off-board first, on-board fallback with a battery | **Off-board only**, no extra battery |
 
 ### v2 (2026-10-29)
 
