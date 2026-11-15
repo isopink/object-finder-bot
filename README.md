@@ -57,6 +57,7 @@ Mapping, localization, and navigation use existing packages. The project's contr
 | [`slam/`](slam/README.md) | ROS 2 SLAM scripts: Gazebo simulation, real-robot verification, rosbag record/replay, map saving |
 | [`vision/`](vision/) | Jetson vision code: CLIP speed and memory benchmark, camera + detectNet + CLIP memory/search |
 | [`docs/proposal.md`](docs/proposal.md) | Design document: equations, schedule, evaluation metrics, risks |
+| [`docs/jetson-inference.md`](docs/jetson-inference.md) | jetson-inference summary and lab observations (detectNet at about 30 FPS) |
 
 ## Usage
 
