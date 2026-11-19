@@ -25,8 +25,54 @@ SRC = os.path.join(os.path.dirname(HERE), "src")
 if os.path.isdir(SRC) and SRC not in sys.path:
     sys.path.insert(0, SRC)
 
-from objmem.speech import WhisperSTT  # noqa: E402
+from objmem.speech import SAMPLE_RATE, WhisperSTT, record_until_silence  # noqa: E402
 from objmem.types import Params  # noqa: E402
+
+
+class TrtSTT:
+    """Whisper through NVIDIA-AI-IOT/whisper_trt (TensorRT): faster and smaller on
+    the Jetson than openai-whisper. Optional (--trt); needs `whisper_trt` and
+    `torch2trt` in the conda env. The first load builds an engine (minutes) and
+    caches it. Same listen()/unload() interface as objmem.speech.WhisperSTT.
+    """
+
+    def __init__(self, model="base.en", mic=None, max_seconds=8.0, silence_rms=0.015):
+        self.model_name = model
+        self.mic = mic
+        self.max_seconds = max_seconds
+        self.silence_rms = silence_rms
+        self._model = None
+
+    def _load(self):
+        if self._model is None:
+            from whisper_trt import load_trt_model  # imported late: optional dependency
+            print("  loading whisper_trt %s (first time builds a TensorRT engine)..." % self.model_name, flush=True)
+            self._model = load_trt_model(self.model_name)
+        return self._model
+
+    def listen(self):
+        import tempfile
+        import wave
+
+        import numpy as np
+
+        model = self._load()
+        audio = record_until_silence(max_seconds=self.max_seconds, silence_rms=self.silence_rms, device=self.mic)
+        if audio.size == 0:
+            return ""
+        # whisper_trt's documented input is a file path; write 16 kHz mono 16-bit WAV.
+        pcm = (np.clip(audio, -1.0, 1.0) * 32767).astype("<i2").tobytes()
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as f:
+            with wave.open(f.name, "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(SAMPLE_RATE)
+                w.writeframes(pcm)
+            result = model.transcribe(f.name)
+        return result.get("text", "") if isinstance(result, dict) else str(result)
+
+    def unload(self):
+        self._model = None
 
 
 def publish_query(text, topic="/query", timeout=15):
@@ -65,15 +111,27 @@ def main():
     ap.add_argument("--topic", default="/query")
     ap.add_argument("--dry-run", action="store_true", help="print the recognized text only")
     ap.add_argument("--once", action="store_true", help="one utterance, then exit")
+    ap.add_argument("--trt", action="store_true",
+                    help="use whisper_trt (TensorRT, NVIDIA-AI-IOT) instead of openai-whisper; falls back if missing")
     args = ap.parse_args()
 
     params = Params.load(args.config)
     model = args.model or getattr(params, "whisper_model", "") or "base.en"
     mic = args.mic or getattr(params, "mic_device", "") or None
-    stt = WhisperSTT(model=model, device=args.device, max_seconds=args.max_seconds,
-                     silence_rms=args.silence_rms, mic=mic)
-    print("voice queries: model %s, mic %s, topic %s%s"
-          % (model, mic or "ALSA default", args.topic, " (dry run)" if args.dry_run else ""), flush=True)
+    engine = "openai-whisper"
+    stt = None
+    if args.trt:
+        try:
+            import whisper_trt  # noqa: F401
+            stt = TrtSTT(model=model, mic=mic, max_seconds=args.max_seconds, silence_rms=args.silence_rms)
+            engine = "whisper_trt"
+        except ImportError as exc:
+            print("  whisper_trt not available (%s); using openai-whisper" % exc, flush=True)
+    if stt is None:
+        stt = WhisperSTT(model=model, device=args.device, max_seconds=args.max_seconds,
+                         silence_rms=args.silence_rms, mic=mic)
+    print("voice queries: %s %s, mic %s, topic %s%s"
+          % (engine, model, mic or "ALSA default", args.topic, " (dry run)" if args.dry_run else ""), flush=True)
     print("Speak English, e.g. 'Where is the blue mug?'. The first query loads Whisper (slow).", flush=True)
 
     while True:

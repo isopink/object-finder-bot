@@ -15,6 +15,10 @@
 #   pip install --no-deps openai-whisper
 #   pip install --dry-run tiktoken more-itertools numba tqdm   # must not change numpy/torch
 #   pip install tiktoken more-itertools numba tqdm
+# Optional, faster on the Jetson (TensorRT; uses the torch2trt already in the env):
+#   pip install --dry-run --no-deps git+https://github.com/NVIDIA-AI-IOT/whisper_trt
+#   pip install --no-deps git+https://github.com/NVIDIA-AI-IOT/whisper_trt
+#   ./robot/voice.sh --trt        (falls back to openai-whisper if whisper_trt is missing)
 set -uo pipefail
 source "$(dirname "$0")/env.sh"
 ofb_need_ros "$0" "$@"

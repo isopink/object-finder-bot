@@ -436,6 +436,22 @@ tar -xzf opencr_update.tar.bz2 && cd opencr_update   # gzip despite the .bz2 nam
 
 Wait for `jump_to_fw`, then rerun `./robot/bringup.sh`.
 
+## Demo helpers (added 2026-11-19)
+
+| Script | What it does |
+|---|---|
+| `install_realsense_jetson.sh` | Builds librealsense (RSUSB backend) with Python bindings for the conda env, so `import pyrealsense2` works for depth mode. 30-90 min, run in tmux. Adapted from JetsonHacks installRealSenseSDK. |
+| `patrol.sh` | Drives through saved waypoints and stops at each so the observer records the desks. `--add` saves the current pose; replaces teleop patrolling in stage 5 and the demo. |
+| `voice.sh` | Spoken queries: microphone (USB or the C920's) -> Whisper in the conda env -> `/query`. `--dry-run` only prints the text; `--trt` uses NVIDIA-AI-IOT/whisper_trt. |
+
+Patrol in the demo (nav.sh / start_all.sh running, initial pose set):
+
+```bash
+./robot/teleop.sh                 # drive to a spot facing a desk, then in another window:
+./robot/patrol.sh --add room429   # repeat for each desk
+./robot/patrol.sh room429 1 3     # 1 round, 3 s per stop
+```
+
 ## What to bring back after class
 
 | What | Where on the Jetson |
