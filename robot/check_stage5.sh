@@ -28,7 +28,7 @@ for n in objmem_observer objmem_finder objmem_mapview; do
     fail "no $n node" "objmem pane: ros2 launch objmem_ros objmem.launch.py ...; ./robot/build_ws.sh after git pull"
   fi
 done
-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 /navigate_to_pose"; else
+if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 /navigate_to_pose"; else
   fail "no /navigate_to_pose" "nav pane (./robot/nav.sh <map>)"
 fi
 

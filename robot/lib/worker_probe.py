@@ -80,6 +80,14 @@ def main():
             fail("camera_mode is %r, expected %r" % (h.get("camera_mode"), args.mode),
                  "the worker reads camera_mode from --config; start_all.sh writes it for you")
 
+    # One untimed warm-up call: the first /detect_embed builds the TensorRT
+    # engine and loads CLIP (8 s on 2026-11-18) and would fail the 3 s limit.
+    try:
+        _, dt0 = call(url, "/detect_embed", {})
+        print("  warm-up /detect_embed: %.0f ms (not counted)" % (1000 * dt0))
+    except Exception as e:  # noqa: BLE001
+        print("  warm-up /detect_embed failed: %s" % e)
+
     times = []
     n_det = []
     depth_seen = 0

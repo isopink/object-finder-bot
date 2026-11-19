@@ -430,7 +430,7 @@ to the Jetson, robot power ON):
 ```bash
 sudo dpkg --add-architecture armhf && sudo apt update && sudo apt install -y libc6:armhf
 cd /tmp && wget https://github.com/ROBOTIS-GIT/OpenCR-Binaries/raw/master/turtlebot3/ROS2/latest/opencr_update.tar.bz2
-tar -xjf opencr_update.tar.bz2 && cd opencr_update
+tar -xzf opencr_update.tar.bz2 && cd opencr_update   # gzip despite the .bz2 name (-xjf fails)
 ./update.sh /dev/ttyACM0 waffle.opencr     # Waffle Pi uses the "waffle" firmware
 ```
 

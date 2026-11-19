@@ -21,7 +21,7 @@ for n in map_server amcl bt_navigator; do
     *) fail "$n state: ${S:-unknown}" "nav.sh prints 'Managed nodes are active' when ready; a wrong map path stops map_server" ;;
   esac
 done
-if timeout 10 ros2 topic echo --qos-durability transient_local --qos-reliability reliable /map 2>/dev/null | head -n 1 | grep -q .; then
+if [ -n "$(timeout 10 ros2 topic echo --qos-durability transient_local --qos-reliability reliable /map 2>/dev/null | head -n 1)" ]; then
   ok "/map served"
 else
   fail "/map not received" "map_server not active, or wrong map file"

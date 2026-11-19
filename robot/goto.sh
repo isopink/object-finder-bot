@@ -23,7 +23,7 @@ fi
 read -r QZ QW < <(ofb_python -c "import math,sys; y=float(sys.argv[1]); print('%.6f %.6f' % (math.sin(y/2), math.cos(y/2)))" "$YAW") \
   || { echo "[FAIL] x y yaw must be numbers"; exit 2; }
 
-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 action /navigate_to_pose"; else
+if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 action /navigate_to_pose"; else
   fail "no /navigate_to_pose action" "start ./robot/nav.sh <map> and wait until it prints 'Managed nodes are active'"
   ofb_summary; exit 1
 fi

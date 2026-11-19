@@ -42,7 +42,8 @@ def main(argv):
     print("  python %s" % sys.version.split()[0])
     try_import("numpy", "conda install numpy")
     try_import("yaml", "pip install pyyaml")
-    try_import("objmem", "PYTHONPATH must include <repo>/src (robot/env.sh sets it)")
+    try_import("objmem", "conda activate $OFB_CONDA_ENV && pip install -e <repo> --no-deps "
+                         "(links src/, changes no other package; PYTHONPATH alone was not enough on 2026-11-18)")
     torch = try_import("torch", "use the conda env with the JetPack PyTorch wheel; do not pip install torch")
     if torch is not None:
         if torch.cuda.is_available():

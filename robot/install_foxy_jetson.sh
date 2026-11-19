@@ -40,13 +40,35 @@ if [ ! -f /usr/share/keyrings/ros-archive-keyring.gpg ]; then
     -o /usr/share/keyrings/ros-archive-keyring.gpg
 fi
 REPO_URL="http://packages.ros.org/ros2/ubuntu"
-# Foxy is end-of-life. If its packages ever leave the main repository,
-# rerun with OFB_FOXY_SNAPSHOT=1 to use the frozen final snapshot instead.
-if [ "${OFB_FOXY_SNAPSHOT:-0}" = 1 ]; then REPO_URL="http://snapshots.ros.org/foxy/final/ubuntu"; fi
+# Foxy is end-of-life and its packages have left the main repository (seen in
+# the classroom on 2026-11-18). OFB_FOXY_SNAPSHOT=1 uses the frozen final snapshot.
+if [ "${OFB_FOXY_SNAPSHOT:-0}" = 1 ]; then
+  REPO_URL="http://snapshots.ros.org/foxy/final/ubuntu"
+  # snapshots.ros.org is signed with its own key; add it to the ROS keyring.
+  SNAP_FPR=4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA
+  KEYRING=/usr/share/keyrings/ros-archive-keyring.gpg
+  if gpg --show-keys --with-colons "$KEYRING" 2>/dev/null | grep "$SNAP_FPR" >/dev/null; then
+    ok "snapshot key already in $KEYRING"
+  else
+    TMPKEY="$(mktemp)"
+    curl -sSL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x$SNAP_FPR" | gpg --dearmor > "$TMPKEY"
+    if gpg --show-keys --with-colons "$TMPKEY" 2>/dev/null | grep "$SNAP_FPR" >/dev/null; then
+      sudo cp "$KEYRING" "$KEYRING.bak"
+      cat "$KEYRING.bak" "$TMPKEY" | sudo tee "$KEYRING" >/dev/null
+      ok "snapshot key $SNAP_FPR added to $KEYRING"
+    else
+      fail "could not fetch the snapshots.ros.org key $SNAP_FPR" "check the network (keyserver.ubuntu.com, port 80)"
+    fi
+    rm -f "$TMPKEY"
+  fi
+  # Index files left by an earlier failed (unsigned) update make apt skip the download.
+  sudo rm -f /var/lib/apt/lists/snapshots.ros.org_* /var/lib/apt/lists/partial/snapshots.ros.org_*
+fi
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] $REPO_URL focal main" \
   | sudo tee /etc/apt/sources.list.d/ros2.list >/dev/null
 sudo apt-get update
-if apt-cache policy ros-foxy-ros-base | grep -q 'Candidate: [0-9]'; then
+# Not `grep -q`: with pipefail, grep exiting early can fail the pipeline (SIGPIPE).
+if apt-cache policy ros-foxy-ros-base | grep 'Candidate: [0-9]' >/dev/null; then
   ok "ros-foxy packages available from $REPO_URL"
 else
   fail "ros-foxy-ros-base not found in $REPO_URL" "rerun with OFB_FOXY_SNAPSHOT=1 ./robot/install_foxy_jetson.sh"
@@ -106,7 +128,7 @@ sudo cp "$OFB_ROBOT_DIR/udev/99-ofb-robot.rules" /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ok "udev rules installed (/dev/opencr, /dev/lidar symlinks, mode 0666)"
 # ModemManager grabs /dev/ttyACM* (the OpenCR) for a few seconds after plug-in.
-if systemctl list-unit-files 2>/dev/null | grep -q '^ModemManager'; then
+if systemctl list-unit-files 2>/dev/null | grep '^ModemManager' >/dev/null; then
   sudo systemctl disable --now ModemManager >/dev/null 2>&1 && ok "ModemManager disabled"
 fi
 for g in dialout video plugdev; do

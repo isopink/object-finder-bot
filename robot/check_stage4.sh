@@ -27,7 +27,7 @@ for m in "${MODES[@]}"; do
     if grep -qi '8086:' <<<"$USB"; then ok "RealSense: $(grep -i '8086:' <<<"$USB" | head -n 1 | cut -d' ' -f6-)"; else
       fail "no RealSense on USB" "use a USB 3 port and the USB 3 cable (blue port); lsusb | grep 8086"
     fi
-    if lsusb -t 2>/dev/null | grep -i 'uvcvideo' | grep -q '5000M'; then ok "a UVC device runs at USB 3 speed (5000M)"; else
+    if lsusb -t 2>/dev/null | grep -i 'uvcvideo' | grep '5000M' >/dev/null; then ok "a UVC device runs at USB 3 speed (5000M)"; else
       info "no UVC device at 5000M: RealSense on USB 2 limits depth resolution and fps"
     fi
   else
@@ -42,7 +42,9 @@ if command -v v4l2-ctl >/dev/null 2>&1; then v4l2-ctl --list-devices 2>/dev/null
 echo "== 2. Memory"
 free -m | sed 's/^/         /'
 AVAIL="$(free -m | awk '/^Mem:/ {print $7}')"
-if [ -n "$AVAIL" ] && [ "$AVAIL" -lt 1500 ]; then
+if curl -sf -m 2 "$OFB_WORKER_URL/health" >/dev/null 2>&1; then
+  info "a worker is already running and holds its memory; it will be reused (no new 2 GB needed)"
+elif [ -n "$AVAIL" ] && [ "$AVAIL" -lt 1500 ]; then
   fail "only ${AVAIL} MB available" "close other programs (vision/find_object.py, old workers); CLIP + detector need ~2 GB"
 fi
 
@@ -68,6 +70,8 @@ for m in "${MODES[@]}"; do
     # setsid: own process group, so the whole worker stops at the end.
     setsid "$OFB_ROBOT_DIR/worker.sh" "$m" $FAKE >/dev/null 2>&1 < /dev/null &
     STARTED=$!
+    # Ctrl+C on this check must not leave the worker (~3 GB) running.
+    trap 'kill -INT -- "-$STARTED" 2>/dev/null; sleep 2; kill -- "-$STARTED" 2>/dev/null; exit 130' INT TERM
   fi
   T0=$(date +%s)
   if ofb_python "$OFB_ROBOT_DIR/lib/worker_probe.py" --url "$OFB_WORKER_URL" --mode "$m" --n 5 --wait 300; then
@@ -80,6 +84,7 @@ for m in "${MODES[@]}"; do
     sleep 3
     kill -- "-$STARTED" 2>/dev/null || true
     wait "$STARTED" 2>/dev/null || true
+    trap - INT TERM
     info "stopped the worker started by this check"
     sleep 2
   fi

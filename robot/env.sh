@@ -148,12 +148,17 @@ ofb_need_ros() {
 # (`ros2 topic echo --once` is not in every distro; head -n 1 works everywhere.)
 ofb_wait_topic() {
   local topic="$1" t="${2:-10}"
-  timeout "$t" ros2 topic echo "$topic" 2>/dev/null | head -n 1 | grep -q .
+  # Test the captured text, not the pipeline status: under pipefail, `head`
+  # closing the pipe makes `ros2 topic echo` die with BrokenPipeError, which
+  # failed this check although a message had arrived.
+  [ -n "$(timeout "$t" ros2 topic echo "$topic" 2>/dev/null | head -n 1)" ]
 }
 
 # ofb_topic_hz <topic> <seconds>: print the average rate (or nothing).
+# SIGINT, not the default SIGTERM: on SIGTERM `ros2 topic hz` dies with its
+# buffered "average rate" lines unflushed and nothing reaches awk.
 ofb_topic_hz() {
-  timeout "${2:-5}" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
+  timeout -s INT "${2:-5}" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
 }
 
 # ofb_make_config <depth|nodepth>: write $OFB_LOG_DIR/config_<mode>.yaml and print its path.

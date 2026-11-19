@@ -27,10 +27,10 @@ CONFIG="$(ofb_make_config "$MODE")"
 
 echo "== Waiting for Nav2 (/navigate_to_pose, up to 120 s)"
 for _ in $(seq 60); do
-  if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then break; fi
+  if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then break; fi
   sleep 2
 done
-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 is up"; else
+if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 is up"; else
   fail "Nav2 did not come up" "read the nav pane / nav.log in $OFB_LOG_DIR"
 fi
 

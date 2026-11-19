@@ -33,8 +33,16 @@ if pgrep -f turtlebot3_ros >/dev/null 2>&1; then
 fi
 if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
 
+LAUNCH=(turtlebot3_bringup robot.launch.py)
+TB3_LAUNCH_FILE="$(ros2 pkg prefix turtlebot3_bringup 2>/dev/null)/share/turtlebot3_bringup/launch/robot.launch.py"
+if [ "$LDS_MODEL" = LDS-02 ] && [ -f "$TB3_LAUNCH_FILE" ] && ! grep LDS_MODEL "$TB3_LAUNCH_FILE" >/dev/null; then
+  # Foxy's robot.launch.py always starts the LDS-01 driver (no /scan with an LDS-02).
+  info "this turtlebot3_bringup ignores LDS_MODEL; using robot/launch/robot_ld08.launch.py (ld08_driver)"
+  LAUNCH=("$OFB_ROBOT_DIR/launch/robot_ld08.launch.py")
+fi
+
 echo "== Starting turtlebot3_bringup (Ctrl+C to stop). Check it from another pane: ./robot/check_stage1.sh"
-ros2 launch turtlebot3_bringup robot.launch.py usb_port:="$OPENCR_PORT"
+ros2 launch "${LAUNCH[@]}" usb_port:="$OPENCR_PORT"
 status=$?
 echo "== bringup exited with status $status"
 if [ "$status" -ne 0 ] && [ "$status" -ne 130 ]; then
