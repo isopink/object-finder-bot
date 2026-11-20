@@ -85,12 +85,18 @@ class RealSenseCamera(object):
 
     def __init__(self, width: Optional[int] = None, height: Optional[int] = None, fps: int = 30,
                  serial: Optional[str] = None, timeout_ms: int = 1000,
-                 size: Optional[Tuple[int, int]] = None, **_unused: Any) -> None:
+                 size: Optional[Tuple[int, int]] = None, first_timeout_ms: int = 10000,
+                 **_unused: Any) -> None:
         import pyrealsense2 as rs
         self._rs = rs
         self.width, self.height = _size(width, height, size, (640, 480))
         self.fps = int(fps)
         self.timeout_ms = int(timeout_ms)
+        # The first color frame can take ~3 s after the stream starts (auto
+        # exposure; seen on a D455F, 2026-11-20). Until one frame has arrived,
+        # read() waits up to first_timeout_ms instead of timeout_ms.
+        self.first_timeout_ms = max(int(first_timeout_ms), self.timeout_ms)
+        self._got_frame = False
         self.pipeline = rs.pipeline()
         config = rs.config()
         if serial:
@@ -103,12 +109,14 @@ class RealSenseCamera(object):
         self._color_order = "rgb"
 
     def read(self) -> Optional[Frame]:
+        timeout = self.timeout_ms if self._got_frame else self.first_timeout_ms
         try:
-            frames = self.pipeline.wait_for_frames(self.timeout_ms)
+            frames = self.pipeline.wait_for_frames(timeout)
         except RuntimeError:
             return None  # "Frame didn't arrive within ..." timeout
         if not frames:
             return None
+        self._got_frame = True
         aligned = self.align.process(frames)
         color_frame = aligned.get_color_frame()
         depth_frame = aligned.get_depth_frame()

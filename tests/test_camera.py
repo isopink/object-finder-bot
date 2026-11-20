@@ -79,6 +79,7 @@ def install_realsense(monkeypatch, frames, depth_scale=0.001):
             return Profile()
 
         def wait_for_frames(self, timeout_ms):
+            state.setdefault("timeouts", []).append(timeout_ms)
             item = queue.pop(0)
             if isinstance(item, str) and item == "timeout":
                 raise RuntimeError("Frame didn't arrive within {}".format(timeout_ms))
@@ -123,6 +124,16 @@ def test_realsense_depth_in_meters_and_rgb(monkeypatch):
     assert cam.read() is None   # frameset without color/depth
     cam.close()
     assert state["stopped"]
+
+
+def test_realsense_waits_longer_for_the_first_frame(monkeypatch):
+    fs = (np.zeros((4, 6, 3), np.uint8), np.zeros((4, 6), np.uint16))
+    state = install_realsense(monkeypatch, ["timeout", fs, fs])
+    cam = make_camera("realsense", size=(6, 4), timeout_ms=1000)
+    assert cam.read() is None       # still waiting for the first frame
+    assert cam.read() is not None
+    assert cam.read() is not None
+    assert state["timeouts"] == [10000, 10000, 1000]
 
 
 def test_realsense_other_depth_scale(monkeypatch):
