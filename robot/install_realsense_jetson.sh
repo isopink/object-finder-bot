@@ -47,15 +47,21 @@ echo "== 4. cmake (RSUSB backend, Python bindings for $PY)"
 CMAKE=cmake; [ -x /usr/bin/cmake ] && CMAKE=/usr/bin/cmake
 info "$($CMAKE --version | head -n 1) ($CMAKE)"
 mkdir -p "$SRC/build" && cd "$SRC/build" || exit 1
-rm -f CMakeCache.txt   # a cache from a failed run pins the old generator and compiler
+# A cache written by another cmake (the conda one) cannot be reused; keep a
+# matching cache so a rerun does not start the compile over.
+if [ -f CMakeCache.txt ] && ! grep -q "^CMAKE_COMMAND:INTERNAL=$CMAKE\$" CMakeCache.txt; then
+  rm -f CMakeCache.txt
+fi
+# Python_EXECUTABLE: librealsense's pybind11 setup uses FindPython, which ignores
+# PYTHON_EXECUTABLE and finds the system Python 2.7 without headers (2026-11-20).
 if "$CMAKE" .. -DCMAKE_BUILD_TYPE=Release \
      -DFORCE_RSUSB_BACKEND=ON \
-     -DBUILD_PYTHON_BINDINGS=ON -DPYTHON_EXECUTABLE="$PY" \
+     -DBUILD_PYTHON_BINDINGS=ON -DPYTHON_EXECUTABLE="$PY" -DPython_EXECUTABLE="$PY" \
      -DBUILD_EXAMPLES=OFF -DBUILD_GRAPHICAL_EXAMPLES=OFF -DBUILD_WITH_CUDA=OFF \
      -DBUILD_UNIT_TESTS=OFF; then
   ok "cmake configured"
 else
-  fail "cmake failed" "read $OFB_LOG_FILE (pybind11 is downloaded from GitHub during cmake)"; ofb_summary; exit 1
+  fail "cmake failed" "read $OFB_LOG_FILE (pybind11 and json are downloaded during cmake); after an interrupted run: rm -rf $SRC/build, then rerun"; ofb_summary; exit 1
 fi
 
 echo "== 5. make -j$JOBS (30-90 min)"
