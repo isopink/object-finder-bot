@@ -1,4 +1,4 @@
-# Object-Finding Robot with Natural-Language Queries: Design (v4)
+# Object-Finding Robot with Natural-Language Queries: Design (v4.1)
 
 > "Where is the blue mug?" The robot searches its memory and drives to where it last saw the mug.
 
@@ -24,6 +24,7 @@ A TurtleBot3 Waffle Pi patrols a room and remembers each object it sees on a des
 | Cameras | Two supported versions, selected by `camera_mode`: `depth` (Intel RealSense, color + aligned depth) and `nodepth` (Logitech C920, color only) | Both run end to end; the C920 has no depth, so it uses bearing-only fusion |
 | Object range | `depth`: RealSense depth back-projection. `nodepth`: bearing-only EKF fusion, and the observation pose is the goal while the position is uncertain | A 2D LiDAR cannot range objects on a desk |
 | Compute | Jetson Xavier NX **mounted on the robot**; it runs everything (bringup, SLAM, AMCL, Nav2, vision, memory) | No camera or depth stream over Wi-Fi |
+| Jetson power | **USB-C PD power bank** (20 V output) feeding the PE1000N DC input (12 to 24 V) through a PD trigger cable or a boost converter; separate from the robot battery | The robot battery (11.1 V Li-Po) cannot feed the Jetson directly, and a wall adapter tethers the robot |
 | ROS 2 distro | Foxy native on the Jetson (Ubuntu 20.04), or Humble in Docker; chosen in the classroom | Must work with the robot's OpenCR firmware and TurtleBot3 packages |
 | Operation | Over SSH from a laptop, long-running programs in tmux; queries typed in a terminal, video and map in a browser | No monitor or RViz in the classroom |
 
@@ -155,8 +156,9 @@ Progression shown in the report:
 
 ## 9. Equipment and software
 
-- TurtleBot3 Waffle Pi (LiDAR, OpenCR, Raspberry Pi)
+- TurtleBot3 Waffle Pi (LDS-02 LiDAR, OpenCR; no Raspberry Pi, the OpenCR and LiDAR connect to the Jetson over USB)
 - NVIDIA Jetson Xavier NX (ASUS PE1000N, 8 GB, 256 GB SSD)
+- USB-C PD power bank (20 V) with a PD trigger cable or boost converter, for the Jetson
 - Logitech C920 webcam, Intel RealSense depth camera, camera mast
 - Mini USB microphone, plug-and-play (speech queries)
 - 10 test objects, 20 query sentences with ground-truth positions
@@ -188,7 +190,7 @@ develop → push → git pull on the Jetson (SSH) → run robot/check_stageN.sh 
 | Risk | Mitigation |
 |------|------------|
 | ROS 2 distro mismatch (Waffle Pi vs Jetson) | Check `ROS_DISTRO` first, then unify (Docker on the Jetson if needed) |
-| Jetson power and weight on the robot | Check the battery runtime early; keep the vision rate at 1 to 2 Hz |
+| Jetson power and weight on the robot | PD power bank for the Jetson; measure its runtime with everything running early; keep the vision rate at 1 to 2 Hz |
 | Wi-Fi or SSH drops during a run | Everything runs on the robot; programs run in tmux, so an SSH drop does not stop them |
 | 8 GB memory limit on the Jetson, shared with SLAM and Nav2 | TensorRT / FP16, run CLIP only on detections, load Whisper only for queries |
 | RealSense unavailable | `camera_mode: nodepth` with the C920: bearing-only EKF, observation-pose revisit |
@@ -208,11 +210,13 @@ develop → push → git pull on the Jetson (SSH) → run robot/check_stageN.sh 
 
 ## Open items
 
-- [ ] ROS 2 distro on the Waffle Pi
-- [ ] Waffle Pi LiDAR model (LDS-01 / LDS-02)
+- [x] ROS 2 distro on the Waffle Pi: Foxy native on the Jetson (2026-11-18)
+- [x] Waffle Pi LiDAR model: LDS-02 (2026-11-18)
+- [ ] LiDAR position on the top plate (the Jetson box blocks part of the scan)
 - [ ] Camera mount height and tilt, mast fixture
 - [ ] Camera used in the demo: RealSense (`depth`) or C920 (`nodepth`)
-- [ ] Jetson power on the robot and battery runtime
+- [x] Jetson power on the robot: PD power bank (2026-11-20)
+- [ ] Power bank model, trigger cable or boost converter, and runtime with everything running
 
 ## References
 
@@ -223,6 +227,13 @@ develop → push → git pull on the Jetson (SSH) → run robot/check_stageN.sh 
 5. S. Thrun, W. Burgard, D. Fox, *Probabilistic Robotics*, MIT Press, 2005.
 
 ## Changelog
+
+### v4.1 (2026-11-20)
+
+| Item | v4 | v4.1 |
+|------|----|------|
+| Jetson power | Not specified (v3 said "no extra battery") | **PD power bank** for the Jetson, separate from the robot battery |
+| Hardware | Raspberry Pi listed, LiDAR model unknown | No Raspberry Pi; LDS-02 LiDAR; Foxy native (seen on 2026-11-18) |
 
 ### v4 (2026-11-16)
 

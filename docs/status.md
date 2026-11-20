@@ -149,7 +149,8 @@ detect_embed [('cup', (96, 192, 192, 336), None, 512), ('book', (352, 216, 544, 
   silence threshold (`WhisperSTT(silence_rms=...)`), Whisper `base.en` memory.
   Install Whisper with `pip install --no-deps openai-whisper` and then
   `pip install tiktoken more-itertools numba tqdm`.
-- [ ] Jetson power on the robot: battery runtime with everything running.
+- [ ] Jetson power on the robot (PD power bank, decided 2026-11-20): runtime
+  with everything running.
 
 ### Evaluation on the robot
 
