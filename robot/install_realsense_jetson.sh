@@ -42,8 +42,13 @@ else
 fi
 
 echo "== 4. cmake (RSUSB backend, Python bindings for $PY)"
+# Use the system cmake (3.16 on focal), not the conda env's: a pip-installed
+# CMake 4.x rejects librealsense's cmake_minimum_required (seen 2026-11-20).
+CMAKE=cmake; [ -x /usr/bin/cmake ] && CMAKE=/usr/bin/cmake
+info "$($CMAKE --version | head -n 1) ($CMAKE)"
 mkdir -p "$SRC/build" && cd "$SRC/build" || exit 1
-if cmake .. -DCMAKE_BUILD_TYPE=Release \
+rm -f CMakeCache.txt   # a cache from a failed run pins the old generator and compiler
+if "$CMAKE" .. -DCMAKE_BUILD_TYPE=Release \
      -DFORCE_RSUSB_BACKEND=ON \
      -DBUILD_PYTHON_BINDINGS=ON -DPYTHON_EXECUTABLE="$PY" \
      -DBUILD_EXAMPLES=OFF -DBUILD_GRAPHICAL_EXAMPLES=OFF -DBUILD_WITH_CUDA=OFF \
