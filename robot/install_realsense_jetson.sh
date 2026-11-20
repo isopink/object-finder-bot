@@ -24,7 +24,9 @@ if ofb_conda_activate; then ok "conda env $OFB_CONDA_ENV"; else ofb_summary; exi
 PY="$(command -v python)"
 SITE="$(python -c 'import site; print(site.getsitepackages()[0])')"
 info "python $PY ($(python --version 2>&1)), site-packages $SITE"
-if python -c "import pyrealsense2" 2>/dev/null; then
+# Check rs.context, not just the import: a folder holding only pyrsutils imports
+# as an empty namespace package (seen 2026-11-20).
+if python -c "import pyrealsense2 as rs; rs.context" 2>/dev/null; then
   ok "pyrealsense2 already importable: $(python -c 'import pyrealsense2 as rs; print(getattr(rs, "__version__", "?"))')"
   ofb_summary; exit 0
 fi
