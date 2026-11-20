@@ -1,0 +1,59 @@
+== bringup  2026-11-18 11:27:27  log: /home/device06/object-finder-bot/robot/logs/20261118_112727/bringup.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== Devices
+  [OK]   OpenCR at /dev/ttyACM0
+  [OK]   LiDAR at /dev/ttyUSB0
+  [OK]   LDS_MODEL=LDS-02
+== Starting turtlebot3_bringup (Ctrl+C to stop). Check it from another pane: ./robot/check_stage1.sh
+[INFO] [launch]: All log files can be found below /home/device06/.ros/log/2026-11-18-11-27-29-902454-ubuntu-18020
+[INFO] [launch]: Default logging verbosity is set to INFO
+/opt/ros/foxy/share/turtlebot3_bringup/launch/robot.launch.py:76: UserWarning: The parameter 'node_executable' is deprecated, use 'executable' instead
+  Node(
+urdf_file_name : turtlebot3_waffle_pi.urdf
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_executable' is deprecated, use 'executable' instead
+  Node(
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_name' is deprecated, use 'name' instead
+  Node(
+/opt/ros/foxy/share/hls_lfcd_lds_driver/launch/hlds_laser.launch.py:46: UserWarning: The parameter 'node_executable' is deprecated, use 'executable' instead
+  Node(
+/opt/ros/foxy/share/hls_lfcd_lds_driver/launch/hlds_laser.launch.py:46: UserWarning: The parameter 'node_name' is deprecated, use 'name' instead
+  Node(
+[INFO] [robot_state_publisher-1]: process started with pid [18022]
+[INFO] [hlds_laser_publisher-2]: process started with pid [18024]
+[INFO] [turtlebot3_ros-3]: process started with pid [18026]
+[robot_state_publisher-1] [WARN] [1794968850.325899122] [robot_state_publisher]: No robot_description parameter, but command-line argument available.  Assuming argument is name of URDF file.  This backwards compatibility fallback will be removed in the future.
+[robot_state_publisher-1] Parsing robot urdf xml string.
+[robot_state_publisher-1] Link base_link had 7 children
+[robot_state_publisher-1] Link camera_link had 1 children
+[robot_state_publisher-1] Link camera_rgb_frame had 1 children
+[robot_state_publisher-1] Link camera_rgb_optical_frame had 0 children
+[robot_state_publisher-1] Link caster_back_left_link had 0 children
+[robot_state_publisher-1] Link caster_back_right_link had 0 children
+[robot_state_publisher-1] Link imu_link had 0 children
+[robot_state_publisher-1] Link base_scan had 0 children
+[robot_state_publisher-1] Link wheel_left_link had 0 children
+[robot_state_publisher-1] Link wheel_right_link had 0 children
+[robot_state_publisher-1] [INFO] [1794968850.340303724] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-1] [INFO] [1794968850.340404332] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-1] [INFO] [1794968850.340442380] [robot_state_publisher]: got segment base_scan
+[robot_state_publisher-1] [INFO] [1794968850.340475212] [robot_state_publisher]: got segment camera_link
+[robot_state_publisher-1] [INFO] [1794968850.340510540] [robot_state_publisher]: got segment camera_rgb_frame
+[robot_state_publisher-1] [INFO] [1794968850.340544044] [robot_state_publisher]: got segment camera_rgb_optical_frame
+[robot_state_publisher-1] [INFO] [1794968850.340576524] [robot_state_publisher]: got segment caster_back_left_link
+[robot_state_publisher-1] [INFO] [1794968850.340608588] [robot_state_publisher]: got segment caster_back_right_link
+[robot_state_publisher-1] [INFO] [1794968850.340639757] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-1] [INFO] [1794968850.340672301] [robot_state_publisher]: got segment wheel_left_link
+[robot_state_publisher-1] [INFO] [1794968850.340703437] [robot_state_publisher]: got segment wheel_right_link
+[hlds_laser_publisher-2] [INFO] [1794968850.406083137] [hlds_laser_publisher]: Init hlds_laser_publisher Node Main
+[hlds_laser_publisher-2] [INFO] [1794968850.406714786] [hlds_laser_publisher]: port : /dev/ttyUSB0 frame_id : base_scan
+[turtlebot3_ros-3] [INFO] [1794968850.441891456] [turtlebot3_node]: Init TurtleBot3 Node Main
+[turtlebot3_ros-3] [INFO] [1794968850.444435141] [turtlebot3_node]: Init DynamixelSDKWrapper
+[turtlebot3_ros-3] [INFO] [1794968850.447864107] [DynamixelSDKWrapper]: Succeeded to open the port(/dev/ttyACM0)!
+[turtlebot3_ros-3] [INFO] [1794968850.456201434] [DynamixelSDKWrapper]: Succeeded to change the baudrate!
+[turtlebot3_ros-3] [ERROR] [1794968850.490605623] [turtlebot3_node]: Failed connection with Devices
+[turtlebot3_ros-3] [INFO] [1794968850.492948795] [turtlebot3_node]: Add Motors
+[turtlebot3_ros-3] [INFO] [1794968850.493097179] [turtlebot3_node]: Add Wheels
+[turtlebot3_ros-3] [INFO] [1794968850.493187611] [turtlebot3_node]: Add Sensors
+[turtlebot3_ros-3] terminate called after throwing an instance of 'rclcpp::exceptions::RCLError'
+[turtlebot3_ros-3]   what():  could not create publisher: rcl node's context is invalid, at /tmp/binarydeb/ros-foxy-rcl-1.1.14/src/rcl/node.c:441
+[ERROR] [turtlebot3_ros-3]: process has died [pid 18026, exit code -6, cmd '/opt/ros/foxy/lib/turtlebot3_node/turtlebot3_ros -i /dev/ttyACM0 --ros-args --params-file /opt/ros/foxy/share/turtlebot3_bringup/param/waffle_pi.yaml'].

@@ -1,0 +1,34 @@
+== check_stage4  2026-11-18 11:53:22  log: /home/device06/object-finder-bot/robot/logs/20261118_115322/check_stage4.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. Cameras (lsusb, /dev/video*)
+  [OK]   Logitech C920: 046d:082d Logitech, Inc. HD Pro Webcam C920
+  [..]   video devices: /dev/video0 /dev/video1 
+         NVIDIA Tegra Video Input Device (platform:tegra-camrtc-ca):
+         	/dev/media0
+         
+         HD Pro Webcam C920 (usb-3610000.xhci-2.2):
+         	/dev/video0
+         	/dev/video1
+         	/dev/media1
+         
+== 2. Memory
+                       total        used        free      shared  buff/cache   available
+         Mem:           6832        1963        2001          32        2868        4617
+         Swap:         19800           0       19800
+== 3. Python packages (conda env test1001)
+  [OK]   conda env test1001: /home/device06/miniforge3/envs/test1001/bin/python
+  python 3.8.20
+  [OK]   import numpy 1.24.4
+  [OK]   import yaml 6.0.3
+  [FAIL] import objmem: No module named 'objmem'
+         hint: PYTHONPATH must include <repo>/src (robot/env.sh sets it)
+  [OK]   import torch 2.1.0a0+41361538.nv23.06
+  [OK]   CUDA available: Xavier
+  [OK]   import open_clip 2.32.0
+  [OK]   import PIL 10.4.0
+  [OK]   import jetson_utils 
+  [OK]   import jetson_inference 
+  [FAIL] packages for nodepth / detectnet
+         hint: see the lines above
+== 4. Vision worker, nodepth mode
+  [..]   starting ./robot/worker.sh nodepth  (log: /home/device06/object-finder-bot/robot/logs/20261118_115322/worker.log)

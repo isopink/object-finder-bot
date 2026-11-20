@@ -1,0 +1,179 @@
+== install_foxy  2026-11-18 10:43:10  log: /home/device06/object-finder-bot/robot/logs/20261118_104310/install_foxy.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. System
+  [OK]   Ubuntu 20.04 (focal)
+  [..]   arch aarch64, JetPack: 5.1.5-b11
+== 2. ROS 2 apt repository
+Get:1 https://cli.github.com/packages stable InRelease [3,917 B]
+Hit:2 https://storage.googleapis.com/bazel-apt stable InRelease
+Err:1 https://cli.github.com/packages stable InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+Hit:3 http://snapshots.ros.org/foxy/final/ubuntu focal InRelease
+Hit:4 http://ports.ubuntu.com/ubuntu-ports focal InRelease
+Hit:5 http://ports.ubuntu.com/ubuntu-ports focal-updates InRelease
+Hit:6 http://ports.ubuntu.com/ubuntu-ports focal-backports InRelease
+Get:7 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease [2,567 B]
+Get:8 https://repo.download.nvidia.com/jetson/common r35.6 InRelease [2,572 B]
+Hit:9 http://ports.ubuntu.com/ubuntu-ports focal-security InRelease
+Err:7 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Err:8 https://repo.download.nvidia.com/jetson/common r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Fetched 5,139 B in 4s (1,460 B/s)
+Reading package lists...
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://cli.github.com/packages stable InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/common r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://cli.github.com/packages/dists/stable/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: Failed to fetch https://repo.download.nvidia.com/jetson/t194/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://repo.download.nvidia.com/jetson/common/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+lsb-release is already the newest version (11.1.0ubuntu2).
+curl is already the newest version (7.68.0-1ubuntu2.25).
+gnupg is already the newest version (2.2.19-3ubuntu2.5).
+locales is already the newest version (2.31-0ubuntu9.18).
+software-properties-common is already the newest version (0.99.9.12).
+0 upgraded, 0 newly installed, 0 to remove and 12 not upgraded.
+Get:1 https://cli.github.com/packages stable InRelease [3,917 B]
+Hit:2 https://storage.googleapis.com/bazel-apt stable InRelease
+Hit:3 http://snapshots.ros.org/foxy/final/ubuntu focal InRelease
+Get:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease [2,567 B]
+Hit:5 http://ports.ubuntu.com/ubuntu-ports focal InRelease
+Get:6 https://repo.download.nvidia.com/jetson/common r35.6 InRelease [2,572 B]
+Err:1 https://cli.github.com/packages stable InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+Hit:7 http://ports.ubuntu.com/ubuntu-ports focal-updates InRelease
+Hit:8 http://ports.ubuntu.com/ubuntu-ports focal-backports InRelease
+Hit:9 http://ports.ubuntu.com/ubuntu-ports focal-security InRelease
+Err:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Err:6 https://repo.download.nvidia.com/jetson/common r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Fetched 5,139 B in 3s (1,540 B/s)
+Reading package lists...
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://cli.github.com/packages stable InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/common r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://cli.github.com/packages/dists/stable/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: Failed to fetch https://repo.download.nvidia.com/jetson/t194/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://repo.download.nvidia.com/jetson/common/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+  [OK]   ros-foxy packages available from http://snapshots.ros.org/foxy/final/ubuntu
+== 3. ROS packages
+Reading package lists...
+Building dependency tree...
+Reading state information...
+python3-argcomplete is already the newest version (1.8.1-1.3ubuntu1).
+python3-argcomplete set to manually installed.
+build-essential is already the newest version (12.8ubuntu1.1).
+curl is already the newest version (7.68.0-1ubuntu2.25).
+git is already the newest version (1:2.25.1-1ubuntu3.14).
+libudev-dev is already the newest version (245.4-4ubuntu3.24).
+python3-numpy is already the newest version (1:1.17.4-5ubuntu3.1).
+python3-yaml is already the newest version (5.3.1-1ubuntu0.1).
+python3-yaml set to manually installed.
+tmux is already the newest version (3.0a-2ubuntu0.4).
+python3-pip is already the newest version (20.0.2-5ubuntu1.11).
+ros-foxy-cv-bridge is already the newest version (3.0.7-1focal.20230527.055710).
+ros-foxy-dynamixel-sdk is already the newest version (3.7.40-4focal.20230527.034347).
+ros-foxy-hls-lfcd-lds-driver is already the newest version (2.0.1-1focal.20230527.075853).
+ros-foxy-hls-lfcd-lds-driver set to manually installed.
+ros-foxy-nav2-bringup is already the newest version (0.4.7-1focal.20230606.055931).
+ros-foxy-nav2-map-server is already the newest version (0.4.7-1focal.20230606.045504).
+ros-foxy-nav2-map-server set to manually installed.
+ros-foxy-nav2-msgs is already the newest version (0.4.7-1focal.20230527.085358).
+ros-foxy-navigation2 is already the newest version (0.4.7-1focal.20230606.055548).
+ros-foxy-ros-base is already the newest version (0.9.2-1focal.20230606.043331).
+ros-foxy-rosbag2 is already the newest version (0.3.11-1focal.20230531.182104).
+ros-foxy-rosbag2 set to manually installed.
+ros-foxy-rosbag2-storage-default-plugins is already the newest version (0.3.11-1focal.20230531.180022).
+ros-foxy-rosbag2-storage-default-plugins set to manually installed.
+ros-foxy-slam-toolbox is already the newest version (2.4.1-1focal.20230606.054336).
+ros-foxy-tf2-ros is already the newest version (0.13.14-1focal.20230606.034740).
+ros-foxy-tf2-tools is already the newest version (0.13.14-1focal.20230606.040506).
+ros-foxy-tf2-tools set to manually installed.
+ros-foxy-turtlebot3 is already the newest version (2.1.1-1focal.20230606.060512).
+ros-foxy-turtlebot3-bringup is already the newest version (2.1.1-1focal.20230606.054804).
+ros-foxy-turtlebot3-msgs is already the newest version (2.2.1-1focal.20230527.062227).
+ros-foxy-turtlebot3-navigation2 is already the newest version (2.1.1-1focal.20230606.060440).
+ros-foxy-turtlebot3-teleop is already the newest version (2.1.1-1focal.20230527.071959).
+ros-foxy-visualization-msgs is already the newest version (2.0.5-1focal.20230527.061156).
+ros-foxy-visualization-msgs set to manually installed.
+python3-colcon-common-extensions is already the newest version (0.3.0-100).
+python3-rosdep is already the newest version (0.26.0-1).
+The following additional packages will be installed:
+  ros-foxy-compressed-depth-image-transport
+  ros-foxy-compressed-image-transport ros-foxy-theora-image-transport
+The following NEW packages will be installed:
+  ros-foxy-compressed-depth-image-transport
+  ros-foxy-compressed-image-transport ros-foxy-image-transport-plugins
+  ros-foxy-theora-image-transport
+0 upgraded, 4 newly installed, 0 to remove and 12 not upgraded.
+Need to get 353 kB of archives.
+After this operation, 2,103 kB of additional disk space will be used.
+Get:1 http://snapshots.ros.org/foxy/final/ubuntu focal/main arm64 ros-foxy-compressed-depth-image-transport arm64 2.3.3-1focal.20230606.035246 [94.7 kB]
+Get:2 http://snapshots.ros.org/foxy/final/ubuntu focal/main arm64 ros-foxy-compressed-image-transport arm64 2.3.3-1focal.20230606.035350 [95.6 kB]
+Get:3 http://snapshots.ros.org/foxy/final/ubuntu focal/main arm64 ros-foxy-theora-image-transport arm64 2.3.3-1focal.20230606.035728 [157 kB]
+Get:4 http://snapshots.ros.org/foxy/final/ubuntu focal/main arm64 ros-foxy-image-transport-plugins arm64 2.3.3-1focal.20230606.040621 [6,160 B]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 353 kB in 2s (235 kB/s)
+Selecting previously unselected package ros-foxy-compressed-depth-image-transport.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 273994 files and directories currently installed.)
+Preparing to unpack .../ros-foxy-compressed-depth-image-transport_2.3.3-1focal.20230606.035246_arm64.deb ...
+Unpacking ros-foxy-compressed-depth-image-transport (2.3.3-1focal.20230606.035246) ...
+Selecting previously unselected package ros-foxy-compressed-image-transport.
+Preparing to unpack .../ros-foxy-compressed-image-transport_2.3.3-1focal.20230606.035350_arm64.deb ...
+Unpacking ros-foxy-compressed-image-transport (2.3.3-1focal.20230606.035350) ...
+Selecting previously unselected package ros-foxy-theora-image-transport.
+Preparing to unpack .../ros-foxy-theora-image-transport_2.3.3-1focal.20230606.035728_arm64.deb ...
+Unpacking ros-foxy-theora-image-transport (2.3.3-1focal.20230606.035728) ...
+Selecting previously unselected package ros-foxy-image-transport-plugins.
+Preparing to unpack .../ros-foxy-image-transport-plugins_2.3.3-1focal.20230606.040621_arm64.deb ...
+Unpacking ros-foxy-image-transport-plugins (2.3.3-1focal.20230606.040621) ...
+Setting up ros-foxy-compressed-image-transport (2.3.3-1focal.20230606.035350) ...
+Setting up ros-foxy-theora-image-transport (2.3.3-1focal.20230606.035728) ...
+Setting up ros-foxy-compressed-depth-image-transport (2.3.3-1focal.20230606.035246) ...
+Setting up ros-foxy-image-transport-plugins (2.3.3-1focal.20230606.040621) ...
+Processing triggers for libc-bin (2.31-0ubuntu9.18) ...
+  [OK]   TurtleBot3, slam_toolbox, Nav2 installed
+  [OK]   rosbag2 MCAP storage
+== 4. LDS-02 LiDAR driver (ld08_driver)
+Cloning into '/home/device06/turtlebot3_ws/src/ld08_driver'...
+Starting >>> ld08_driver
+[Processing: ld08_driver]
+--- stderr: ld08_driver
+/home/device06/turtlebot3_ws/src/ld08_driver/src/transform.cpp: In constructor ‘SlTransform::SlTransform(LDVersion, bool)’:
+/home/device06/turtlebot3_ws/src/ld08_driver/src/transform.cpp:30:50: warning: unused parameter ‘to_right_hand’ [-Wunused-parameter]
+   30 | SlTransform::SlTransform(LDVersion version, bool to_right_hand)
+      |                                             ~~~~~^~~~~~~~~~~~~
+---
+Finished <<< ld08_driver [37.1s]
+
+Summary: 1 package finished [38.3s]
+  1 package had stderr output: ld08_driver
+  [OK]   ld08_driver built in /home/device06/turtlebot3_ws
+== 5. udev rules and permissions
+  [OK]   udev rules installed (/dev/opencr, /dev/lidar symlinks, mode 0666)
+  [..]   added device06 to dialout (log out and back in once)
+== 6. Shell setup
+  [OK]   added to ~/.bashrc: source /home/device06/object-finder-bot/robot/env.sh
+== 7. Build objmem_ros
+== build_ws  2026-11-18 10:45:03  log: /home/device06/object-finder-bot/robot/logs/20261118_104310/build_ws.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+  [OK]   colcon available
+Starting >>> objmem_ros
+Finished <<< objmem_ros [4.52s]
+
+Summary: 1 package finished [5.75s]
+  [OK]   colcon build in /home/device06/object-finder-bot/robot/.ws_foxy
+  [OK]   ros2 can find objmem_ros
+  [OK]   python can import objmem
+== Result: 4 OK, 0 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_104310/build_ws.log)
+[OK] all checks passed
+  [OK]   objmem_ros built
+== Result: 8 OK, 0 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_104310/install_foxy.log)
+[OK] all checks passed
+Next: open a new SSH session (or 'source ~/.bashrc'), then ./robot/check_stage1.sh

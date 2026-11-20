@@ -1,0 +1,10 @@
+== bringup  2026-11-18 11:46:50  log: /home/device06/object-finder-bot/robot/logs/20261118_114650/bringup.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== Devices
+  [OK]   OpenCR at /dev/ttyACM0
+  [OK]   LiDAR at /dev/ttyUSB0
+  [OK]   LDS_MODEL=LDS-02
+  [FAIL] turtlebot3_ros already running
+         hint: only one bringup at a time: ./robot/stop_all.sh, or Ctrl+C the other pane
+== Result: 3 OK, 1 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_114650/bringup.log)
+[FAIL] 1 check(s) failed; read the hints above

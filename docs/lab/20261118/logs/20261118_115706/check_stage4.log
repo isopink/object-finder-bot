@@ -1,0 +1,47 @@
+== check_stage4  2026-11-18 11:57:06  log: /home/device06/object-finder-bot/robot/logs/20261118_115706/check_stage4.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. Cameras (lsusb, /dev/video*)
+  [OK]   Logitech C920: 046d:082d Logitech, Inc. HD Pro Webcam C920
+  [..]   video devices: /dev/video0 /dev/video1 
+         NVIDIA Tegra Video Input Device (platform:tegra-camrtc-ca):
+         	/dev/media0
+         
+         HD Pro Webcam C920 (usb-3610000.xhci-2.2):
+         	/dev/video0
+         	/dev/video1
+         	/dev/media1
+         
+== 2. Memory
+                       total        used        free      shared  buff/cache   available
+         Mem:           6832        5289         154          23        1388        1322
+         Swap:         19800          74       19725
+  [FAIL] only 1322 MB available
+         hint: close other programs (vision/find_object.py, old workers); CLIP + detector need ~2 GB
+== 3. Python packages (conda env test1001)
+  [OK]   conda env test1001: /home/device06/miniforge3/envs/test1001/bin/python
+  python 3.8.20
+  [OK]   import numpy 1.24.4
+  [OK]   import yaml 6.0.3
+  [OK]   import objmem 0.1.0
+  [OK]   import torch 2.1.0a0+41361538.nv23.06
+  [OK]   CUDA available: Xavier
+  [OK]   import open_clip 2.32.0
+  [OK]   import PIL 10.4.0
+  [OK]   import jetson_utils 
+  [OK]   import jetson_inference 
+  [OK]   packages for nodepth / detectnet
+== 4. Vision worker, nodepth mode
+  [..]   using the worker already running on http://127.0.0.1:8600
+  health: {"ok": true, "camera": true, "camera_mode": "nodepth"}
+  [OK]   worker is up
+  [OK]   worker has a camera
+  [OK]   camera_mode is nodepth
+  [OK]   /detect_embed x5: mean 130 ms, max 158 ms, detections per frame [1, 1, 1, 1, 1]
+  labels: person x5
+  [OK]   depth_m is null in nodepth mode
+  [OK]   /embed_text 21 ms
+  [OK]   /verify 'a cup': found=True prob=1.00 box=[400, 120, 560, 240] (1723 ms)
+  [OK]   worker in nodepth mode (first answer after 3 s)
+== Result: 4 OK, 1 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_115706/check_stage4.log)
+[FAIL] 1 check(s) failed; read the hints above
+Copy back: scp -r <user>@<jetson-ip>:/home/device06/object-finder-bot/robot/logs/20261118_115706 ./

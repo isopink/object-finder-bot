@@ -1,0 +1,356 @@
+From c24df01553eeed985a5c79736f655e22b66dbc98 Mon Sep 17 00:00:00 2001
+From: Noobbbb2 <lees555@uos.ac.kr>
+Date: Thu, 19 Nov 2026 15:15:35 +0900
+Subject: [PATCH 1/3] robot: fixes from the first classroom run (2026-11-18,
+ Foxy on the Jetson)
+
+- install_foxy_jetson.sh: with OFB_FOXY_SNAPSHOT=1, add the snapshots.ros.org
+  signing key (4B63...CBF125EA) and clear stale snapshot index files; the
+  "Candidate" check no longer uses grep -q under pipefail (false "not found").
+- env.sh: ofb_wait_topic tests the captured message instead of the pipeline
+  status (BrokenPipeError from ros2 topic echo made /odom look missing);
+  ofb_topic_hz stops `ros2 topic hz` with SIGINT so its output is flushed.
+- Same grep -q / head pipeline pattern fixed in check_stage3/4/5, goto, objmem.
+- bringup.sh: Foxy's robot.launch.py ignores LDS_MODEL and always starts the
+  LDS-01 driver; with LDS-02 use the new robot/launch/robot_ld08.launch.py.
+- udev: match SUBSYSTEM=="tty" so /dev/opencr and /dev/lidar point at the tty.
+- check_stage4: no memory FAIL when a worker is already running; Ctrl+C stops
+  the worker it started; worker_probe makes one untimed warm-up call.
+- env_probe: objmem hint suggests `pip install -e . --no-deps`.
+- README: the OpenCR firmware archive is gzip (tar -xzf).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ robot/README.md                   |  2 +-
+ robot/bringup.sh                  | 10 ++++++-
+ robot/check_stage3.sh             |  2 +-
+ robot/check_stage4.sh             |  9 ++++--
+ robot/check_stage5.sh             |  2 +-
+ robot/env.sh                      |  9 ++++--
+ robot/goto.sh                     |  2 +-
+ robot/install_foxy_jetson.sh      | 32 +++++++++++++++++----
+ robot/launch/robot_ld08.launch.py | 47 +++++++++++++++++++++++++++++++
+ robot/lib/env_probe.py            |  3 +-
+ robot/lib/worker_probe.py         |  8 ++++++
+ robot/objmem.sh                   |  4 +--
+ robot/udev/99-ofb-robot.rules     |  6 ++--
+ 13 files changed, 117 insertions(+), 19 deletions(-)
+ create mode 100644 robot/launch/robot_ld08.launch.py
+
+diff --git a/robot/README.md b/robot/README.md
+index ad1856a..b9ac275 100644
+--- a/robot/README.md
++++ b/robot/README.md
+@@ -430,7 +430,7 @@ to the Jetson, robot power ON):
+ ```bash
+ sudo dpkg --add-architecture armhf && sudo apt update && sudo apt install -y libc6:armhf
+ cd /tmp && wget https://github.com/ROBOTIS-GIT/OpenCR-Binaries/raw/master/turtlebot3/ROS2/latest/opencr_update.tar.bz2
+-tar -xjf opencr_update.tar.bz2 && cd opencr_update
++tar -xzf opencr_update.tar.bz2 && cd opencr_update   # gzip despite the .bz2 name (-xjf fails)
+ ./update.sh /dev/ttyACM0 waffle.opencr     # Waffle Pi uses the "waffle" firmware
+ ```
+ 
+diff --git a/robot/bringup.sh b/robot/bringup.sh
+index c2b0198..251c70d 100755
+--- a/robot/bringup.sh
++++ b/robot/bringup.sh
+@@ -33,8 +33,16 @@ if pgrep -f turtlebot3_ros >/dev/null 2>&1; then
+ fi
+ if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
+ 
++LAUNCH=(turtlebot3_bringup robot.launch.py)
++TB3_LAUNCH_FILE="$(ros2 pkg prefix turtlebot3_bringup 2>/dev/null)/share/turtlebot3_bringup/launch/robot.launch.py"
++if [ "$LDS_MODEL" = LDS-02 ] && [ -f "$TB3_LAUNCH_FILE" ] && ! grep LDS_MODEL "$TB3_LAUNCH_FILE" >/dev/null; then
++  # Foxy's robot.launch.py always starts the LDS-01 driver (no /scan with an LDS-02).
++  info "this turtlebot3_bringup ignores LDS_MODEL; using robot/launch/robot_ld08.launch.py (ld08_driver)"
++  LAUNCH=("$OFB_ROBOT_DIR/launch/robot_ld08.launch.py")
++fi
++
+ echo "== Starting turtlebot3_bringup (Ctrl+C to stop). Check it from another pane: ./robot/check_stage1.sh"
+-ros2 launch turtlebot3_bringup robot.launch.py usb_port:="$OPENCR_PORT"
++ros2 launch "${LAUNCH[@]}" usb_port:="$OPENCR_PORT"
+ status=$?
+ echo "== bringup exited with status $status"
+ if [ "$status" -ne 0 ] && [ "$status" -ne 130 ]; then
+diff --git a/robot/check_stage3.sh b/robot/check_stage3.sh
+index c09060a..fc46f70 100755
+--- a/robot/check_stage3.sh
++++ b/robot/check_stage3.sh
+@@ -21,7 +21,7 @@ for n in map_server amcl bt_navigator; do
+     *) fail "$n state: ${S:-unknown}" "nav.sh prints 'Managed nodes are active' when ready; a wrong map path stops map_server" ;;
+   esac
+ done
+-if timeout 10 ros2 topic echo --qos-durability transient_local --qos-reliability reliable /map 2>/dev/null | head -n 1 | grep -q .; then
++if [ -n "$(timeout 10 ros2 topic echo --qos-durability transient_local --qos-reliability reliable /map 2>/dev/null | head -n 1)" ]; then
+   ok "/map served"
+ else
+   fail "/map not received" "map_server not active, or wrong map file"
+diff --git a/robot/check_stage4.sh b/robot/check_stage4.sh
+index 6c396d2..eff4189 100755
+--- a/robot/check_stage4.sh
++++ b/robot/check_stage4.sh
+@@ -27,7 +27,7 @@ for m in "${MODES[@]}"; do
+     if grep -qi '8086:' <<<"$USB"; then ok "RealSense: $(grep -i '8086:' <<<"$USB" | head -n 1 | cut -d' ' -f6-)"; else
+       fail "no RealSense on USB" "use a USB 3 port and the USB 3 cable (blue port); lsusb | grep 8086"
+     fi
+-    if lsusb -t 2>/dev/null | grep -i 'uvcvideo' | grep -q '5000M'; then ok "a UVC device runs at USB 3 speed (5000M)"; else
++    if lsusb -t 2>/dev/null | grep -i 'uvcvideo' | grep '5000M' >/dev/null; then ok "a UVC device runs at USB 3 speed (5000M)"; else
+       info "no UVC device at 5000M: RealSense on USB 2 limits depth resolution and fps"
+     fi
+   else
+@@ -42,7 +42,9 @@ if command -v v4l2-ctl >/dev/null 2>&1; then v4l2-ctl --list-devices 2>/dev/null
+ echo "== 2. Memory"
+ free -m | sed 's/^/         /'
+ AVAIL="$(free -m | awk '/^Mem:/ {print $7}')"
+-if [ -n "$AVAIL" ] && [ "$AVAIL" -lt 1500 ]; then
++if curl -sf -m 2 "$OFB_WORKER_URL/health" >/dev/null 2>&1; then
++  info "a worker is already running and holds its memory; it will be reused (no new 2 GB needed)"
++elif [ -n "$AVAIL" ] && [ "$AVAIL" -lt 1500 ]; then
+   fail "only ${AVAIL} MB available" "close other programs (vision/find_object.py, old workers); CLIP + detector need ~2 GB"
+ fi
+ 
+@@ -68,6 +70,8 @@ for m in "${MODES[@]}"; do
+     # setsid: own process group, so the whole worker stops at the end.
+     setsid "$OFB_ROBOT_DIR/worker.sh" "$m" $FAKE >/dev/null 2>&1 < /dev/null &
+     STARTED=$!
++    # Ctrl+C on this check must not leave the worker (~3 GB) running.
++    trap 'kill -INT -- "-$STARTED" 2>/dev/null; sleep 2; kill -- "-$STARTED" 2>/dev/null; exit 130' INT TERM
+   fi
+   T0=$(date +%s)
+   if ofb_python "$OFB_ROBOT_DIR/lib/worker_probe.py" --url "$OFB_WORKER_URL" --mode "$m" --n 5 --wait 300; then
+@@ -80,6 +84,7 @@ for m in "${MODES[@]}"; do
+     sleep 3
+     kill -- "-$STARTED" 2>/dev/null || true
+     wait "$STARTED" 2>/dev/null || true
++    trap - INT TERM
+     info "stopped the worker started by this check"
+     sleep 2
+   fi
+diff --git a/robot/check_stage5.sh b/robot/check_stage5.sh
+index 41928f8..a686014 100755
+--- a/robot/check_stage5.sh
++++ b/robot/check_stage5.sh
+@@ -28,7 +28,7 @@ for n in objmem_observer objmem_finder objmem_mapview; do
+     fail "no $n node" "objmem pane: ros2 launch objmem_ros objmem.launch.py ...; ./robot/build_ws.sh after git pull"
+   fi
+ done
+-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 /navigate_to_pose"; else
++if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 /navigate_to_pose"; else
+   fail "no /navigate_to_pose" "nav pane (./robot/nav.sh <map>)"
+ fi
+ 
+diff --git a/robot/env.sh b/robot/env.sh
+index e98940a..f687edc 100755
+--- a/robot/env.sh
++++ b/robot/env.sh
+@@ -148,12 +148,17 @@ ofb_need_ros() {
+ # (`ros2 topic echo --once` is not in every distro; head -n 1 works everywhere.)
+ ofb_wait_topic() {
+   local topic="$1" t="${2:-10}"
+-  timeout "$t" ros2 topic echo "$topic" 2>/dev/null | head -n 1 | grep -q .
++  # Test the captured text, not the pipeline status: under pipefail, `head`
++  # closing the pipe makes `ros2 topic echo` die with BrokenPipeError, which
++  # failed this check although a message had arrived.
++  [ -n "$(timeout "$t" ros2 topic echo "$topic" 2>/dev/null | head -n 1)" ]
+ }
+ 
+ # ofb_topic_hz <topic> <seconds>: print the average rate (or nothing).
++# SIGINT, not the default SIGTERM: on SIGTERM `ros2 topic hz` dies with its
++# buffered "average rate" lines unflushed and nothing reaches awk.
+ ofb_topic_hz() {
+-  timeout "${2:-5}" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
++  timeout -s INT "${2:-5}" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
+ }
+ 
+ # ofb_make_config <depth|nodepth>: write $OFB_LOG_DIR/config_<mode>.yaml and print its path.
+diff --git a/robot/goto.sh b/robot/goto.sh
+index f7ff3a0..5471eb0 100755
+--- a/robot/goto.sh
++++ b/robot/goto.sh
+@@ -23,7 +23,7 @@ fi
+ read -r QZ QW < <(ofb_python -c "import math,sys; y=float(sys.argv[1]); print('%.6f %.6f' % (math.sin(y/2), math.cos(y/2)))" "$YAW") \
+   || { echo "[FAIL] x y yaw must be numbers"; exit 2; }
+ 
+-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 action /navigate_to_pose"; else
++if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 action /navigate_to_pose"; else
+   fail "no /navigate_to_pose action" "start ./robot/nav.sh <map> and wait until it prints 'Managed nodes are active'"
+   ofb_summary; exit 1
+ fi
+diff --git a/robot/install_foxy_jetson.sh b/robot/install_foxy_jetson.sh
+index e12c21d..30ee4f5 100755
+--- a/robot/install_foxy_jetson.sh
++++ b/robot/install_foxy_jetson.sh
+@@ -40,13 +40,35 @@ if [ ! -f /usr/share/keyrings/ros-archive-keyring.gpg ]; then
+     -o /usr/share/keyrings/ros-archive-keyring.gpg
+ fi
+ REPO_URL="http://packages.ros.org/ros2/ubuntu"
+-# Foxy is end-of-life. If its packages ever leave the main repository,
+-# rerun with OFB_FOXY_SNAPSHOT=1 to use the frozen final snapshot instead.
+-if [ "${OFB_FOXY_SNAPSHOT:-0}" = 1 ]; then REPO_URL="http://snapshots.ros.org/foxy/final/ubuntu"; fi
++# Foxy is end-of-life and its packages have left the main repository (seen in
++# the classroom on 2026-11-18). OFB_FOXY_SNAPSHOT=1 uses the frozen final snapshot.
++if [ "${OFB_FOXY_SNAPSHOT:-0}" = 1 ]; then
++  REPO_URL="http://snapshots.ros.org/foxy/final/ubuntu"
++  # snapshots.ros.org is signed with its own key; add it to the ROS keyring.
++  SNAP_FPR=4B63CF8FDE49746E98FA01DDAD19BAB3CBF125EA
++  KEYRING=/usr/share/keyrings/ros-archive-keyring.gpg
++  if gpg --show-keys --with-colons "$KEYRING" 2>/dev/null | grep "$SNAP_FPR" >/dev/null; then
++    ok "snapshot key already in $KEYRING"
++  else
++    TMPKEY="$(mktemp)"
++    curl -sSL "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x$SNAP_FPR" | gpg --dearmor > "$TMPKEY"
++    if gpg --show-keys --with-colons "$TMPKEY" 2>/dev/null | grep "$SNAP_FPR" >/dev/null; then
++      sudo cp "$KEYRING" "$KEYRING.bak"
++      cat "$KEYRING.bak" "$TMPKEY" | sudo tee "$KEYRING" >/dev/null
++      ok "snapshot key $SNAP_FPR added to $KEYRING"
++    else
++      fail "could not fetch the snapshots.ros.org key $SNAP_FPR" "check the network (keyserver.ubuntu.com, port 80)"
++    fi
++    rm -f "$TMPKEY"
++  fi
++  # Index files left by an earlier failed (unsigned) update make apt skip the download.
++  sudo rm -f /var/lib/apt/lists/snapshots.ros.org_* /var/lib/apt/lists/partial/snapshots.ros.org_*
++fi
+ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] $REPO_URL focal main" \
+   | sudo tee /etc/apt/sources.list.d/ros2.list >/dev/null
+ sudo apt-get update
+-if apt-cache policy ros-foxy-ros-base | grep -q 'Candidate: [0-9]'; then
++# Not `grep -q`: with pipefail, grep exiting early can fail the pipeline (SIGPIPE).
++if apt-cache policy ros-foxy-ros-base | grep 'Candidate: [0-9]' >/dev/null; then
+   ok "ros-foxy packages available from $REPO_URL"
+ else
+   fail "ros-foxy-ros-base not found in $REPO_URL" "rerun with OFB_FOXY_SNAPSHOT=1 ./robot/install_foxy_jetson.sh"
+@@ -106,7 +128,7 @@ sudo cp "$OFB_ROBOT_DIR/udev/99-ofb-robot.rules" /etc/udev/rules.d/
+ sudo udevadm control --reload-rules && sudo udevadm trigger
+ ok "udev rules installed (/dev/opencr, /dev/lidar symlinks, mode 0666)"
+ # ModemManager grabs /dev/ttyACM* (the OpenCR) for a few seconds after plug-in.
+-if systemctl list-unit-files 2>/dev/null | grep -q '^ModemManager'; then
++if systemctl list-unit-files 2>/dev/null | grep '^ModemManager' >/dev/null; then
+   sudo systemctl disable --now ModemManager >/dev/null 2>&1 && ok "ModemManager disabled"
+ fi
+ for g in dialout video plugdev; do
+diff --git a/robot/launch/robot_ld08.launch.py b/robot/launch/robot_ld08.launch.py
+new file mode 100644
+index 0000000..c24bce1
+--- /dev/null
++++ b/robot/launch/robot_ld08.launch.py
+@@ -0,0 +1,47 @@
++"""TurtleBot3 bringup with the LDS-02 (ld08_driver) LiDAR.
++
++The Foxy apt release of turtlebot3_bringup/robot.launch.py ignores LDS_MODEL
++and always starts hlds_laser_publisher (the LDS-01 driver). With an LDS-02
++that driver publishes nothing on /scan (seen in the classroom on 2026-11-18).
++This file is robot.launch.py with ld08_driver in place of hlds_laser.
++robot/bringup.sh uses it only when LDS_MODEL=LDS-02 and the installed
++robot.launch.py does not mention LDS_MODEL.
++
++Usage: ros2 launch robot/launch/robot_ld08.launch.py usb_port:=/dev/ttyACM0
++"""
++import os
++
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
++from launch.launch_description_sources import PythonLaunchDescriptionSource
++from launch.substitutions import LaunchConfiguration
++from launch_ros.actions import Node
++
++
++def generate_launch_description():
++    model = os.environ.get("TURTLEBOT3_MODEL", "waffle_pi")
++    usb_port = LaunchConfiguration("usb_port")
++    bringup_dir = get_package_share_directory("turtlebot3_bringup")
++    ld08_dir = get_package_share_directory("ld08_driver")
++    param_file = os.path.join(bringup_dir, "param", model + ".yaml")
++
++    return LaunchDescription([
++        DeclareLaunchArgument("usb_port", default_value="/dev/ttyACM0",
++                              description="OpenCR serial port"),
++        IncludeLaunchDescription(
++            PythonLaunchDescriptionSource(
++                os.path.join(bringup_dir, "launch", "turtlebot3_state_publisher.launch.py")),
++            launch_arguments={"use_sim_time": "false"}.items(),
++        ),
++        IncludeLaunchDescription(
++            PythonLaunchDescriptionSource(os.path.join(ld08_dir, "launch", "ld08.launch.py")),
++        ),
++        Node(
++            package="turtlebot3_node",
++            executable="turtlebot3_ros",
++            parameters=[param_file],
++            arguments=["-i", usb_port],
++            output="screen",
++        ),
++    ])
+diff --git a/robot/lib/env_probe.py b/robot/lib/env_probe.py
+index 1af5f3c..e18461d 100755
+--- a/robot/lib/env_probe.py
++++ b/robot/lib/env_probe.py
+@@ -42,7 +42,8 @@ def main(argv):
+     print("  python %s" % sys.version.split()[0])
+     try_import("numpy", "conda install numpy")
+     try_import("yaml", "pip install pyyaml")
+-    try_import("objmem", "PYTHONPATH must include <repo>/src (robot/env.sh sets it)")
++    try_import("objmem", "conda activate $OFB_CONDA_ENV && pip install -e <repo> --no-deps "
++                         "(links src/, changes no other package; PYTHONPATH alone was not enough on 2026-11-18)")
+     torch = try_import("torch", "use the conda env with the JetPack PyTorch wheel; do not pip install torch")
+     if torch is not None:
+         if torch.cuda.is_available():
+diff --git a/robot/lib/worker_probe.py b/robot/lib/worker_probe.py
+index 0343490..ad7d399 100755
+--- a/robot/lib/worker_probe.py
++++ b/robot/lib/worker_probe.py
+@@ -80,6 +80,14 @@ def main():
+             fail("camera_mode is %r, expected %r" % (h.get("camera_mode"), args.mode),
+                  "the worker reads camera_mode from --config; start_all.sh writes it for you")
+ 
++    # One untimed warm-up call: the first /detect_embed builds the TensorRT
++    # engine and loads CLIP (8 s on 2026-11-18) and would fail the 3 s limit.
++    try:
++        _, dt0 = call(url, "/detect_embed", {})
++        print("  warm-up /detect_embed: %.0f ms (not counted)" % (1000 * dt0))
++    except Exception as e:  # noqa: BLE001
++        print("  warm-up /detect_embed failed: %s" % e)
++
+     times = []
+     n_det = []
+     depth_seen = 0
+diff --git a/robot/objmem.sh b/robot/objmem.sh
+index 2fbf15a..067302d 100755
+--- a/robot/objmem.sh
++++ b/robot/objmem.sh
+@@ -27,10 +27,10 @@ CONFIG="$(ofb_make_config "$MODE")"
+ 
+ echo "== Waiting for Nav2 (/navigate_to_pose, up to 120 s)"
+ for _ in $(seq 60); do
+-  if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then break; fi
++  if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then break; fi
+   sleep 2
+ done
+-if ros2 action list 2>/dev/null | grep -qx /navigate_to_pose; then ok "Nav2 is up"; else
++if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 is up"; else
+   fail "Nav2 did not come up" "read the nav pane / nav.log in $OFB_LOG_DIR"
+ fi
+ 
+diff --git a/robot/udev/99-ofb-robot.rules b/robot/udev/99-ofb-robot.rules
+index ea1383d..b50b684 100644
+--- a/robot/udev/99-ofb-robot.rules
++++ b/robot/udev/99-ofb-robot.rules
+@@ -6,10 +6,12 @@
+ 
+ # OpenCR (STM32 virtual COM port) -> /dev/ttyACM0 and /dev/opencr.
+ # ID_MM_DEVICE_IGNORE keeps ModemManager away from it.
+-ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="opencr"
++# SUBSYSTEM=="tty": without it the symlink also lands on the USB device node
++# (/dev/opencr -> bus/usb/001/006, seen on 2026-11-18) instead of the tty.
++SUBSYSTEM=="tty", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="5740", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="opencr"
+ 
+ # LDS-01 / LDS-02 LiDAR (CP2102 USB-UART) -> /dev/ttyUSB0 and /dev/lidar.
+-ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="lidar"
++SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", ENV{ID_MM_DEVICE_IGNORE}="1", MODE:="0666", GROUP:="dialout", SYMLINK+="lidar"
+ 
+ # Intel RealSense (any model): user access for pyrealsense2 without sudo.
+ SUBSYSTEMS=="usb", ATTRS{idVendor}=="8086", MODE:="0666", GROUP:="plugdev"
+-- 
+2.55.0.windows.5
+

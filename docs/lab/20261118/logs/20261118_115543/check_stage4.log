@@ -1,0 +1,48 @@
+== check_stage4  2026-11-18 11:55:43  log: /home/device06/object-finder-bot/robot/logs/20261118_115543/check_stage4.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. Cameras (lsusb, /dev/video*)
+  [OK]   Logitech C920: 046d:082d Logitech, Inc. HD Pro Webcam C920
+  [..]   video devices: /dev/video0 /dev/video1 
+         NVIDIA Tegra Video Input Device (platform:tegra-camrtc-ca):
+         	/dev/media0
+         
+         HD Pro Webcam C920 (usb-3610000.xhci-2.2):
+         	/dev/video0
+         	/dev/video1
+         	/dev/media1
+         
+== 2. Memory
+                       total        used        free      shared  buff/cache   available
+         Mem:           6832        4837         115          31        1879        1740
+         Swap:         19800           2       19797
+== 3. Python packages (conda env test1001)
+  [OK]   conda env test1001: /home/device06/miniforge3/envs/test1001/bin/python
+  python 3.8.20
+  [OK]   import numpy 1.24.4
+  [OK]   import yaml 6.0.3
+  [OK]   import objmem 0.1.0
+  [OK]   import torch 2.1.0a0+41361538.nv23.06
+  [OK]   CUDA available: Xavier
+  [OK]   import open_clip 2.32.0
+  [OK]   import PIL 10.4.0
+  [OK]   import jetson_utils 
+  [OK]   import jetson_inference 
+  [OK]   packages for nodepth / detectnet
+== 4. Vision worker, nodepth mode
+  [..]   using the worker already running on http://127.0.0.1:8600
+  health: {"ok": true, "camera": true, "camera_mode": "nodepth"}
+  [OK]   worker is up
+  [OK]   worker has a camera
+  [OK]   camera_mode is nodepth
+  [OK]   /detect_embed x5: mean 1840 ms, max 8034 ms, detections per frame [9, 9, 9, 9, 9]
+  labels: tile00 x5, tile01 x5, tile02 x5, tile10 x5, tile11 x5, tile12 x5, tile20 x5, tile21 x5, tile22 x5
+  [OK]   depth_m is null in nodepth mode
+  [FAIL] a /detect_embed call took over 3 s
+         hint: observer runs at 1-2 Hz; try --detector detectnet, FP16
+  [OK]   /embed_text 126 ms
+  [OK]   /verify 'a cup': found=False prob=0.48 box=None (2640 ms)
+  [FAIL] worker in nodepth mode
+         hint: read /home/device06/object-finder-bot/robot/logs/20261118_115543/worker.log (camera not found? CUDA out of memory? missing package?)
+== Result: 3 OK, 1 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_115543/check_stage4.log)
+[FAIL] 1 check(s) failed; read the hints above
+Copy back: scp -r <user>@<jetson-ip>:/home/device06/object-finder-bot/robot/logs/20261118_115543 ./

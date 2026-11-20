@@ -1,0 +1,40 @@
+== check_stage1  2026-11-18 11:36:00  log: /home/device06/object-finder-bot/robot/logs/20261118_113600/check_stage1.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. USB devices (lsusb)
+  [OK]   OpenCR (0483:5740)
+  [OK]   LiDAR USB adapter (10c4:ea60)
+  [..]   no RealSense (needed for depth mode only)
+  [..]   no C920 (needed for nodepth mode only)
+== 2. Serial ports
+  [OK]   /dev/ttyACM0 readable and writable
+  [OK]   /dev/ttyUSB0 readable and writable
+== 3. ROS setup
+  [OK]   ROS_DISTRO=foxy (/opt/ros/foxy/bin/ros2)
+  [OK]   package turtlebot3_bringup
+  [OK]   package turtlebot3_teleop
+  [OK]   package slam_toolbox
+  [OK]   package nav2_bringup
+  [OK]   package ld08_driver (LDS-02)
+== 4. Robot topics (bringup.sh must be running)
+  [FAIL] no /scan
+         hint: read the bringup pane for errors (robot/logs/*/bringup.log)
+  [OK]   /odom
+  [OK]   /tf
+  [OK]   /imu
+  [OK]   /joint_states
+  [FAIL] /scan rate unknown
+         hint: ros2 topic hz /scan
+  [FAIL] /odom rate unknown
+         hint: ros2 topic hz /odom
+  [FAIL] battery 0.07000000029802322 V (low)
+         hint: charge the battery (11.1 V pack; below 11 V the OpenCR beeps)
+== 5. TF odom -> base_link
+  [OK]   odom -> base_link: 0.000 0.000 1.768 (x y yaw)
+== 6. Short turn in place (teleop check)
+  the robot will turn left in place for 3 s; Ctrl+C now to skip
+  [FAIL] robot turned only 0 deg
+         hint: wheels on the floor? motors powered (OpenCR switch)? emergency stop?
+  [..]   now drive by hand: ./robot/teleop.sh (w/x/a/d, s to stop)
+== Result: 15 OK, 5 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_113600/check_stage1.log)
+[FAIL] 5 check(s) failed; read the hints above
+Copy back: scp -r <user>@<jetson-ip>:/home/device06/object-finder-bot/robot/logs/20261118_113600 ./

@@ -1,0 +1,284 @@
+== worker  2026-11-18 11:54:10  log: /home/device06/object-finder-bot/robot/logs/20261118_115322/worker.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+  [OK]   conda env test1001
+  [..]   python /home/device06/miniforge3/envs/test1001/bin/python (Python 3.8.20)
+  [..]   config /home/device06/object-finder-bot/robot/logs/20261118_115322/config_nodepth.yaml (camera_mode nodepth)
+== python scripts/vision_worker.py --config /home/device06/object-finder-bot/robot/logs/20261118_115322/config_nodepth.yaml --port 8600 --detector detectnet --camera c920
+   first start loads CLIP and may build a TensorRT engine: allow 1-5 minutes
+Loading CLIP ViT-B-32 / laion2b_s34b_b79k ... (about 15 s)
+'(ProtocolError('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer')), '(Request ID: 3aefbcd0-492c-472e-8e69-3f1e2a4269cb)')' thrown while requesting HEAD https://huggingface.co/laion/CLIP-ViT-B-32-laion2B-s34B-b79K/resolve/main/open_clip_model.safetensors
+WARNING:huggingface_hub.utils._http:'(ProtocolError('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer')), '(Request ID: 3aefbcd0-492c-472e-8e69-3f1e2a4269cb)')' thrown while requesting HEAD https://huggingface.co/laion/CLIP-ViT-B-32-laion2B-s34B-b79K/resolve/main/open_clip_model.safetensors
+Retrying in 1s [Retry 1/5].
+WARNING:huggingface_hub.utils._http:Retrying in 1s [Retry 1/5].
+CLIP ready on cuda (fp16=True) in 52.2 s
+jetson.inference -- detectNet loading custom model '(null)'
+
+detectNet -- loading detection network model from:
+          -- model        networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff
+          -- input_blob   'Input'
+          -- output_blob  'NMS'
+          -- output_count 'NMS_1'
+          -- class_labels networks/SSD-Mobilenet-v2/ssd_coco_labels.txt
+          -- threshold    0.500000
+          -- batch_size   1
+
+[TRT]    TensorRT version 8.5.2
+[TRT]    loading NVIDIA plugins...
+[TRT]    Registered plugin creator - ::BatchedNMSDynamic_TRT version 1
+[TRT]    Registered plugin creator - ::BatchedNMS_TRT version 1
+[TRT]    Registered plugin creator - ::BatchTilePlugin_TRT version 1
+[TRT]    Registered plugin creator - ::Clip_TRT version 1
+[TRT]    Registered plugin creator - ::CoordConvAC version 1
+[TRT]    Registered plugin creator - ::CropAndResizeDynamic version 1
+[TRT]    Registered plugin creator - ::CropAndResize version 1
+[TRT]    Registered plugin creator - ::DecodeBbox3DPlugin version 1
+[TRT]    Registered plugin creator - ::DetectionLayer_TRT version 1
+[TRT]    Registered plugin creator - ::EfficientNMS_Explicit_TF_TRT version 1
+[TRT]    Registered plugin creator - ::EfficientNMS_Implicit_TF_TRT version 1
+[TRT]    Registered plugin creator - ::EfficientNMS_ONNX_TRT version 1
+[TRT]    Registered plugin creator - ::EfficientNMS_TRT version 1
+[0;31m[TRT]    Could not register plugin creator -  ::FlattenConcat_TRT version 1
+[0m[TRT]    Registered plugin creator - ::GenerateDetection_TRT version 1
+[TRT]    Registered plugin creator - ::GridAnchor_TRT version 1
+[TRT]    Registered plugin creator - ::GridAnchorRect_TRT version 1
+[TRT]    Registered plugin creator - ::GroupNorm version 1
+[TRT]    Registered plugin creator - ::InstanceNormalization_TRT version 1
+[TRT]    Registered plugin creator - ::InstanceNormalization_TRT version 2
+[TRT]    Registered plugin creator - ::LayerNorm version 1
+[TRT]    Registered plugin creator - ::LReLU_TRT version 1
+[TRT]    Registered plugin creator - ::MultilevelCropAndResize_TRT version 1
+[TRT]    Registered plugin creator - ::MultilevelProposeROI_TRT version 1
+[TRT]    Registered plugin creator - ::MultiscaleDeformableAttnPlugin_TRT version 1
+[TRT]    Registered plugin creator - ::NMSDynamic_TRT version 1
+[TRT]    Registered plugin creator - ::NMS_TRT version 1
+[TRT]    Registered plugin creator - ::Normalize_TRT version 1
+[TRT]    Registered plugin creator - ::PillarScatterPlugin version 1
+[TRT]    Registered plugin creator - ::PriorBox_TRT version 1
+[TRT]    Registered plugin creator - ::ProposalDynamic version 1
+[TRT]    Registered plugin creator - ::ProposalLayer_TRT version 1
+[TRT]    Registered plugin creator - ::Proposal version 1
+[TRT]    Registered plugin creator - ::PyramidROIAlign_TRT version 1
+[TRT]    Registered plugin creator - ::Region_TRT version 1
+[TRT]    Registered plugin creator - ::Reorg_TRT version 1
+[TRT]    Registered plugin creator - ::ResizeNearest_TRT version 1
+[TRT]    Registered plugin creator - ::ROIAlign_TRT version 1
+[TRT]    Registered plugin creator - ::RPROI_TRT version 1
+[TRT]    Registered plugin creator - ::ScatterND version 1
+[TRT]    Registered plugin creator - ::SeqLen2Spatial version 1
+[TRT]    Registered plugin creator - ::SpecialSlice_TRT version 1
+[TRT]    Registered plugin creator - ::SplitGeLU version 1
+[TRT]    Registered plugin creator - ::Split version 1
+[TRT]    Registered plugin creator - ::VoxelGeneratorPlugin version 1
+[TRT]    completed loading NVIDIA plugins.
+[TRT]    detected model format - UFF  (extension '.uff')
+[TRT]    desired precision specified for GPU: FASTEST
+[0;33m[TRT]    requested fasted precision for device GPU without providing valid calibrator, disabling INT8
+[0m[TRT]    [MemUsageChange] Init CUDA: CPU +182, GPU +0, now: CPU 846, GPU 4659 (MiB)
+[TRT]    Trying to load shared library libnvinfer_builder_resource.so.8.5.2
+[TRT]    Loaded shared library libnvinfer_builder_resource.so.8.5.2
+[TRT]    [MemUsageChange] Init builder kernel library: CPU +106, GPU +116, now: CPU 975, GPU 4775 (MiB)
+[TRT]    native precisions detected for GPU:  FP32, FP16, INT8
+[TRT]    selecting fastest native precision for GPU:  FP16
+[TRT]    found engine cache file /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff.1.1.8502.GPU.FP16.engine
+[TRT]    found model checksum /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff.sha256sum
+[TRT]    echo "$(cat /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff.sha256sum) /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff" | sha256sum --check --status
+[TRT]    model matched checksum /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff.sha256sum
+[TRT]    loading network plan from engine cache... /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff.1.1.8502.GPU.FP16.engine
+[0;32m[TRT]    device GPU, loaded /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff
+[0m[TRT]    Loaded engine size: 33 MiB
+[0;33m[TRT]    Using an engine plan file across different models of devices is not recommended and is likely to affect performance or even cause errors.
+[0m[TRT]    Trying to load shared library libcublas.so.11
+[TRT]    Loaded shared library libcublas.so.11
+[TRT]    Using cublas as plugin tactic source
+[TRT]    Trying to load shared library libcublasLt.so.11
+[TRT]    Loaded shared library libcublasLt.so.11
+[TRT]    Using cublasLt as core library tactic source
+[TRT]    [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +260, GPU +296, now: CPU 1180, GPU 5102 (MiB)
+[TRT]    Trying to load shared library libcudnn.so.8
+[TRT]    Loaded shared library libcudnn.so.8
+[TRT]    Using cuDNN as plugin tactic source
+NvMapMemAllocInternalTagged: 1074810371 error 12
+NvMapMemHandleAlloc: error 0
+[TRT]    Using cuDNN as core library tactic source
+[TRT]    [MemUsageChange] Init cuDNN: CPU +82, GPU +117, now: CPU 1262, GPU 5219 (MiB)
+[TRT]    Deserialization required 7138701 microseconds.
+[TRT]    [MemUsageChange] TensorRT-managed allocation in engine deserialization: CPU +0, GPU +32, now: CPU 0, GPU 32 (MiB)
+[TRT]    Trying to load shared library libcublas.so.11
+[TRT]    Loaded shared library libcublas.so.11
+[TRT]    Using cublas as plugin tactic source
+[TRT]    Trying to load shared library libcublasLt.so.11
+[TRT]    Loaded shared library libcublasLt.so.11
+[TRT]    Using cublasLt as core library tactic source
+[TRT]    [MemUsageChange] Init cuBLAS/cuBLASLt: CPU +0, GPU +0, now: CPU 1263, GPU 5216 (MiB)
+[TRT]    Trying to load shared library libcudnn.so.8
+[TRT]    Loaded shared library libcudnn.so.8
+[TRT]    Using cuDNN as plugin tactic source
+[TRT]    Using cuDNN as core library tactic source
+[TRT]    [MemUsageChange] Init cuDNN: CPU +0, GPU +34, now: CPU 1263, GPU 5250 (MiB)
+[TRT]    Total per-runner device persistent memory is 10240
+[TRT]    Total per-runner host persistent memory is 155568
+[TRT]    Allocated activation device memory of size 6995456
+[TRT]    [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +7, now: CPU 0, GPU 39 (MiB)
+[TRT]    
+[TRT]    CUDA engine context initialized on device GPU:
+[TRT]       -- layers       108
+[TRT]       -- maxBatchSize 1
+[TRT]       -- deviceMemory 6995456
+[TRT]       -- bindings     3
+[TRT]       binding 0
+                -- index   0
+                -- name    'Input'
+                -- type    FP32
+                -- in/out  INPUT
+                -- # dims  3
+                -- dim #0  3
+                -- dim #1  300
+                -- dim #2  300
+[TRT]       binding 1
+                -- index   1
+                -- name    'NMS'
+                -- type    FP32
+                -- in/out  OUTPUT
+                -- # dims  3
+                -- dim #0  1
+                -- dim #1  100
+                -- dim #2  7
+[TRT]       binding 2
+                -- index   2
+                -- name    'NMS_1'
+                -- type    FP32
+                -- in/out  OUTPUT
+                -- # dims  3
+                -- dim #0  1
+                -- dim #1  1
+                -- dim #2  1
+[TRT]    
+[TRT]    binding to input 0 Input  binding index:  0
+[TRT]    binding to input 0 Input  dims (b=1 c=3 h=300 w=300) size=1080000
+[TRT]    binding to output 0 NMS  binding index:  1
+[TRT]    binding to output 0 NMS  dims (b=1 c=1 h=100 w=7) size=2800
+[TRT]    binding to output 1 NMS_1  binding index:  2
+[TRT]    binding to output 1 NMS_1  dims (b=1 c=1 h=1 w=1) size=4
+[TRT]    
+[0;32m[TRT]    device GPU, /home/device06/miniforge3/envs/test1001/bin/networks/SSD-Mobilenet-v2/ssd_mobilenet_v2_coco.uff initialized.
+[0m[TRT]    W = 7  H = 100  C = 1
+[TRT]    detectNet -- maximum bounding boxes:   100
+[TRT]    loaded 91 class labels
+[TRT]    detectNet -- number of object classes:  91
+[TRT]    loaded 0 class colors
+[0;33m[TRT]    didn't load expected number of class colors  (0 of 91)
+[0m[0;33m[TRT]    filling in remaining 91 class colors with default colors
+[0m[gstreamer] initialized gstreamer, version 1.16.3.0
+[gstreamer] gstCamera -- attempting to create device v4l2:///dev/video0
+[gstreamer] gstCamera -- found v4l2 device: HD Pro Webcam C920
+[gstreamer] v4l2-proplist, device.path=(string)/dev/video0, udev-probed=(boolean)false, device.api=(string)v4l2, v4l2.device.driver=(string)uvcvideo, v4l2.device.card=(string)"HD\ Pro\ Webcam\ C920", v4l2.device.bus_info=(string)usb-3610000.xhci-2.2, v4l2.device.version=(uint)330456, v4l2.device.capabilities=(uint)2225078273, v4l2.device.device_caps=(uint)69206017;
+[gstreamer] gstCamera -- found 53 caps for v4l2 device /dev/video0
+[gstreamer] [0] video/x-raw, format=(string)YUY2, width=(int)2304, height=(int)1536, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)2/1;
+[gstreamer] [1] video/x-raw, format=(string)YUY2, width=(int)2304, height=(int)1296, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)2/1;
+[gstreamer] [2] video/x-raw, format=(string)YUY2, width=(int)1920, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)5/1;
+[gstreamer] [3] video/x-raw, format=(string)YUY2, width=(int)1600, height=(int)896, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 15/2, 5/1 };
+[gstreamer] [4] video/x-raw, format=(string)YUY2, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 10/1, 15/2, 5/1 };
+[gstreamer] [5] video/x-raw, format=(string)YUY2, width=(int)960, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [6] video/x-raw, format=(string)YUY2, width=(int)1024, height=(int)576, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [7] video/x-raw, format=(string)YUY2, width=(int)800, height=(int)600, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [8] video/x-raw, format=(string)YUY2, width=(int)864, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [9] video/x-raw, format=(string)YUY2, width=(int)800, height=(int)448, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [10] video/x-raw, format=(string)YUY2, width=(int)640, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [11] video/x-raw, format=(string)YUY2, width=(int)640, height=(int)360, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [12] video/x-raw, format=(string)YUY2, width=(int)432, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [13] video/x-raw, format=(string)YUY2, width=(int)352, height=(int)288, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [14] video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [15] video/x-raw, format=(string)YUY2, width=(int)320, height=(int)180, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [16] video/x-raw, format=(string)YUY2, width=(int)176, height=(int)144, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [17] video/x-raw, format=(string)YUY2, width=(int)160, height=(int)120, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [18] video/x-raw, format=(string)YUY2, width=(int)160, height=(int)90, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [19] image/jpeg, width=(int)1920, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [20] image/jpeg, width=(int)1600, height=(int)896, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [21] image/jpeg, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [22] image/jpeg, width=(int)960, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [23] image/jpeg, width=(int)1024, height=(int)576, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [24] image/jpeg, width=(int)800, height=(int)600, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [25] image/jpeg, width=(int)864, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [26] image/jpeg, width=(int)800, height=(int)448, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [27] image/jpeg, width=(int)640, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [28] image/jpeg, width=(int)640, height=(int)360, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [29] image/jpeg, width=(int)432, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [30] image/jpeg, width=(int)352, height=(int)288, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [31] image/jpeg, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [32] image/jpeg, width=(int)320, height=(int)180, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [33] image/jpeg, width=(int)176, height=(int)144, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [34] image/jpeg, width=(int)160, height=(int)120, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [35] image/jpeg, width=(int)160, height=(int)90, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [36] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)1920, height=(int)1080, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [37] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)1600, height=(int)896, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [38] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)1280, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [39] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)960, height=(int)720, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [40] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)1024, height=(int)576, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [41] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)800, height=(int)600, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [42] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)864, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [43] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)800, height=(int)448, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [44] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)640, height=(int)480, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [45] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)640, height=(int)360, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [46] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)432, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [47] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)352, height=(int)288, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [48] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)320, height=(int)240, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [49] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)320, height=(int)180, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [50] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)176, height=(int)144, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [51] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)160, height=(int)120, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] [52] video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, width=(int)160, height=(int)90, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction){ 30/1, 24/1, 20/1, 15/1, 10/1, 15/2, 5/1 };
+[gstreamer] gstCamera -- selected device profile:  codec=MJPEG format=unknown width=640 height=480 framerate=30
+[gstreamer] gstCamera pipeline string:
+[gstreamer] v4l2src device=/dev/video0 do-timestamp=true ! image/jpeg, width=(int)640, height=(int)480, framerate=30/1 ! jpegdec name=decoder ! video/x-raw ! appsink name=mysink sync=false
+[gstreamer] gstCamera successfully created device v4l2:///dev/video0
+[0;32m[video]  created gstCamera from v4l2:///dev/video0
+[0m------------------------------------------------
+gstCamera video options:
+------------------------------------------------
+  -- URI: v4l2:///dev/video0
+     - protocol:  v4l2
+     - location:  /dev/video0
+  -- deviceType: v4l2
+  -- ioType:     input
+  -- codec:      MJPEG
+  -- codecType:  cpu
+  -- width:      640
+  -- height:     480
+  -- frameRate:  30
+  -- numBuffers: 4
+  -- zeroCopy:   true
+  -- flipMethod: none
+------------------------------------------------
+Vision worker on http://0.0.0.0:8600  (camera_mode=nodepth, camera=C920Camera, detector=DetectNetDetector, fake=False)
+[gstreamer] opening gstCamera for streaming, transitioning pipeline to GST_STATE_PLAYING
+[gstreamer] gstreamer changed state from NULL to READY ==> mysink
+[gstreamer] gstreamer changed state from NULL to READY ==> capsfilter1
+[gstreamer] gstreamer changed state from NULL to READY ==> decoder
+[gstreamer] gstreamer changed state from NULL to READY ==> capsfilter0
+[gstreamer] gstreamer changed state from NULL to READY ==> v4l2src0
+[gstreamer] gstreamer changed state from NULL to READY ==> pipeline0
+[gstreamer] gstreamer changed state from READY to PAUSED ==> capsfilter1
+[gstreamer] gstreamer changed state from READY to PAUSED ==> decoder
+[gstreamer] gstreamer changed state from READY to PAUSED ==> capsfilter0
+[gstreamer] gstreamer stream status CREATE ==> src
+[gstreamer] gstreamer changed state from READY to PAUSED ==> v4l2src0
+[gstreamer] gstreamer changed state from READY to PAUSED ==> pipeline0
+[gstreamer] gstreamer message new-clock ==> pipeline0
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> capsfilter1
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> decoder
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> capsfilter0
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> v4l2src0
+[gstreamer] gstreamer stream status ENTER ==> src
+[gstreamer] gstreamer message stream-start ==> pipeline0
+[gstreamer] gstCamera -- onPreroll
+[0;33m[gstreamer] gstBufferManager -- map buffer size was less than max size (460800 vs 460807)
+[0m[gstreamer] gstBufferManager recieve caps:  video/x-raw, format=(string)I420, width=(int)640, height=(int)480, interlace-mode=(string)progressive, multiview-mode=(string)mono, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono, pixel-aspect-ratio=(fraction)1/1, chroma-site=(string)jpeg, colorimetry=(string)1:4:0:0, framerate=(fraction)30/1
+[gstreamer] gstBufferManager -- recieved first frame, codec=MJPEG format=i420 width=640 height=480 size=460807
+[cuda]   allocated 4 ring buffers (460807 bytes each, 1843228 bytes total)
+[cuda]   allocated 4 ring buffers (8 bytes each, 32 bytes total)
+[gstreamer] gstreamer changed state from READY to PAUSED ==> mysink
+[gstreamer] gstreamer message async-done ==> pipeline0
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> mysink
+[gstreamer] gstreamer changed state from PAUSED to PLAYING ==> pipeline0
+[cuda]   allocated 4 ring buffers (921600 bytes each, 3686400 bytes total)
+/home/device06/miniforge3/envs/test1001/lib/python3.8/site-packages/torch/nn/modules/activation.py:1186: UserWarning: Converting mask without torch.bool dtype to bool; this will negatively affect performance. Prefer to use a boolean mask directly. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/transformers/attention.cpp:150.)
+  return torch._native_multi_head_attention(

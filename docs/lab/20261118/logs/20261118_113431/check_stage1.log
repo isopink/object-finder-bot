@@ -1,0 +1,22 @@
+== check_stage1  2026-11-18 11:34:31  log: /home/device06/object-finder-bot/robot/logs/20261118_113431/check_stage1.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. USB devices (lsusb)
+  [OK]   OpenCR (0483:5740)
+  [OK]   LiDAR USB adapter (10c4:ea60)
+  [..]   no RealSense (needed for depth mode only)
+  [..]   no C920 (needed for nodepth mode only)
+== 2. Serial ports
+  [OK]   /dev/ttyACM0 readable and writable
+  [OK]   /dev/ttyUSB0 readable and writable
+== 3. ROS setup
+  [OK]   ROS_DISTRO=foxy (/opt/ros/foxy/bin/ros2)
+  [OK]   package turtlebot3_bringup
+  [OK]   package turtlebot3_teleop
+  [OK]   package slam_toolbox
+  [OK]   package nav2_bringup
+  [OK]   package ld08_driver (LDS-02)
+== 4. Robot topics (bringup.sh must be running)
+  [FAIL] no /odom
+         hint: start ./robot/bringup.sh in another tmux pane, wait for 'Run!', rerun this check
+== Result: 10 OK, 1 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_113431/check_stage1.log)
+[FAIL] 1 check(s) failed; read the hints above

@@ -1,0 +1,67 @@
+== install_foxy  2026-11-18 10:40:58  log: /home/device06/object-finder-bot/robot/logs/20261118_104058/install_foxy.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== 1. System
+  [OK]   Ubuntu 20.04 (focal)
+  [..]   arch aarch64, JetPack: 5.1.5-b11
+== 2. ROS 2 apt repository
+Get:1 https://cli.github.com/packages stable InRelease [3,917 B]
+Hit:2 https://storage.googleapis.com/bazel-apt stable InRelease
+Hit:3 http://snapshots.ros.org/foxy/final/ubuntu focal InRelease
+Get:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease [2,567 B]
+Get:5 https://repo.download.nvidia.com/jetson/common r35.6 InRelease [2,572 B]
+Hit:6 http://ports.ubuntu.com/ubuntu-ports focal InRelease
+Err:1 https://cli.github.com/packages stable InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+Hit:7 http://ports.ubuntu.com/ubuntu-ports focal-updates InRelease
+Hit:8 http://ports.ubuntu.com/ubuntu-ports focal-backports InRelease
+Hit:9 http://ports.ubuntu.com/ubuntu-ports focal-security InRelease
+Err:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Err:5 https://repo.download.nvidia.com/jetson/common r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Fetched 5,139 B in 3s (1,557 B/s)
+Reading package lists...
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://cli.github.com/packages stable InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/common r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://cli.github.com/packages/dists/stable/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: Failed to fetch https://repo.download.nvidia.com/jetson/t194/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://repo.download.nvidia.com/jetson/common/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+lsb-release is already the newest version (11.1.0ubuntu2).
+curl is already the newest version (7.68.0-1ubuntu2.25).
+gnupg is already the newest version (2.2.19-3ubuntu2.5).
+locales is already the newest version (2.31-0ubuntu9.18).
+software-properties-common is already the newest version (0.99.9.12).
+0 upgraded, 0 newly installed, 0 to remove and 12 not upgraded.
+Get:1 https://cli.github.com/packages stable InRelease [3,917 B]
+Hit:2 https://storage.googleapis.com/bazel-apt stable InRelease
+Hit:3 http://snapshots.ros.org/foxy/final/ubuntu focal InRelease
+Get:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease [2,567 B]
+Get:5 https://repo.download.nvidia.com/jetson/common r35.6 InRelease [2,572 B]
+Hit:6 http://ports.ubuntu.com/ubuntu-ports focal InRelease
+Err:1 https://cli.github.com/packages stable InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+Hit:7 http://ports.ubuntu.com/ubuntu-ports focal-updates InRelease
+Hit:8 http://ports.ubuntu.com/ubuntu-ports focal-backports InRelease
+Err:4 https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Hit:9 http://ports.ubuntu.com/ubuntu-ports focal-security InRelease
+Err:5 https://repo.download.nvidia.com/jetson/common r35.6 InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+Fetched 5,139 B in 3s (1,570 B/s)
+Reading package lists...
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://cli.github.com/packages stable InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/t194 r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: An error occurred during the signature verification. The repository is not updated and the previous index files will be used. GPG error: https://repo.download.nvidia.com/jetson/common r35.6 InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://cli.github.com/packages/dists/stable/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 5612B36462313325
+W: Failed to fetch https://repo.download.nvidia.com/jetson/t194/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Failed to fetch https://repo.download.nvidia.com/jetson/common/dists/r35.6/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 0D296FFB880FB004
+W: Some index files failed to download. They have been ignored, or old ones used instead.
+  [FAIL] ros-foxy-ros-base not found in http://snapshots.ros.org/foxy/final/ubuntu
+         hint: rerun with OFB_FOXY_SNAPSHOT=1 ./robot/install_foxy_jetson.sh
+== Result: 1 OK, 1 FAIL   (log: /home/device06/object-finder-bot/robot/logs/20261118_104058/install_foxy.log)
+[FAIL] 1 check(s) failed; read the hints above
