@@ -6,6 +6,9 @@ copied back with scp), and anything sent along with them.
 | Session | Folder | Notes |
 |---|---|---|
 | 2026-11-18 | [`20261118/`](20261118/) | First run: Foxy install, bringup, C920 vision worker. Issue index: `README_이슈색인.md` |
+| 2026-11-20 | [`20261120/`](20261120/) | LDS-02 bringup, D455 build and depth check. Summary: `1120_진행정리.pdf`; next lab: `다음실습_D455_실행순서.pdf` |
+
+Problems hit in the lab and how they were solved: [`트러블슈팅_기록.md`](트러블슈팅_기록.md).
 
 ## 2026-11-18 patches
 
