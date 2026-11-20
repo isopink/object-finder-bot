@@ -75,6 +75,9 @@ MOD="$(find "$SRC/build" -name 'pyrealsense2*.so' | head -n 1)"
 if [ -z "$MOD" ]; then fail "pyrealsense2*.so not found under $SRC/build"; ofb_summary; exit 1; fi
 DST="$SITE/pyrealsense2"
 mkdir -p "$DST"
+# `sudo make install` already put pyrsutils into $DST and left the folder owned
+# by root, so the copies below failed with "Permission denied" (2026-11-20).
+if [ ! -w "$DST" ]; then sudo chown -R "$(id -u):$(id -g)" "$DST"; fi
 cp "$(dirname "$MOD")"/pyrealsense2*.so "$DST"/
 cp "$(dirname "$MOD")"/pybackend2*.so "$DST"/ 2>/dev/null || true
 # Same layout as the pip package: pyrealsense2/__init__.py re-exports the extension.
