@@ -39,6 +39,9 @@ export OFB_MAPVIEW_PORT="${OFB_MAPVIEW_PORT:-8555}"
 export OFB_DETECTOR="${OFB_DETECTOR:-detectnet}"  # detectnet | yolo | owl (NanoOWL)
 export OFB_IMAGE_SOURCE="${OFB_IMAGE_SOURCE:-worker}"  # worker | ros
 export OFB_MAX_VEL="${OFB_MAX_VEL:-0.15}"         # m/s cap for Nav2 (raised camera mast)
+# LiDAR returns closer than this (m) are the robot itself (camera mast rods):
+# robot/lib/scan_filter.py drops them. 0 = off. Measure the rods (robot/README.md).
+export OFB_SCAN_MIN="${OFB_SCAN_MIN:-0}"
 export OFB_DOCKER_IMAGE="${OFB_DOCKER_IMAGE:-ofb-humble}"
 export OFB_DOCKER_NAME="${OFB_DOCKER_NAME:-ofb-humble}"
 

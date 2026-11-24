@@ -13,10 +13,34 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
+
+def lidar_actions(ld08_dir):
+    """The LDS-02 driver, plus robot/lib/scan_filter.py when OFB_SCAN_MIN > 0.
+
+    The filter drops returns from the camera mast rods (inside the robot):
+    driver -> /scan_raw -> scan_filter.py -> /scan. Without OFB_SCAN_MIN the
+    driver publishes /scan directly, as before.
+    """
+    try:
+        scan_min = float(os.environ.get("OFB_SCAN_MIN", "0") or 0)
+    except ValueError:
+        scan_min = 0.0
+    if scan_min <= 0:
+        return [IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(os.path.join(ld08_dir, "launch", "ld08.launch.py")))]
+    here = os.path.dirname(os.path.abspath(__file__))
+    filt = os.path.join(os.path.dirname(here), "lib", "scan_filter.py")
+    return [
+        # Same node as ld08_driver/launch/ld08.launch.py, with its output renamed.
+        Node(package="ld08_driver", executable="ld08_driver", name="ld08_driver", output="screen",
+             remappings=[("scan", "scan_raw"), ("/scan", "/scan_raw")]),
+        ExecuteProcess(cmd=["python3", filt, "--min-range", str(scan_min)], output="screen"),
+    ]
 
 
 def generate_launch_description():
@@ -34,9 +58,7 @@ def generate_launch_description():
                 os.path.join(bringup_dir, "launch", "turtlebot3_state_publisher.launch.py")),
             launch_arguments={"use_sim_time": "false"}.items(),
         ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(os.path.join(ld08_dir, "launch", "ld08.launch.py")),
-        ),
+    ] + lidar_actions(ld08_dir) + [
         Node(
             package="turtlebot3_node",
             executable="turtlebot3_ros",
