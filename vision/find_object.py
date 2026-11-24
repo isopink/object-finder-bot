@@ -362,11 +362,13 @@ def parse_args(argv=None):
     ap.add_argument("--width", type=int, default=None, help="default 1920 (C920), 640 (RealSense)")
     ap.add_argument("--height", type=int, default=None, help="default 1080 (C920), 480 (RealSense)")
     ap.add_argument("--output", default="webrtc://@:8554/mystream", help='video sink, or "none"')
-    ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "fake"])
+    ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "owl", "fake"])
     ap.add_argument("--network", default="ssd-mobilenet-v2", help="detectNet model")
     ap.add_argument("--threshold", type=float, default=0.5, help="detector confidence threshold")
     ap.add_argument("--yolo-model", default="yolov8n.pt")
     ap.add_argument("--yolo-engine", default=None, help="TensorRT .engine file for YOLO")
+    ap.add_argument("--owl-engine", default=None, help="NanoOWL image encoder engine (default ~/nanoowl/data/...)")
+    ap.add_argument("--owl-prompts", default=None, help="comma separated phrases for --detector owl")
     ap.add_argument("--config", default=None, help="config/default.yaml (found_thresh, crop_pad, prompts)")
     ap.add_argument("--memory-dir", default=os.path.join(HERE, "memory"))
     ap.add_argument("--fake", action="store_true",
@@ -409,6 +411,15 @@ def build_parts(args):
         detector = make_detector("detectnet", network=args.network, threshold=args.threshold)
     elif args.detector == "yolo":
         detector = make_detector("yolo", model=args.yolo_model, engine=args.yolo_engine, conf=args.threshold)
+    elif args.detector == "owl":
+        owl_kw = {}
+        if args.owl_engine:
+            owl_kw["engine"] = args.owl_engine
+        if args.owl_prompts:
+            owl_kw["prompts"] = [s for s in args.owl_prompts.split(",") if s.strip()]
+        # detectNet's 0.5 default would drop most OWL boxes; OWL scores run lower.
+        thr = args.threshold if args.threshold != 0.5 else 0.15
+        detector = make_detector("owl", threshold=thr, **owl_kw)
     else:
         detector = make_detector("fake")
     return embedder, detector, camera, params

@@ -7,6 +7,7 @@
 #   nodepth  Logitech C920 (color only)      -> --camera c920
 #   --fake   fake camera, detector, CLIP (tests the HTTP path, no GPU)
 #   OFB_DETECTOR=yolo ./robot/worker.sh depth    to use YOLO instead of detectNet
+#   OFB_DETECTOR=owl  ./robot/worker.sh depth    NanoOWL: open vocabulary (clear bottles, boxes)
 #   OFB_IMAGE_SOURCE=ros: the camera belongs to a ROS node, so --camera none
 set -uo pipefail
 source "$(dirname "$0")/env.sh"
@@ -38,5 +39,10 @@ info "python $(command -v python) ($(python --version 2>&1))"
 info "config $CONFIG (camera_mode $MODE)"
 echo "== python scripts/vision_worker.py ${ARGS[*]}"
 echo "   first start loads CLIP and may build a TensorRT engine: allow 1-5 minutes"
+# NanoOWL loads its text model from huggingface.co; the lab Wi-Fi resets that
+# connection (retries cost minutes). Use the cache once it exists.
+if [ "$OFB_DETECTOR" = owl ] && [ -d "$HOME/.cache/huggingface/hub/models--google--owlvit-base-patch32" ]; then
+  export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
+fi
 cd "$OFB_REPO" || exit 1
 exec python scripts/vision_worker.py "${ARGS[@]}"

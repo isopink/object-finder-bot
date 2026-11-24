@@ -2,6 +2,7 @@
 
     make_detector("detectnet", network="ssd-mobilenet-v2", threshold=0.5)
     make_detector("yolo", model="yolov8n.pt", engine=None, conf=0.4)
+    make_detector("owl", prompts=["a water bottle", ...], threshold=0.15)   # NanoOWL
     make_detector("fake")   # objmem.fakes.FakeDetector
 
 Every detector takes an (H, W, 3) uint8 RGB numpy image and returns a list of
@@ -17,7 +18,7 @@ import numpy as np
 
 from objmem.types import RawBox
 
-DETECTOR_NAMES = ("detectnet", "yolo", "fake")
+DETECTOR_NAMES = ("detectnet", "yolo", "owl", "fake")
 
 
 def clip_box(left: float, top: float, right: float, bottom: float, width: int, height: int):
@@ -190,9 +191,124 @@ class YoloDetector(object):
         return self.timing.fps()
 
 
+# ---------------------------------------------------------------- NanoOWL
+# Things that stand on desks and floors in a classroom. OWL-ViT finds any
+# phrase, so this list (not a fixed class set) decides what gets proposed.
+OWL_DEFAULT_PROMPTS = (
+    "a banana", "an apple", "an orange", "a water bottle", "a cup", "a mug",
+    "a backpack", "a bag", "a laptop", "a cell phone", "a book", "a box",
+    "an umbrella", "a hat", "a wallet", "a key", "a remote control", "a toy",
+    "a keyboard", "a computer mouse", "a scissors", "a teddy bear", "a shoe", "a ball",
+)
+OWL_DEFAULT_ENGINE = "~/nanoowl/data/owl_image_encoder_patch32.engine"
+
+
+def _box_iou(a: Sequence[int], b: Sequence[int]) -> float:
+    iw = min(a[2], b[2]) - max(a[0], b[0])
+    ih = min(a[3], b[3]) - max(a[1], b[1])
+    if iw <= 0 or ih <= 0:
+        return 0.0
+    inter = float(iw * ih)
+    union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
+    return inter / union if union > 0 else 0.0
+
+
+def nms_boxes(boxes: List[RawBox], iou: float = 0.7, max_boxes: int = 0) -> List[RawBox]:
+    """Highest conf first; drop a box that overlaps a kept one by more than `iou`
+    whatever its label (OWL often returns one object under two phrases)."""
+    kept = []  # type: List[RawBox]
+    for b in sorted(boxes, key=lambda x: -x.conf):
+        if all(_box_iou(b.box, k.box) <= iou for k in kept):
+            kept.append(b)
+            if max_boxes and len(kept) >= max_boxes:
+                break
+    return kept
+
+
+class OwlDetector(object):
+    """NVIDIA-AI-IOT/nanoowl (OWL-ViT B/32, TensorRT image encoder): open-vocabulary
+    boxes for a list of text prompts. Finds things the COCO detectors miss (a clear
+    plastic bottle, a cardboard box: 2026-11-24, C920 and D455, about 77 ms/frame).
+
+    `engine` is the image encoder built once on the Jetson:
+      python -m nanoowl.build_image_encoder_engine data/owl_image_encoder_patch32.engine
+    (or ONNX export + trtexec --fp16 when that runs out of memory). Without an engine
+    nanoowl runs the encoder in PyTorch (slower). Labels are the prompts without the
+    leading article ("water bottle"). `threshold` is OWL's score, which is lower than
+    detectNet's: 0.1-0.2 keeps real objects, 0.3+ keeps only clear ones.
+    """
+
+    def __init__(self, prompts: Optional[Sequence[str]] = None, engine: Optional[str] = OWL_DEFAULT_ENGINE,
+                 threshold: float = 0.15, model: str = "google/owlvit-base-patch32",
+                 nms_iou: float = 0.7, max_boxes: int = 20,
+                 ignore: Optional[Sequence[str]] = None, **_unused: Any) -> None:
+        import os
+        import sys
+        try:
+            from nanoowl.owl_predictor import OwlPredictor
+        except ImportError:
+            # `pip install -e .` may have gone to another env: use the clone directly.
+            src = os.path.expanduser(os.environ.get("OFB_NANOOWL_DIR", "~/nanoowl"))
+            if os.path.isdir(os.path.join(src, "nanoowl")) and src not in sys.path:
+                sys.path.insert(0, src)
+            from nanoowl.owl_predictor import OwlPredictor
+        from PIL import Image
+        self._Image = Image
+        self.prompts = [p.strip() for p in (prompts or OWL_DEFAULT_PROMPTS) if p and p.strip()]
+        if not self.prompts:
+            raise ValueError("OwlDetector needs at least one prompt")
+        self.labels = [_strip_article(p) for p in self.prompts]
+        self.threshold = float(threshold)
+        self.nms_iou = float(nms_iou)
+        self.max_boxes = int(max_boxes)
+        self.ignore = set(s.lower() for s in (ignore or ()))
+        eng = os.path.expanduser(engine) if engine else None
+        if eng and not os.path.isfile(eng):
+            print("OwlDetector: engine {} not found; running the image encoder in PyTorch".format(eng), flush=True)
+            eng = None
+        self.engine = eng
+        self.predictor = OwlPredictor(model, image_encoder_engine=eng)
+        self.text_encodings = self.predictor.encode_text(self.prompts)
+        self.timing = _Timing()
+
+    def detect(self, color: np.ndarray) -> List[RawBox]:
+        _check_image(color)
+        t0 = time.time()
+        height, width = color.shape[:2]
+        image = self._Image.fromarray(np.ascontiguousarray(color[:, :, :3], dtype=np.uint8))
+        out = self.predictor.predict(image=image, text=self.prompts,
+                                     text_encodings=self.text_encodings, threshold=self.threshold)
+        boxes = []  # type: List[RawBox]
+        xyxy = _to_numpy(out.boxes).reshape(-1, 4)
+        scores = _to_numpy(out.scores).reshape(-1)
+        labels = _to_numpy(out.labels).reshape(-1)
+        for (l, t, r, b), s, k in zip(xyxy, scores, labels):
+            box = clip_box(l, t, r, b, width, height)
+            if box is None:
+                continue
+            label = self.labels[int(k)] if 0 <= int(k) < len(self.labels) else str(int(k))
+            if label.lower() in self.ignore:
+                continue
+            boxes.append(RawBox(box=box, label=label, conf=float(s)))
+        boxes = nms_boxes(boxes, self.nms_iou, self.max_boxes)
+        self.timing.add(time.time() - t0)
+        return boxes
+
+    def fps(self) -> float:
+        return self.timing.fps()
+
+
+def _strip_article(prompt: str) -> str:
+    p = prompt.strip()
+    for art in ("a ", "an ", "the "):
+        if p.lower().startswith(art):
+            return p[len(art):].strip()
+    return p
+
+
 # ---------------------------------------------------------------- factory
 def make_detector(name: str, **kw: Any):
-    """Build a detector by name: "detectnet", "yolo", or "fake".
+    """Build a detector by name: "detectnet", "yolo", "owl" (NanoOWL), or "fake".
 
     Keyword arguments go to the detector class; unknown ones are ignored by the
     real detectors so one argument set can be passed to either.
@@ -202,6 +318,8 @@ def make_detector(name: str, **kw: Any):
         return DetectNetDetector(**kw)
     if key in ("yolo", "ultralytics"):
         return YoloDetector(**kw)
+    if key in ("owl", "nanoowl"):
+        return OwlDetector(**kw)
     if key == "fake":
         from objmem.fakes import FakeDetector
         boxes = kw.get("boxes")

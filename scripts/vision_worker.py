@@ -43,14 +43,18 @@ def build_parser():
     ap.add_argument("--fake", action="store_true", help="FakeEmbedder, FakeDetector, FakeCamera (runs on a PC)")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8600)
-    ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "fake"])
+    ap.add_argument("--detector", default="detectnet", choices=["detectnet", "yolo", "owl", "fake"])
     ap.add_argument("--camera", default=None, choices=["realsense", "c920", "fake", "none"],
                     help="default: realsense when camera_mode is depth, c920 when nodepth")
     ap.add_argument("--camera-device", default="/dev/video0", help="C920 device (c920 camera only)")
     ap.add_argument("--threshold", type=float, default=None,
-                    help="detector confidence threshold (default: 0.5 detectnet, 0.4 yolo)")
+                    help="detector confidence threshold (default: 0.5 detectnet, 0.4 yolo, 0.15 owl)")
     ap.add_argument("--yolo-model", default="yolov8n.pt", help="ultralytics weights (yolo detector only)")
     ap.add_argument("--yolo-engine", default=None, help="TensorRT .engine built on the Jetson (yolo detector only)")
+    ap.add_argument("--owl-engine", default=None,
+                    help="NanoOWL image encoder engine (owl detector; default ~/nanoowl/data/owl_image_encoder_patch32.engine)")
+    ap.add_argument("--owl-prompts", default=None,
+                    help="comma separated phrases for the owl detector, e.g. 'a banana,a water bottle' (default: built-in list)")
     ap.add_argument("--clip-model", default="ViT-B-32")
     ap.add_argument("--clip-pretrained", default="laion2b_s34b_b79k")
     ap.add_argument("--no-fp16", action="store_true")
@@ -91,6 +95,11 @@ def build_parts(args, params):
         det_kw["model"] = args.yolo_model
         if args.yolo_engine:
             det_kw["engine"] = args.yolo_engine
+    if args.detector == "owl":
+        if args.owl_engine:
+            det_kw["engine"] = args.owl_engine
+        if args.owl_prompts:
+            det_kw["prompts"] = [s for s in args.owl_prompts.split(",") if s.strip()]
     detector = make_detector(args.detector, **det_kw)
     camera = None
     if kind != "none":

@@ -113,6 +113,40 @@ yolo export model=yolov8n.pt format=engine half=True imgsz=640
 
 A detector that fails to load prints `[FAIL] <name>: <error>` and the others still run.
 
+## NanoOWL detector (`--detector owl`)
+
+OWL-ViT finds objects from text phrases, not from the 91 COCO classes. On
+2026-11-24 (room 429, C920 and D455) it found a clear plastic bottle and a
+cardboard box that SSD-Mobilenet-v2 missed (detectNet called a shoulder "bed").
+About 75 ms per frame with the TensorRT encoder; the worker with CLIP + OWL +
+D455 used about 4.2 GB.
+
+Setup on the Jetson (already done on device06, 2026-10-27):
+
+```bash
+git clone https://github.com/NVIDIA-AI-IOT/nanoowl ~/nanoowl
+cd ~/nanoowl && pip install --dry-run --no-deps -e . && pip install --no-deps -e .
+mkdir -p data
+# build_image_encoder_engine ran out of memory; this route works:
+python -c "from nanoowl.owl_predictor import OwlPredictor; OwlPredictor('google/owlvit-base-patch32', device='cpu').export_image_encoder_onnx('data/owl_image_encoder_patch32.onnx', onnx_opset=16)"
+/usr/src/tensorrt/bin/trtexec --onnx=data/owl_image_encoder_patch32.onnx \
+  --saveEngine=data/owl_image_encoder_patch32.engine --fp16 --shapes=image:1x3x768x768 --memPoolSize=workspace:1024
+```
+
+Run:
+
+```bash
+OFB_DETECTOR=owl ./robot/worker.sh depth
+python vision/find_object.py --camera realsense --detector owl
+python vision/find_object.py --detector owl --owl-prompts "a banana,a backpack,a water bottle"
+```
+
+Notes: OWL scores are lower than detectNet's (default threshold 0.15). The
+prompt list (`OWL_DEFAULT_PROMPTS` in `src/objmem/detectors.py`) decides what
+gets proposed. If the lab network blocks huggingface.co, set `HF_HUB_OFFLINE=1`
+(the text model is cached after the first run). The D455 measures through a
+clear bottle (3.6-3.9 m instead of about 2.4 m): use opaque demo objects.
+
 ## print_intrinsics.py
 
 ```bash

@@ -53,7 +53,7 @@ after the `source .../robot/env.sh` line):
 | `ROS_LOCALHOST_ONLY` | `1` | Set `0` only to see topics from a laptop with ROS |
 | `OPENCR_PORT`, `LIDAR_PORT` | `/dev/ttyACM0`, `/dev/ttyUSB0` | The devices enumerate differently |
 | `ROS_DISTRO` | auto (`/opt/ros/*`, else Docker Humble) | Force one |
-| `OFB_DETECTOR` | `detectnet` | `yolo` |
+| `OFB_DETECTOR` | `detectnet` | `yolo`, or `owl` (NanoOWL: finds clear bottles and boxes that detectNet misses; needs `~/nanoowl` and its engine, see `vision/README.md`) |
 | `OFB_IMAGE_SOURCE` | `worker` | `ros` if the camera must be a ROS node |
 | `OFB_CONDA_ENV` | `test1001` | Different conda env name |
 | `OFB_MAX_VEL` | `0.15` | Faster or slower Nav2 driving (m/s) |

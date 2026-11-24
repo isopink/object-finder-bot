@@ -209,7 +209,7 @@ def test_yolo_names_from_model_and_ignore(monkeypatch):
 # ---------------------------------------------------------------- factory
 def test_make_detector_unknown():
     with pytest.raises(ValueError):
-        make_detector("owl")
+        make_detector("no-such-detector")
 
 
 def test_make_detector_fake():
@@ -218,3 +218,69 @@ def test_make_detector_fake():
     assert isinstance(det, fakes.FakeDetector)
     out = det.detect(rgb_image())
     assert isinstance(out, list)
+
+
+# ---------------------------------------------------------------- NanoOWL
+def install_owl(monkeypatch, boxes, scores, labels):
+    calls = {}
+
+    class FakeOutput(object):
+        pass
+
+    class FakeOwlPredictor(object):
+        def __init__(self, model, image_encoder_engine=None):
+            calls["model"], calls["engine"] = model, image_encoder_engine
+
+        def encode_text(self, texts):
+            calls["texts"] = list(texts)
+            return "enc"
+
+        def predict(self, image, text, text_encodings, threshold):
+            calls["image"], calls["threshold"], calls["enc"] = image, threshold, text_encodings
+            o = FakeOutput()
+            o.boxes = np.array(boxes, float).reshape(-1, 4)
+            o.scores, o.labels = np.array(scores, float), np.array(labels, int)
+            return o
+
+    pkg = types.ModuleType("nanoowl")
+    mod = types.ModuleType("nanoowl.owl_predictor")
+    mod.OwlPredictor = FakeOwlPredictor
+    pkg.owl_predictor = mod
+    monkeypatch.setitem(sys.modules, "nanoowl", pkg)
+    monkeypatch.setitem(sys.modules, "nanoowl.owl_predictor", mod)
+    return calls
+
+
+def test_owl_labels_clip_nms_and_ignore(monkeypatch):
+    pytest.importorskip("PIL")
+    calls = install_owl(monkeypatch,
+                        [[10, 10, 50, 100], [12, 11, 51, 99], [-5, 0, 30, 30], [100, 100, 200, 200],
+                         [300, 300, 300, 310]],
+                        [0.38, 0.20, 0.31, 0.25, 0.9],
+                        [0, 1, 2, 3, 0])
+    det = make_detector("owl", prompts=["a water bottle", "a bottle", "an apple", "a person"],
+                        engine=None, threshold=0.12, ignore=["person"])
+    out = det.detect(rgb_image())
+    assert calls["texts"] == ["a water bottle", "a bottle", "an apple", "a person"]
+    assert calls["engine"] is None and calls["threshold"] == 0.12 and calls["enc"] == "enc"
+    assert calls["image"].size == (640, 480)
+    # "bottle" overlaps "water bottle" (IoU > 0.7) and is dropped, the person is
+    # ignored, the zero-width box is dropped, negative coordinates are clipped.
+    assert [(b.label, b.box) for b in out] == [("water bottle", (10, 10, 50, 100)), ("apple", (0, 0, 30, 30))]
+    assert out[0].conf == pytest.approx(0.38)
+
+
+def test_owl_missing_engine_falls_back(monkeypatch, tmp_path):
+    pytest.importorskip("PIL")
+    calls = install_owl(monkeypatch, [], [], [])
+    det = make_detector("nanoowl", engine=str(tmp_path / "missing.engine"))
+    assert calls["engine"] is None
+    assert det.detect(rgb_image()) == []
+    assert det.labels[calls["texts"].index("a water bottle")] == "water bottle"
+
+
+def test_nms_boxes_max():
+    bs = [RawBox(box=(0, 0, 10, 10), label="a", conf=0.2), RawBox(box=(20, 20, 30, 30), label="b", conf=0.5),
+          RawBox(box=(1, 1, 10, 10), label="c", conf=0.9)]
+    assert [b.label for b in detectors.nms_boxes(bs)] == ["c", "b"]
+    assert [b.label for b in detectors.nms_boxes(bs, max_boxes=1)] == ["c"]

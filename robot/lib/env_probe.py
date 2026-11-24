@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Check the Python packages the vision worker needs, inside the conda env.
 
-Usage: python robot/lib/env_probe.py depth|nodepth [detectnet|yolo|fake]
+Usage: python robot/lib/env_probe.py depth|nodepth [detectnet|yolo|owl|fake]
 
 Prints [OK]/[FAIL] per package; exit status 1 if a required one is missing.
 Python 3.8 syntax.
@@ -61,6 +61,18 @@ def main(argv):
         try_import("jetson_inference", "build jetson-inference in this env, or OFB_DETECTOR=yolo")
     elif det == "yolo":
         try_import("ultralytics", "pip install ultralytics --no-deps, or OFB_DETECTOR=detectnet")
+    elif det == "owl":
+        import os
+        owl_src = os.path.expanduser(os.environ.get("OFB_NANOOWL_DIR", "~/nanoowl"))
+        if owl_src not in sys.path:
+            sys.path.append(owl_src)
+        try_import("nanoowl", "git clone https://github.com/NVIDIA-AI-IOT/nanoowl ~/nanoowl (pip install --no-deps -e .)")
+        try_import("transformers", "pip install --dry-run transformers first: it must not touch torch")
+        eng = os.path.expanduser("~/nanoowl/data/owl_image_encoder_patch32.engine")
+        if os.path.isfile(eng):
+            ok("NanoOWL engine " + eng)
+        else:
+            print("  [INFO] no NanoOWL engine at %s: the encoder runs in PyTorch (slower)" % eng)
     return 1 if N_FAIL else 0
 
 
