@@ -160,8 +160,12 @@ ofb_wait_topic() {
 # ofb_topic_hz <topic> <seconds>: print the average rate (or nothing).
 # SIGINT, not the default SIGTERM: on SIGTERM `ros2 topic hz` dies with its
 # buffered "average rate" lines unflushed and nothing reaches awk.
+# At least 10 s: on the Jetson the CLI start and discovery take several seconds
+# before the first "average rate" line (4-6 s gave nothing on 11/20 and 11/24).
 ofb_topic_hz() {
-  timeout -s INT "${2:-5}" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
+  local t="${2:-10}"
+  [ "$t" -lt 10 ] 2>/dev/null && t=10
+  PYTHONUNBUFFERED=1 timeout -s INT "$t" ros2 topic hz "$1" 2>/dev/null | awk '/average rate/ {r=$3} END {if (r) print r}'
 }
 
 # ofb_make_config <depth|nodepth>: write $OFB_LOG_DIR/config_<mode>.yaml and print its path.

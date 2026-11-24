@@ -48,13 +48,13 @@ fi
 for t in /scan /odom /tf /imu /joint_states; do
   if ofb_wait_topic "$t" 10; then ok "$t"; else fail "no $t" "read the bringup pane for errors (robot/logs/*/bringup.log)"; fi
 done
-HZ="$(ofb_topic_hz /scan 6)"
+HZ="$(ofb_topic_hz /scan 10)"
 if [ -n "$HZ" ]; then
   awk -v r="$HZ" 'BEGIN { exit !(r > 3) }' && ok "/scan at $HZ Hz" || fail "/scan only $HZ Hz" "LiDAR expected ~5 Hz; check LDS_MODEL and the LiDAR cable"
 else
   fail "/scan rate unknown" "ros2 topic hz /scan"
 fi
-HZ="$(ofb_topic_hz /odom 4)"
+HZ="$(ofb_topic_hz /odom 10)"
 [ -n "$HZ" ] && ok "/odom at $HZ Hz" || fail "/odom rate unknown" "ros2 topic hz /odom"
 VALID="$(timeout 10 ros2 topic echo /scan 2>/dev/null | awk '/^ranges:/ {on=1; next} on && /^- / {n++; if ($2+0 > 0.05 && $2 != ".inf") v++} on && /^[a-z]/ {print v+0 "/" n+0; exit}')"
 if [ -n "$VALID" ]; then
