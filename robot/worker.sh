@@ -45,4 +45,12 @@ if [ "$OFB_DETECTOR" = owl ] && [ -d "$HOME/.cache/huggingface/hub/models--googl
   export HF_HUB_OFFLINE="${HF_HUB_OFFLINE:-1}"
 fi
 cd "$OFB_REPO" || exit 1
+# The Jetson GPU cannot use page cache, and `free -m` hides that: on 2026-11-24 the
+# NanoOWL worker answered 500 (TensorRT out of memory) with 2 GB "available". After
+# this step it loaded 4 times out of 4. It takes about 30 s; OFB_DROP_CACHE=0 skips it.
+case " ${ARGS[*]} " in *" --fake "*) FAKE_RUN=1 ;; *) FAKE_RUN=0 ;; esac   # a fake worker needs no GPU
+if [ "${OFB_DROP_CACHE:-1}" != 0 ] && [ "$FAKE_RUN" != 1 ]; then
+  info "dropping the page cache so the GPU can allocate (robot/lib/drop_cache.py)"
+  python "$OFB_ROBOT_DIR/lib/drop_cache.py" || true
+fi
 exec python scripts/vision_worker.py "${ARGS[@]}"
