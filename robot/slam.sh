@@ -15,7 +15,9 @@ ofb_log_init slam
 METHOD="${1:-slam_toolbox}"
 echo "== Checks"
 if ofb_wait_topic /scan 10; then ok "/scan"; else fail "no /scan" "start ./robot/bringup.sh first"; fi
-if ofb_wait_topic /odom 5; then ok "/odom"; else fail "no /odom" "start ./robot/bringup.sh first"; fi
+# 15 s, not 5: right after a Jetson boot the ROS CLI needs several seconds to find the
+# publisher, and /odom (20 Hz) was reported missing twice on 2026-11-25 while it was fine.
+if ofb_wait_topic /odom 15; then ok "/odom"; else fail "no /odom" "start ./robot/bringup.sh first"; fi
 if pgrep -f 'amcl|async_slam_toolbox|sync_slam_toolbox|cartographer_node' >/dev/null 2>&1; then
   fail "SLAM or AMCL already running" "stop nav.sh / the other slam.sh first (only one map->odom source)"
 fi
