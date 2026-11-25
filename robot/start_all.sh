@@ -64,15 +64,21 @@ pane() {  # pane <title> <command>
   echo "  pane $title: $cmd"
 }
 
+# The worker goes first and the ROS panes wait for it (up to 7 min). With bringup and
+# SLAM/Nav2 already running, the NanoOWL TensorRT engine could not allocate its GPU
+# memory and every /detect_embed answered 500 (2026-11-25); loaded first, it works and
+# the ROS side starts fine afterwards.
+WAITW="{ timeout 420 bash -c 'until curl -sf -m 2 $OFB_WORKER_URL/health >/dev/null 2>&1; do sleep 3; done'; true; } &&"
+
 echo "== Starting tmux session '$SESSION' (logs: $OFB_LOG_DIR)"
-pane bringup "$NOCONDA $R/bringup.sh"
-pane nav     "$NOCONDA sleep 10 && $R/nav.sh '$MAP_FILE'"
-if [ "$OFB_IMAGE_SOURCE" = ros ]; then
-  pane camera "$NOCONDA $R/camera_ros.sh $MODE"
-fi
 pane worker  "$R/worker.sh $MODE"
-pane objmem  "$NOCONDA sleep 20 && $R/objmem.sh '$MAP_FILE' $MODE"
-pane ask     "$NOCONDA sleep 30 && echo 'Waiting for the objmem nodes; then type: q a blue mug' && $R/lib/ros_exec.sh ros2 run objmem_ros ask"
+pane bringup "$NOCONDA $WAITW $R/bringup.sh"
+pane nav     "$NOCONDA $WAITW sleep 10 && $R/nav.sh '$MAP_FILE'"
+if [ "$OFB_IMAGE_SOURCE" = ros ]; then
+  pane camera "$NOCONDA $WAITW $R/camera_ros.sh $MODE"
+fi
+pane objmem  "$NOCONDA $WAITW sleep 20 && $R/objmem.sh '$MAP_FILE' $MODE"
+pane ask     "$NOCONDA $WAITW sleep 30 && echo 'Waiting for the objmem nodes; then type: q a blue mug' && $R/lib/ros_exec.sh ros2 run objmem_ros ask"
 tmux set-option -t "$SESSION" pane-border-status top >/dev/null 2>&1 || true
 tmux set-option -t "$SESSION" mouse on >/dev/null 2>&1 || true
 tmux select-pane -t "$SESSION:main.{bottom-right}" 2>/dev/null || true

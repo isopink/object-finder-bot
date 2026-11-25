@@ -118,6 +118,18 @@ def main(argv=None):
     params = Params.load(args.config)
     embedder, detector, camera = build_parts(args, params)
 
+    # Fail now, not at the first request: a detector whose TensorRT execution context
+    # could not be created (GPU out of memory) loads without an error and then answers
+    # every /detect_embed with 500 (NanoOWL, 2026-11-25).
+    try:
+        import numpy as np
+        detector.detect(np.zeros((240, 320, 3), np.uint8))
+    except Exception as exc:  # noqa: BLE001
+        print("[FAIL] the detector does not run: {}: {}".format(type(exc).__name__, exc), flush=True)
+        print("       GPU out of memory? Start the worker before bringup/nav (start_all.sh does), "
+              "and see robot/lib/drop_cache.py", flush=True)
+        sys.exit(1)
+
     from objmem.worker import serve
 
     print("Vision worker on http://{}:{}  (camera_mode={}, camera={}, detector={}, fake={})".format(
