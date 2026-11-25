@@ -236,12 +236,17 @@ class OwlDetector(object):
     nanoowl runs the encoder in PyTorch (slower). Labels are the prompts without the
     leading article ("water bottle"). `threshold` is OWL's score, which is lower than
     detectNet's: 0.1-0.2 keeps real objects, 0.3+ keeps only clear ones.
+
+    `slim` (default: the OFB_OWL_SLIM environment variable, off) frees the PyTorch
+    parts that are not used after start-up; see `slim_owl_predictor`. The prompts are
+    then fixed for the life of the detector.
     """
 
     def __init__(self, prompts: Optional[Sequence[str]] = None, engine: Optional[str] = OWL_DEFAULT_ENGINE,
                  threshold: float = 0.15, model: str = "google/owlvit-base-patch32",
                  nms_iou: float = 0.7, max_boxes: int = 20,
-                 ignore: Optional[Sequence[str]] = None, **_unused: Any) -> None:
+                 ignore: Optional[Sequence[str]] = None, slim: Optional[bool] = None,
+                 **_unused: Any) -> None:
         import os
         import sys
         try:
@@ -269,6 +274,10 @@ class OwlDetector(object):
         self.engine = eng
         self.predictor = OwlPredictor(model, image_encoder_engine=eng)
         self.text_encodings = self.predictor.encode_text(self.prompts)
+        self.slim = owl_slim_enabled() if slim is None else bool(slim)
+        self.slimmed = []  # type: List[str]
+        if self.slim:
+            self.slimmed = slim_owl_predictor(self.predictor, self.text_encodings)
         self.timing = _Timing()
 
     def detect(self, color: np.ndarray) -> List[RawBox]:
@@ -296,6 +305,75 @@ class OwlDetector(object):
 
     def fps(self) -> float:
         return self.timing.fps()
+
+
+_TRUE = ("1", "true", "yes", "on")
+
+
+def owl_slim_enabled() -> bool:
+    """OFB_OWL_SLIM=1 turns on `slim_owl_predictor` (off by default)."""
+    import os
+    return os.environ.get("OFB_OWL_SLIM", "0").strip().lower() in _TRUE
+
+
+def _cuda_mb(torch: Any) -> Optional[float]:
+    try:
+        if torch is not None and torch.cuda.is_available():
+            return torch.cuda.memory_allocated() / 1048576.0
+    except Exception:
+        pass
+    return None
+
+
+def slim_owl_predictor(predictor: Any, text_encodings: Any = None) -> List[str]:
+    """Free the parts of a nanoowl OwlPredictor that `predict()` no longer needs.
+
+    nanoowl loads the whole OWL-ViT model onto the GPU. After the prompts are
+    encoded once (OwlDetector.__init__), `predict(text_encodings=...)` never calls
+    the text encoder again, so `owlvit.text_model` and `owlvit.text_projection` can
+    go. With a TensorRT image encoder, `encode_image` calls only the engine, whose
+    outputs already include post_layernorm, layer_norm, class_head and box_head
+    (nanoowl owl_predictor.py, encode_image_trt / load_image_encoder_engine), so the
+    PyTorch `owlvit.vision_model` can go too. Without an engine it is kept, since
+    encode_image_torch uses it. The small heads are kept either way.
+
+    `text_encodings.text_embeds` is detached so its autograd graph does not keep the
+    text encoder alive. Returns the names that were dropped (empty when the
+    predictor does not look like nanoowl's).
+    """
+    import gc
+    try:
+        import torch  # type: ignore
+    except ImportError:
+        torch = None
+    owlvit = getattr(getattr(predictor, "model", None), "owlvit", None)
+    if owlvit is None:
+        return []
+    embeds = getattr(text_encodings, "text_embeds", None)
+    if embeds is not None and hasattr(embeds, "detach"):
+        text_encodings.text_embeds = embeds.detach()
+    names = ["text_model", "text_projection"]
+    if getattr(predictor, "image_encoder_engine", None) is not None:
+        names.append("vision_model")
+    before = _cuda_mb(torch)
+    dropped = []  # type: List[str]
+    for name in names:
+        if getattr(owlvit, name, None) is not None:
+            setattr(owlvit, name, None)
+            dropped.append(name)
+    gc.collect()
+    if torch is not None:
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+    after = _cuda_mb(torch)
+    msg = "OwlDetector slim: dropped {}".format(", ".join(dropped) or "nothing")
+    if before is not None and after is not None:
+        msg += " (torch allocated {:.0f} -> {:.0f} MB)".format(before, after)
+    print(msg, flush=True)
+    return dropped
 
 
 def _strip_article(prompt: str) -> str:

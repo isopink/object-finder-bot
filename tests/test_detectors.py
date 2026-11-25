@@ -284,3 +284,111 @@ def test_nms_boxes_max():
           RawBox(box=(1, 1, 10, 10), label="c", conf=0.9)]
     assert [b.label for b in detectors.nms_boxes(bs)] == ["c", "b"]
     assert [b.label for b in detectors.nms_boxes(bs, max_boxes=1)] == ["c"]
+
+
+# ---------------------------------------------------------------- NanoOWL slim (OFB_OWL_SLIM)
+class FakeEmbeds(object):
+    def __init__(self):
+        self.detached = False
+
+    def detach(self):
+        d = FakeEmbeds()
+        d.detached = True
+        return d
+
+
+class FakeTextEnc(object):
+    def __init__(self):
+        self.text_embeds = FakeEmbeds()
+
+
+def fake_nanoowl_predictor(engine):
+    """Only the attributes slim_owl_predictor looks at, shaped like nanoowl's."""
+    owlvit = types.SimpleNamespace(text_model="T", text_projection="P", vision_model="V")
+    model = types.SimpleNamespace(owlvit=owlvit, layer_norm="LN", class_head="CH", box_head="BH")
+    return types.SimpleNamespace(model=model, image_encoder_engine=engine)
+
+
+def test_owl_slim_with_engine_drops_text_and_vision():
+    p, enc = fake_nanoowl_predictor(engine="trt"), FakeTextEnc()
+    assert detectors.slim_owl_predictor(p, enc) == ["text_model", "text_projection", "vision_model"]
+    o = p.model.owlvit
+    assert o.text_model is None and o.text_projection is None and o.vision_model is None
+    # The heads are small and kept; the text encodings are detached from the graph.
+    assert (p.model.layer_norm, p.model.class_head, p.model.box_head) == ("LN", "CH", "BH")
+    assert enc.text_embeds.detached
+
+
+def test_owl_slim_without_engine_keeps_vision():
+    p = fake_nanoowl_predictor(engine=None)
+    assert detectors.slim_owl_predictor(p, FakeTextEnc()) == ["text_model", "text_projection"]
+    assert p.model.owlvit.vision_model == "V"
+
+
+def test_owl_slim_twice_and_unknown_predictor():
+    p = fake_nanoowl_predictor(engine="trt")
+    detectors.slim_owl_predictor(p)
+    assert detectors.slim_owl_predictor(p) == []
+    assert detectors.slim_owl_predictor(object(), "enc") == []
+
+
+def install_owl_slim(monkeypatch):
+    """Fake nanoowl whose predictor has the model attributes; records predict() calls."""
+    calls = {}
+
+    class FakeOwlPredictor(object):
+        def __init__(self, model, image_encoder_engine=None):
+            fake = fake_nanoowl_predictor(engine="trt" if image_encoder_engine else None)
+            self.model, self.image_encoder_engine = fake.model, fake.image_encoder_engine
+
+        def encode_text(self, texts):
+            assert self.model.owlvit.text_model is not None
+            calls["texts"] = list(texts)
+            return FakeTextEnc()
+
+        def predict(self, image, text, text_encodings, threshold):
+            calls["enc"] = text_encodings
+            return types.SimpleNamespace(boxes=np.zeros((0, 4)), scores=np.zeros(0), labels=np.zeros(0, int))
+
+    pkg = types.ModuleType("nanoowl")
+    mod = types.ModuleType("nanoowl.owl_predictor")
+    mod.OwlPredictor = FakeOwlPredictor
+    pkg.owl_predictor = mod
+    monkeypatch.setitem(sys.modules, "nanoowl", pkg)
+    monkeypatch.setitem(sys.modules, "nanoowl.owl_predictor", mod)
+    return calls
+
+
+def test_owl_slim_off_by_default(monkeypatch):
+    pytest.importorskip("PIL")
+    install_owl_slim(monkeypatch)
+    monkeypatch.delenv("OFB_OWL_SLIM", raising=False)
+    det = make_detector("owl", engine=None)
+    assert det.slim is False and det.slimmed == []
+    assert det.predictor.model.owlvit.text_model == "T"
+
+
+@pytest.mark.parametrize("value,expected", [("1", True), ("true", True), ("0", False), ("", False)])
+def test_owl_slim_env(monkeypatch, tmp_path, value, expected):
+    pytest.importorskip("PIL")
+    calls = install_owl_slim(monkeypatch)
+    engine = tmp_path / "owl.engine"
+    engine.write_bytes(b"x")
+    monkeypatch.setenv("OFB_OWL_SLIM", value)
+    det = make_detector("owl", engine=str(engine))
+    assert det.slim is expected
+    assert (det.predictor.model.owlvit.vision_model is None) is expected
+    # The prompts were encoded before anything was dropped, and detect() still
+    # passes the (fixed) encodings so predict() never needs the text encoder.
+    assert calls["texts"][0] == "a banana"
+    assert det.detect(rgb_image()) == []
+    assert calls["enc"] is det.text_encodings
+
+
+def test_owl_slim_argument_overrides_env(monkeypatch):
+    pytest.importorskip("PIL")
+    install_owl_slim(monkeypatch)
+    monkeypatch.setenv("OFB_OWL_SLIM", "1")
+    assert make_detector("owl", engine=None, slim=False).slimmed == []
+    monkeypatch.setenv("OFB_OWL_SLIM", "0")
+    assert make_detector("owl", engine=None, slim=True).slimmed == ["text_model", "text_projection"]

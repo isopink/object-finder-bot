@@ -42,6 +42,7 @@ at the end of each stage) so problems can be studied after class.
 | `objmem.sh <map> depth\|nodepth` | Waits for Nav2 and the worker, sets the initial pose, launches `objmem.launch.py` |
 | `start_all.sh <map> [depth\|nodepth]` / `stop_all.sh` | Everything in one tmux session `ofb` |
 | `check_stage1.sh` ... `check_stage5.sh` | Stage checks |
+| `free_memory.sh` | Read-only memory report; prints (does not run) the sudo commands that free ~500 MB, see "Freeing memory" |
 
 Settings you may need to change (export before running, or add to `~/.bashrc`
 after the `source .../robot/env.sh` line):
@@ -58,6 +59,7 @@ after the `source .../robot/env.sh` line):
 | `OFB_CONDA_ENV` | `test1001` | Different conda env name |
 | `OFB_MAX_VEL` | `0.15` | Faster or slower Nav2 driving (m/s) |
 | `OFB_INIT_POSE` | `0 0 0` | Robot does not start where mapping started (`"x y yaw"`, or `skip`) |
+| `OFB_OWL_SLIM` | `0` | `1` frees NanoOWL's unused PyTorch encoders (off until measured, see "Freeing memory") |
 
 ### tmux in 30 seconds
 
@@ -451,6 +453,66 @@ Patrol in the demo (nav.sh / start_all.sh running, initial pose set):
 ./robot/patrol.sh --add room429   # repeat for each desk
 ./robot/patrol.sh room429 1 3     # 1 round, 3 s per stop
 ```
+
+## Freeing memory
+
+The full system (bringup + Nav2 + NanoOWL worker + objmem) leaves about 1.5 GB
+`MemAvailable` (2026-11-25); the goal is 2 GB or more, and room for Whisper (~1 GB).
+GPU memory cannot use the page cache, so watch `MemFree` (and `CmaFree`) in
+`/proc/meminfo`, not `free -m`'s "available". `./robot/lib/drop_cache.py` empties
+the cache without root. Load the worker first (`start_all.sh` does): loaded after
+ROS, its TensorRT engine could not get GPU memory and every `/detect_embed` was 500.
+
+### 1. Services we do not use (~500 MB, needs sudo, once)
+
+```bash
+./robot/free_memory.sh    # read-only: memory, largest processes, service state,
+                          # then PRINTS the sudo commands below (runs none of them)
+```
+
+| Service | RSS | Why it can go (checked 2026-11-25) |
+|---|---|---|
+| Desktop: gdm, gnome-shell, Xorg | ~270 MB | We use SSH and tmux only; no script opens a window (SLAM runs with `use_rviz:=False`). `sudo systemctl set-default multi-user.target`, then reboot. |
+| docker, containerd | ~120 MB | The robot runs Foxy natively (`~/.bashrc` sources `/opt/ros/foxy`); `robot/docker/` (Humble) is the unused fallback. Check `sudo docker ps -a` first. |
+| mongodb | ~117 MB | Installed only as a dependency of `ros-foxy-warehouse-ros-mongo` (MoveIt, for the turtlebot3_manipulation arm). Nothing here uses MoveIt or MongoDB; its data directory is 288 KB. |
+
+Undo: `sudo systemctl set-default graphical.target` and
+`sudo systemctl enable --now containerd docker.socket docker mongodb`.
+Do this only when nobody is mapping or driving (it needs a reboot).
+
+### 2. Slimmer NanoOWL (`OFB_OWL_SLIM=1`, off by default)
+
+nanoowl puts the whole OWL-ViT model on the GPU, but after start-up the worker
+only uses the TensorRT image encoder and the text encodings it computed once for
+the fixed prompts. With `OFB_OWL_SLIM=1` the `OwlDetector` drops
+`owlvit.text_model` and `owlvit.text_projection`, and, when the TensorRT engine is
+loaded, the PyTorch `owlvit.vision_model` too (the engine's outputs already include
+the layer norms and the class/box heads). It prints
+`OwlDetector slim: dropped ... (torch allocated X -> Y MB)`. The prompts can no
+longer change while the worker runs.
+
+Measure before making it the default (worker alone, nothing else on the GPU):
+
+```bash
+for s in 0 1; do
+  OFB_OWL_SLIM=$s OFB_DETECTOR=owl ./robot/worker.sh nodepth &     # or in a tmux pane
+  python3 robot/lib/worker_probe.py --mode nodepth --n 5 --wait 420
+  grep -E 'MemFree|MemAvailable' /proc/meminfo; free -m             # write both down
+  kill %1; wait
+done
+```
+
+Keep it only if the memory drops and the detections (count and labels on the same
+scene) and the time per frame stay the same.
+
+### 3. Other things
+
+- `slam_toolbox` (~90 MB) is not running in the Nav2 stage: `nav.sh` refuses to
+  start while SLAM runs.
+- `teleop_keyboard` (~65 MB) is only for driving by hand; `start_all.sh` does not
+  start it. Close it when you are done.
+- `scan_filter.py` (~60 MB) is part of bringup and keeps the beam count fixed; leave it.
+- glibc tweaks such as `MALLOC_ARENA_MAX=2`: not tried; add only with a measurement.
 
 ## What to bring back after class
 
