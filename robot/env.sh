@@ -48,6 +48,9 @@ export OFB_SCAN_BEAMS="${OFB_SCAN_BEAMS:-240}"
 # LiDAR returns closer than this (m) are the robot itself (camera mast rods):
 # robot/lib/scan_filter.py drops them. 0 = off. Measure the rods (robot/README.md).
 export OFB_SCAN_MIN="${OFB_SCAN_MIN:-0}"
+# 0: odometry heading from the wheels instead of /imu (robot_ld08.launch.py writes a
+# copy of the turtlebot3 parameters with use_imu: false). See troubleshooting 18.
+export OFB_ODOM_IMU="${OFB_ODOM_IMU:-1}"
 export OFB_DOCKER_IMAGE="${OFB_DOCKER_IMAGE:-ofb-humble}"
 export OFB_DOCKER_NAME="${OFB_DOCKER_NAME:-ofb-humble}"
 

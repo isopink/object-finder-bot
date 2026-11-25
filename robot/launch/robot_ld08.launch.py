@@ -50,6 +50,27 @@ def lidar_actions(ld08_dir):
     ]
 
 
+def odom_param_file(param_file):
+    """The turtlebot3_node parameter file, or a copy with odometry.use_imu: false.
+
+    With use_imu: true the diff_drive_controller takes the heading from /imu. On
+    2026-11-25 it kept the heading frozen after a turn (wheels +97.7 deg, /imu +91.7 deg,
+    /odom 0 deg) while straight driving was recorded, so every SLAM map came out straight
+    instead of L-shaped. `-p odometry.use_imu:=false` on the command line does not help:
+    the file's diff_drive_controller section wins (checked with ros2 param get). A copy
+    with use_imu: false gave /odom +91.6 deg for a 91.6 deg wheel turn.
+    OFB_ODOM_IMU=0 selects the copy; the default (1) keeps the installed file.
+    """
+    if os.environ.get("OFB_ODOM_IMU", "1").strip() != "0":
+        return param_file
+    with open(param_file) as f:
+        text = f.read()
+    out = os.path.join("/tmp", "ofb_" + os.path.basename(param_file).replace(".yaml", "_noimu.yaml"))
+    with open(out, "w") as f:
+        f.write(text.replace("use_imu: true", "use_imu: false"))
+    return out
+
+
 def generate_launch_description():
     model = os.environ.get("TURTLEBOT3_MODEL", "waffle_pi")
     usb_port = LaunchConfiguration("usb_port")
@@ -69,7 +90,7 @@ def generate_launch_description():
         Node(
             package="turtlebot3_node",
             executable="turtlebot3_ros",
-            parameters=[param_file],
+            parameters=[odom_param_file(param_file)],
             arguments=["-i", usb_port],
             output="screen",
         ),

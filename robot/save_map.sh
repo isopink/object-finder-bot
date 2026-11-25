@@ -26,6 +26,14 @@ for ext in yaml pgm; do
   if [ -f "$OUT.$ext" ]; then mv -f "$OUT.$ext" "$OUT.bak.$ext"; fi
 done
 timeout 60 ros2 run nav2_map_server map_saver_cli -f "$OUT"
+if [ ! -f "$OUT.yaml" ] || [ ! -f "$OUT.pgm" ]; then
+  # Foxy's map_saver_cli waits 2 s for /map and failed with "Failed to save the map:
+  # timeout" on 2026-11-25 while slam_toolbox was running; slam_toolbox's own service
+  # saved the same map at once.
+  info "map_saver_cli did not write the map; asking slam_toolbox to save it"
+  timeout 30 ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap \
+    "{name: {data: '$OUT'}}" >/dev/null 2>&1 || true
+fi
 if [ -f "$OUT.yaml" ] && [ -f "$OUT.pgm" ]; then
   ok "saved $OUT.pgm and $OUT.yaml"
   ofb_python "$OFB_ROBOT_DIR/lib/map_info.py" "$OUT.yaml" | sed 's/^/         /'
