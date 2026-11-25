@@ -20,17 +20,23 @@ from launch_ros.actions import Node
 
 
 def lidar_actions(ld08_dir):
-    """The LDS-02 driver, plus robot/lib/scan_filter.py when OFB_SCAN_MIN > 0.
+    """The LDS-02 driver, plus robot/lib/scan_filter.py when it has work to do.
 
-    The filter drops returns from the camera mast rods (inside the robot):
-    driver -> /scan_raw -> scan_filter.py -> /scan. Without OFB_SCAN_MIN the
-    driver publishes /scan directly, as before.
+    driver -> /scan_raw -> scan_filter.py -> /scan. The filter gives every scan the
+    same number of beams (OFB_SCAN_BEAMS; slam_toolbox drops scans whose count
+    differs from the first) and, with OFB_SCAN_MIN > 0, drops returns from the
+    camera mast rods inside the robot. With both at 0 the driver publishes /scan
+    directly, as before.
     """
-    try:
-        scan_min = float(os.environ.get("OFB_SCAN_MIN", "0") or 0)
-    except ValueError:
-        scan_min = 0.0
-    if scan_min <= 0:
+    def _num(name, cast):
+        try:
+            return cast(float(os.environ.get(name, "0") or 0))
+        except ValueError:
+            return cast(0)
+
+    scan_min = _num("OFB_SCAN_MIN", float)
+    beams = _num("OFB_SCAN_BEAMS", int)
+    if scan_min <= 0 and beams <= 0:
         return [IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(ld08_dir, "launch", "ld08.launch.py")))]
     here = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +45,8 @@ def lidar_actions(ld08_dir):
         # Same node as ld08_driver/launch/ld08.launch.py, with its output renamed.
         Node(package="ld08_driver", executable="ld08_driver", name="ld08_driver", output="screen",
              remappings=[("scan", "scan_raw"), ("/scan", "/scan_raw")]),
-        ExecuteProcess(cmd=["python3", filt, "--min-range", str(scan_min)], output="screen"),
+        ExecuteProcess(cmd=["python3", filt, "--min-range", str(scan_min), "--beams", str(beams)],
+                       output="screen"),
     ]
 
 

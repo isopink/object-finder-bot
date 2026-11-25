@@ -22,8 +22,11 @@ esac
 # ---------------------------------------------------------------- robot
 export TURTLEBOT3_MODEL="${TURTLEBOT3_MODEL:-waffle_pi}"
 export LDS_MODEL="${LDS_MODEL:-LDS-02}"          # LDS-01 or LDS-02: read the sticker on the LiDAR
-export OPENCR_PORT="${OPENCR_PORT:-/dev/ttyACM0}"
-export LIDAR_PORT="${LIDAR_PORT:-/dev/ttyUSB0}"
+# The udev links follow the device when the OpenCR re-enumerates as ttyACM1 (seen on
+# 2026-11-25 after a power cycle); the plain names are the fallback without udev rules.
+_ofb_dev() { if [ -e "$1" ]; then echo "$1"; else echo "$2"; fi; }
+export OPENCR_PORT="${OPENCR_PORT:-$(_ofb_dev /dev/opencr /dev/ttyACM0)}"
+export LIDAR_PORT="${LIDAR_PORT:-$(_ofb_dev /dev/lidar /dev/ttyUSB0)}"
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-30}"       # unique per team in the classroom
 # Everything runs on the Jetson: keep DDS traffic on this machine so other
 # teams' robots on the same Wi-Fi are never seen. Set to 0 to talk to a laptop.
@@ -39,6 +42,9 @@ export OFB_MAPVIEW_PORT="${OFB_MAPVIEW_PORT:-8555}"
 export OFB_DETECTOR="${OFB_DETECTOR:-detectnet}"  # detectnet | yolo | owl (NanoOWL)
 export OFB_IMAGE_SOURCE="${OFB_IMAGE_SOURCE:-worker}"  # worker | ros
 export OFB_MAX_VEL="${OFB_MAX_VEL:-0.15}"         # m/s cap for Nav2 (raised camera mast)
+# Beams per LiDAR scan sent to SLAM/Nav2 (robot/lib/scan_filter.py). The LDS-02 driver
+# sends 242-249 and slam_toolbox drops the scans that differ from the first one. 0 = off.
+export OFB_SCAN_BEAMS="${OFB_SCAN_BEAMS:-240}"
 # LiDAR returns closer than this (m) are the robot itself (camera mast rods):
 # robot/lib/scan_filter.py drops them. 0 = off. Measure the rods (robot/README.md).
 export OFB_SCAN_MIN="${OFB_SCAN_MIN:-0}"

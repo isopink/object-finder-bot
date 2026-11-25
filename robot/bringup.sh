@@ -33,6 +33,13 @@ if pgrep -f turtlebot3_ros >/dev/null 2>&1; then
 fi
 if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
 
+# Files that earlier ROS processes left in /dev/shm (Fast DDS shared memory) make new
+# nodes deaf: bringup ran with /odom published but nobody could hear it (2026-11-25,
+# 30-46 stale files). Remove them, but only when none of our ROS processes is running.
+if ! pgrep -u "$(id -u)" -f 'turtlebot3_ros|ld08_driver|nav2_|slam_toolbox|objmem|vision_worker|_ros2_daemon' >/dev/null 2>&1; then
+  rm -f /dev/shm/fastrtps_* /dev/shm/sem.fastrtps_* 2>/dev/null || true
+fi
+
 LAUNCH=(turtlebot3_bringup robot.launch.py)
 TB3_LAUNCH_FILE="$(ros2 pkg prefix turtlebot3_bringup 2>/dev/null)/share/turtlebot3_bringup/launch/robot.launch.py"
 if [ "$LDS_MODEL" = LDS-02 ] && [ -f "$TB3_LAUNCH_FILE" ] && ! grep LDS_MODEL "$TB3_LAUNCH_FILE" >/dev/null; then
