@@ -238,3 +238,29 @@ def test_reaches_the_goal_at_the_robot_speed(occ):
     assert math.hypot(io.p[0] - 6.0, io.p[1] + 3.0) < 0.2
     assert only_four_commands(io.cmds, r.speed, r.turn_rate)
     assert io.t < 120.0
+
+
+def test_map_file_gives_the_same_grid_as_the_occupancy_topic(occ, tmp_path):
+    from PIL import Image
+    # map_server convention: white (254) free, black (0) occupied, image row 0 = top (largest y)
+    img = np.where(occ[::-1] == 0, 254, 0).astype(np.uint8)
+    Image.fromarray(img).save(str(tmp_path / "aisle_nav.pgm"))
+    (tmp_path / "aisle_nav.yaml").write_text(
+        "image: aisle_nav.pgm\nmode: trinary\nresolution: 0.05\norigin: [-1.0, -5.0, 0]\n"
+        "negate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n")
+    from_file = gn.grid_from_map_file(str(tmp_path / "aisle_nav.yaml"), 0.2)
+    from_topic = make_grid(occ, 0.2)
+    assert from_file.res == from_topic.res and (from_file.ox, from_file.oy) == (from_topic.ox, from_topic.oy)
+    assert np.array_equal(from_file.free, from_topic.free)
+    segs, _ = gn.plan(from_file, (0.0, 0.0), 0, (6.0, -3.0))
+    assert [k for k, _x, _y in segs] == [0, 3, 0]
+
+
+def test_map_file_grey_unknown_is_blocked(tmp_path):
+    from PIL import Image
+    img = np.full((40, 40), 205, np.uint8)      # Cartographer grey = unknown
+    img[10:30, 10:30] = 254
+    Image.fromarray(img).save(str(tmp_path / "m.pgm"))
+    (tmp_path / "m.yaml").write_text("image: m.pgm\nresolution: 0.05\norigin: [0, 0, 0]\nnegate: 0\nfree_thresh: 0.196\n")
+    g = gn.grid_from_map_file(str(tmp_path / "m.yaml"), 0.0)
+    assert g.free.sum() == 400 and not g.free[0, 0]

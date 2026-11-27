@@ -69,6 +69,19 @@ cp "$MAP" "$OFB_LOG_DIR/" 2>/dev/null || true
 # 68 % of a core for their costmaps (measured 2026-11-27, 6 cores, load average 7 to 9).
 # OFB_NAV_FULL=1 starts all of Nav2 again (needed for goto.sh, patrol.sh, OFB_NAV4=0).
 if [ "${OFB_NAV4:-1}" = 1 ] && [ "${OFB_NAV_FULL:-0}" != 1 ]; then
+  # AMCL localises on the full SLAM map <name>.yaml when the map given is the aisle copy
+  # <name>_nav.yaml. In the aisle copy everything outside the aisle is painted as wall, so
+  # every scan fits everywhere: on 2026-11-27 AMCL was 1.8 m off after a few metres (scan
+  # match score 0.38 at its pose, 0.86 at the true one). gridnav reads the aisle map from
+  # its file. free_thresh 0.196 keeps Cartographer's grey (unknown) from counting as free.
+  FULL="${MAP%_nav.yaml}.yaml"
+  if [ "$FULL" != "$MAP" ] && [ -f "$FULL" ]; then
+    IMG="$(sed -n -E 's/^image:[[:space:]]*//p' "$FULL" | head -1)"
+    case "$IMG" in /*) ;; *) IMG="$(cd "$(dirname "$FULL")" && pwd)/$IMG" ;; esac
+    sed -E -e "s#^image:.*#image: $IMG#" -e "s/^free_thresh:.*/free_thresh: 0.196/" "$FULL" > "$OFB_LOG_DIR/amcl_map.yaml"
+    info "AMCL uses the full SLAM map $(basename "$FULL") (planning stays on $(basename "$MAP"))"
+    MAP="$OFB_LOG_DIR/amcl_map.yaml"
+  fi
   echo "== Starting the map server and AMCL only on $(basename "$MAP") (four-command navigation)."
   ros2 launch nav2_bringup localization_launch.py \
     map:="$MAP" params_file:="$PARAMS" use_sim_time:=False autostart:=True

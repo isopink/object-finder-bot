@@ -5,7 +5,8 @@
 Serves the action `navigate_to_pose_4cmd` (same type as Nav2's, so the finder only needs
 `nav_action:=navigate_to_pose_4cmd`). Nav2 (map_server + AMCL) keeps running for the
 localisation; its planner and controller are not used.
-Needs: /map (the Nav2 aisle map), TF map -> base_link, /scan (front stop); publishes /cmd_vel.
+Needs: the aisle map (-p map_yaml:=<name>_nav.yaml; without it the /map topic is used),
+TF map -> base_link (AMCL on the full SLAM map), /scan (front stop); publishes /cmd_vel.
 Planning and driving logic: gridnav.py (tested on a PC with a simulated robot).
 """
 import math
@@ -43,6 +44,7 @@ def main(argv=None):
     front_stop = param("front_stop", 0.30)
     goal_tol = param("goal_tol", 0.15)
     max_time = param("max_time_s", 220.0)
+    map_yaml = param("map_yaml", "")
     log = node.get_logger()
 
     pub = node.create_publisher(Twist, "/cmd_vel", 10)
@@ -65,9 +67,15 @@ def main(argv=None):
         state["front"] = min(vals) if vals else 9.9
         state["t_scan"] = time.time()
 
-    node.create_subscription(OccupancyGrid, "/map", on_map,
-                             QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL,
-                                        reliability=ReliabilityPolicy.RELIABLE))
+    if map_yaml:
+        state["grid"] = gridnav.grid_from_map_file(map_yaml, radius)
+        g = state["grid"]
+        log.info("aisle map {}: {}x{} cells, {:.2f} m/cell, free after the {:.2f} m robot radius: {:.1f} m2".format(
+            map_yaml, g.free.shape[1], g.free.shape[0], g.res, radius, float(g.free.sum()) * g.res ** 2))
+    else:
+        node.create_subscription(OccupancyGrid, "/map", on_map,
+                                 QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL,
+                                            reliability=ReliabilityPolicy.RELIABLE))
     node.create_subscription(LaserScan, "/scan", on_scan, qos_profile_sensor_data)
 
     busy = threading.Lock()

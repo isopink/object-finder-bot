@@ -18,6 +18,7 @@ never a curve.
 """
 import heapq
 import math
+import os
 
 import numpy as np
 
@@ -93,6 +94,35 @@ def grid_from_occupancy(data, width, height, res, origin, radius_m, free_max=0):
     counts as blocked)."""
     a = np.asarray(data, dtype=np.int16).reshape(int(height), int(width))
     free = (a >= 0) & (a <= free_max)
+    return Grid(erode(free, int(math.ceil(radius_m / res))), res, origin)
+
+
+def grid_from_map_file(yaml_path, radius_m):
+    """Grid from a map_server .yaml + image pair (the aisle map <name>_nav.yaml).
+
+    The navigator reads its map from the file, not from /map: AMCL must localise on the full
+    SLAM map (in the aisle map everything outside the aisle is "wall", so every scan fits
+    everywhere and AMCL drifted 1.8 m on 2026-11-27), while the paths stay inside the aisle.
+    Free = lighter than free_thresh, like map_server; everything else is blocked.
+    """
+    meta = {}
+    with open(yaml_path) as f:
+        for line in f:
+            key, sep, value = line.partition(":")
+            if sep:
+                meta[key.strip()] = value.strip()
+    res = float(meta["resolution"])
+    origin = [float(v) for v in meta["origin"].strip("[]").split(",")[:2]]
+    free_thresh = float(meta.get("free_thresh", 0.196))
+    negate = int(float(meta.get("negate", 0)))
+    image = meta["image"].strip("'" + '"')
+    if not os.path.isabs(image):
+        image = os.path.join(os.path.dirname(os.path.abspath(yaml_path)), image)
+    from PIL import Image
+    with Image.open(image) as im:
+        px = np.asarray(im.convert("L"), dtype=np.float32)
+    p_occ = px / 255.0 if negate else (255.0 - px) / 255.0
+    free = (p_occ < free_thresh)[::-1]          # image row 0 is the top of the map (largest y)
     return Grid(erode(free, int(math.ceil(radius_m / res))), res, origin)
 
 

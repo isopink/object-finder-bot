@@ -20,6 +20,7 @@ MAP_NAME="$(basename "$MAP" .yaml)"
 MAP_YAML="$MAP"
 case "$MAP_YAML" in *.yaml) ;; *) MAP_YAML="$OFB_ROBOT_DIR/maps/$MAP.yaml" ;; esac
 if [ ! -f "$MAP_YAML" ]; then MAP_YAML=""; fi
+NAV_MAP_YAML="$MAP_YAML"      # the map the four-command navigator plans on (the aisle map)
 # The map view draws the full SLAM map (walls, desks) when the navigation map is the aisle-only
 # copy "<name>_nav" made from it (same size and origin). OFB_VIEW_MAP=<yaml> picks another one.
 VIEW_MAP="${OFB_VIEW_MAP:-${MAP_YAML%_nav.yaml}.yaml}"
@@ -82,7 +83,7 @@ NAV_TIMEOUT=120
 if [ "${OFB_NAV4:-1}" = 1 ]; then
   NAV_ACTION=navigate_to_pose_4cmd
   NAV_TIMEOUT=240      # 9 m of aisle at 0.12 m/s is 75 s plus turns; gridnav itself stops at 220 s
-  ros2 run objmem_ros gridnav --ros-args -p speed:="${OFB_NAV4_SPEED:-0.12}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
+  ros2 run objmem_ros gridnav --ros-args -p map_yaml:="$NAV_MAP_YAML" -p speed:="${OFB_NAV4_SPEED:-0.12}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
   GRIDNAV_PID=$!
   trap 'kill $GRIDNAV_PID 2>/dev/null; pkill -f lib/objmem_ros/gridnav 2>/dev/null' EXIT
   echo "   four-command navigation: ON (action $NAV_ACTION, log $OFB_LOG_DIR/gridnav.log)"
