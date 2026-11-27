@@ -53,6 +53,9 @@ def build_parser():
     ap.add_argument("--yolo-engine", default=None, help="TensorRT .engine built on the Jetson (yolo detector only)")
     ap.add_argument("--owl-engine", default=None,
                     help="NanoOWL image encoder engine (owl detector; default ~/nanoowl/data/owl_image_encoder_patch32.engine)")
+    ap.add_argument("--no-tiles", action="store_true",
+                    help="when the detector finds nothing, report nothing (default: embed the 3x3 tiles of the "
+                         "frame, which puts tile00..tile22 into the memory)")
     ap.add_argument("--owl-prompts", default=None,
                     help="comma separated phrases for the owl detector, e.g. 'a banana,a water bottle' (default: built-in list)")
     ap.add_argument("--clip-model", default="ViT-B-32")
@@ -135,7 +138,8 @@ def main(argv=None):
     print("Vision worker on http://{}:{}  (camera_mode={}, camera={}, detector={}, fake={})".format(
         args.host, args.port, params.camera_mode, type(camera).__name__ if camera else "none",
         type(detector).__name__, args.fake), flush=True)
-    serve(embedder, detector, camera, params, host=args.host, port=args.port, quiet=not args.verbose)
+    serve(embedder, detector, camera, params, host=args.host, port=args.port, quiet=not args.verbose,
+          tiles=not args.no_tiles)
 
 
 if __name__ == "__main__":

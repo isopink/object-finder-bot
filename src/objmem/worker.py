@@ -70,12 +70,13 @@ class VisionService:
     """The request logic, independent of HTTP (also usable in-process)."""
 
     def __init__(self, embedder, detector, camera=None, params: Optional[Params] = None,
-                 camera_mode: Optional[str] = None):
+                 camera_mode: Optional[str] = None, tiles: bool = True):
         self.params = params if params is not None else Params()
         self.embedder = embedder if isinstance(embedder, CachedTextEmbedder) else CachedTextEmbedder(embedder)
         self.detector = detector
         self.camera = camera
         self.camera_mode = camera_mode or self.params.camera_mode
+        self.tiles = bool(tiles)   # False: an empty detector result stays empty (no tile crops)
         self.lock = threading.Lock()
 
     # -- inputs
@@ -108,7 +109,7 @@ class VisionService:
             pad_crop = detection_crops(color, [rb], pad=float(self.params.crop_pad))
             if pad_crop:
                 kept.append((pad_crop[0].image, tuple(int(v) for v in rb.box), rb.label, float(rb.conf)))
-        if not kept:
+        if not kept and self.tiles:
             kept = [(c.image, tuple(int(v) for v in c.box), c.label, 0.0) for c in grid_crops(color, 3)]
         vecs = self.embedder.embed_images([k[0] for k in kept]) if kept else np.zeros((0, 512), np.float32)
         out = []
@@ -195,9 +196,9 @@ class _Handler(BaseHTTPRequestHandler):
 
 def make_server(embedder, detector, camera=None, params: Optional[Params] = None,
                 host: str = "0.0.0.0", port: int = DEFAULT_PORT, camera_mode: Optional[str] = None,
-                quiet: bool = True) -> HTTPServer:
+                quiet: bool = True, tiles: bool = True) -> HTTPServer:
     """Build the (single-threaded) HTTP server. port=0 picks a free port: see server.server_address."""
-    service = VisionService(embedder, detector, camera, params, camera_mode)
+    service = VisionService(embedder, detector, camera, params, camera_mode, tiles=tiles)
     handler = type("VisionHandler", (_Handler,), {"service": service, "quiet": quiet})
     server = HTTPServer((host, port), handler)
     server.service = service
@@ -206,10 +207,10 @@ def make_server(embedder, detector, camera=None, params: Optional[Params] = None
 
 def serve(embedder, detector, camera=None, params: Optional[Params] = None,
           host: str = "0.0.0.0", port: int = DEFAULT_PORT, camera_mode: Optional[str] = None,
-          quiet: bool = False, block: bool = True):
+          quiet: bool = False, block: bool = True, tiles: bool = True):
     """Run the worker. block=True serves until Ctrl+C; block=False starts a daemon thread
     and returns the server (call server.shutdown() to stop)."""
-    server = make_server(embedder, detector, camera, params, host, port, camera_mode, quiet)
+    server = make_server(embedder, detector, camera, params, host, port, camera_mode, quiet, tiles)
     if not block:
         threading.Thread(target=server.serve_forever, daemon=True).start()
         return server

@@ -27,6 +27,12 @@ else
   if [ "$OFB_IMAGE_SOURCE" = ros ]; then CAM=none; fi
   ARGS+=(--detector "$OFB_DETECTOR" --camera "$CAM")
 fi
+# Only look for one kind of object (e.g. the demo bottle): OFB_OWL_PROMPTS="a water bottle"
+# (comma separated, NanoOWL), OFB_TILES=0 (no tile crops when nothing is found, so the
+# memory holds only real detections), OFB_DET_THRESHOLD=0.25 (confidence, default per detector).
+if [ -n "${OFB_OWL_PROMPTS:-}" ]; then ARGS+=(--owl-prompts "$OFB_OWL_PROMPTS"); fi
+if [ "${OFB_TILES:-1}" = 0 ]; then ARGS+=(--no-tiles); fi
+if [ -n "${OFB_DET_THRESHOLD:-}" ]; then ARGS+=(--threshold "$OFB_DET_THRESHOLD"); fi
 ARGS+=("$@")
 
 # The conda env has PyTorch with CUDA (never reinstall torch).

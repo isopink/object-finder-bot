@@ -119,3 +119,10 @@ def test_camera_without_frame(start):
 def test_unreachable():
     with pytest.raises(VisionWorkerError, match="cannot reach"):
         VisionClient("http://127.0.0.1:1", timeout=1.0).health()
+
+
+def test_no_tiles_when_nothing_detected_and_tiles_switched_off(start):
+    # The demo looks for one object only: an empty frame must not put tile00..tile22 into the memory.
+    client, srv = start("depth", detector=FakeDetector(boxes=[]))
+    srv.service.tiles = False
+    assert client.detect_embed() == []
