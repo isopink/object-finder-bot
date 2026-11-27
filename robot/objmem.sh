@@ -105,6 +105,6 @@ if [ "${OFB_NAV4:-1}" = 1 ]; then
 fi
 ros2 launch objmem_ros objmem.launch.py \
   config:="$CONFIG" memory_file:="$MEM" image_source:="$OFB_IMAGE_SOURCE" \
-  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG" nav_action:="$NAV_ACTION" nav_timeout_s:="$NAV_TIMEOUT" \
+  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG" evidence_log:="$OFB_LOG_DIR/evidence.jsonl" nav_action:="$NAV_ACTION" nav_timeout_s:="$NAV_TIMEOUT" \
   only_when_stopped:="$ONLY_STOPPED" skip_while_turning:="$SKIP_TURNING" observe_rate:="$OBS_RATE" \
   start_mark:="${OFB_START_MARK:--0.49 -0.01}"

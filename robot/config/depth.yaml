@@ -3,10 +3,11 @@
 
 # Existence confidence (proposal 4.3)
 d: 0.8              # P(detect | present)
+d_by_range: []      # rows [up to this distance (m), P(detect | present)], measured by scripts/fit_detection_range.py; [] = d everywhere
 f: 0.1              # P(detect | absent)
 tau: 600.0          # time-decay constant (s)
 p_init: 0.7         # confidence of a new memory
-p_update_dist: 0.2  # robot travel between two Bayes updates of one memory's p (m); 0 = every frame  (5 looks per second at 0.08 m/s are 1.6 cm apart)
+p_update_dist: 0.2  # robot travel between two Bayes updates of one memory's p (m); 0 = every frame  (5 looks per second at 0.12 m/s are 2.4 cm apart)
 
 # Same-object test (proposal 4.2)
 maha_thresh: 4.0    # Mahalanobis distance gate (3.0 split one cup into 3 memories 10-20 cm apart, 2026-11-28)
@@ -71,6 +72,7 @@ background_prompts:
 worker_url: http://127.0.0.1:8600
 mapview_port: 8555
 search_log: ""      # JSON-lines search log for scripts/evaluate.py; "" = none (the launch file can set it)
+evidence_log: ""    # JSON-lines log of every look at a remembered place; robot/objmem.sh sets it to <log dir>/evidence.jsonl
 
 # Speech queries (ros2 run objmem_ros ask --voice)
 whisper_model: base.en

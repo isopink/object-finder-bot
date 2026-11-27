@@ -136,6 +136,10 @@ class ObserverNode(Node):
         settle = float(_declare(self, "settle_s", 0.5))
         self.worker_url = _declare(self, "worker_url", p.worker_url)
         self.timeout = float(_declare(self, "worker_timeout", 10.0))
+        evidence_log = str(_declare(self, "evidence_log", "") or "")
+        if evidence_log and hasattr(p, "evidence_log"):
+            p.evidence_log = evidence_log       # the memory reads it from the shared params
+            self.get_logger().info("evidence log: {}".format(evidence_log))
         map_frame = _declare(self, "map_frame", "map")
         base_frame = _declare(self, "base_frame", "base_link")
         self.pause_nav = pause_nav

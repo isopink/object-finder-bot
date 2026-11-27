@@ -37,6 +37,15 @@ show the same view, so they are one piece of evidence, not several. Position and
 embedding are still fused from every frame; the re-check of the finder
 (``mark_found`` / ``mark_not_found``) always counts.
 
+``d_by_range`` (empty by default) replaces the one number ``d`` by a table measured on
+the robot: P(detect | present) for the distance between the camera and the remembered
+place. A cup 3.5 m away is found far less often than one 1 m away, so missing it there
+says little. The value never goes below ``f``: where the detector finds a present object
+no more often than an absent one, a look is no evidence either way. ``evidence_log``
+names a JSON-lines file that gets one line per frame with every remembered place that
+was looked at (distance, found or not); scripts/fit_detection_range.py turns it into
+the table. The re-check of the finder keeps the plain ``d``.
+
 Time decay ``p <- 0.5 + (p - 0.5) exp(-dt / tau)`` is applied lazily: every
 memory remembers the time its p was last decayed to, so the same interval is
 never decayed twice, whichever method triggers it.
@@ -44,6 +53,7 @@ never decayed twice, whichever method triggers it.
 The class is thread-safe (one re-entrant lock) so that the ROS observer and
 finder can share one instance in one process.
 """
+import json
 import math
 import os
 import threading
@@ -51,6 +61,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from objmem.geometry import camera_position
 from objmem.types import Candidate, InView, MemoryItem, Observation, Params, Pose2D
 
 _P_EPS = 1e-6
@@ -85,6 +96,21 @@ def bayes_negative(p: float, d: float, f: float) -> float:
     num = (1.0 - d) * p
     den = num + (1.0 - f) * (1.0 - p)
     return _clip_p(num / den if den > 0 else p)
+
+
+def detect_prob(r: float, params: Params) -> float:
+    """P(detect | present) for an object r meters from the camera: ``params.d``, or the row of
+    ``params.d_by_range`` ([up to this distance, P]) that covers r (beyond the last row: its
+    value). Never below ``params.f``."""
+    d = float(params.d)
+    table = sorted((float(row[0]), float(row[1])) for row in (params.d_by_range or []))
+    if table:
+        d = table[-1][1]
+        for upper, value in table:
+            if r <= upper:
+                d = value
+                break
+    return max(d, float(params.f))
 
 
 def time_decay(p: float, dt: float, tau: float) -> float:
@@ -172,6 +198,7 @@ class ObjectMemory:
         self._next_id = 0
         self._merged_into = {}  # type: Dict[int, int]  # id removed by a merge -> id that absorbed it
         self._p_xy = {}  # type: Dict[int, Tuple[float, float]]  # robot position at each item's last update of p
+        self._evidence_warned = False
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------ access
@@ -295,21 +322,60 @@ class ObjectMemory:
             matches = self.associate(observations)
             matched_obs = set(i for i, _ in matches)
             matched_items = set(j for _, j in matches)
+            cam = camera_position(pose, pr)
+            looks = []  # (item, distance, found, counted for p, new) for the evidence log
+
+            def dist(item):
+                return math.hypot(float(item.mu[0]) - float(cam[0]), float(item.mu[1]) - float(cam[1]))
+
             for i, j in matches:
                 item = self._items[j]
                 self._fuse(item, observations[i], t)
-                if self._p_evidence(item, pose):
-                    item.p = bayes_positive(item.p, pr.d, pr.f)
+                r, counted = dist(item), self._p_evidence(item, pose)
+                if counted:
+                    item.p = bayes_positive(item.p, detect_prob(r, pr), pr.f)
+                looks.append((item, r, True, counted, False))
             for j, item in enumerate(self._items):
                 if j in matched_items:
                     continue
-                if in_view(item.mu, pose) and self._p_evidence(item, pose):
-                    item.p = bayes_negative(item.p, pr.d, pr.f)
+                if in_view(item.mu, pose):
+                    r, counted = dist(item), self._p_evidence(item, pose)
+                    if counted:
+                        item.p = bayes_negative(item.p, detect_prob(r, pr), pr.f)
+                    looks.append((item, r, False, counted, False))
             for i, obs in enumerate(observations):
                 if i not in matched_obs:
-                    self._p_xy[self.add(obs, t).id] = (float(pose.x), float(pose.y))
+                    item = self.add(obs, t)
+                    self._p_xy[item.id] = (float(pose.x), float(pose.y))
+                    looks.append((item, dist(item), True, True, True))
+            if pr.evidence_log and looks:
+                self._write_evidence(t, pose, len(observations), looks)
             if pr.merge_dist > 0.0:
                 self.merge_duplicates(t)
+
+    def _write_evidence(self, t: float, pose: Pose2D, n_obs: int, looks) -> None:
+        """One JSON line: every remembered place looked at in this frame. A failure to write
+        is reported once and never stops the update."""
+        try:
+            rec = {"t": round(float(t), 3),
+                   "pose": [round(float(pose.x), 3), round(float(pose.y), 3), round(float(pose.yaw), 4)],
+                   "n_obs": int(n_obs), "items": []}
+            for item, r, found, counted, new in looks:
+                row = {"id": int(item.id), "label": item.label, "r": round(float(r), 3),
+                       "hit": int(found), "counted": int(counted), "p": round(float(item.p), 4)}
+                if new:
+                    row["new"] = 1
+                rec["items"].append(row)
+            path = self.params.evidence_log
+            folder = os.path.dirname(os.path.abspath(path))
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec) + "\n")
+        except Exception as exc:  # noqa: BLE001 - the log is for people
+            if not self._evidence_warned:
+                self._evidence_warned = True
+                print("objmem: cannot write the evidence log {!r}: {}".format(self.params.evidence_log, exc), flush=True)
 
     def _mergeable(self, a: MemoryItem, b: MemoryItem) -> Optional[float]:
         """Distance (m) between two memories that count as one object, else None."""
