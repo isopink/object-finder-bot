@@ -126,3 +126,48 @@ def test_no_tiles_when_nothing_detected_and_tiles_switched_off(start):
     client, srv = start("depth", detector=FakeDetector(boxes=[]))
     srv.service.tiles = False
     assert client.detect_embed() == []
+
+
+def test_live_view_draws_the_last_detection_and_never_uses_the_worker_port(start):
+    import io
+    import urllib.request
+    from PIL import Image
+    from objmem.worker import start_view_server
+
+    client, srv = start("depth")
+    view = start_view_server(srv.service, "127.0.0.1", 0)
+    try:
+        base = "http://127.0.0.1:{}".format(view.server_address[1])
+        page = urllib.request.urlopen(base + "/", timeout=5).read()
+        assert b"view.jpg" in page
+        plain = urllib.request.urlopen(base + "/view.jpg", timeout=5).read()
+        assert plain[:2] == b"\xff\xd8"                       # a JPEG, before any detection
+        dets = client.detect_embed()                            # the observer asks; boxes are remembered
+        assert dets
+        boxed = urllib.request.urlopen(base + "/view.jpg", timeout=5).read()
+        a = np.asarray(Image.open(io.BytesIO(plain)).convert("RGB")).astype(int)
+        b = np.asarray(Image.open(io.BytesIO(boxed)).convert("RGB")).astype(int)
+        assert a.shape == b.shape and np.abs(a - b).max() > 80  # the green boxes are there
+        found, _prob = client.verify("a red mug")
+        after = urllib.request.urlopen(base + "/view.jpg", timeout=5).read()
+        assert after[:2] == b"\xff\xd8"
+        assert client.health()["ok"]                            # the worker port still answers
+    finally:
+        view.shutdown()
+        view.server_close()
+
+
+def test_live_view_without_a_frame_answers_503(start):
+    import urllib.error
+    import urllib.request
+    from objmem.worker import start_view_server
+
+    _client, srv = start("depth", camera=False)
+    view = start_view_server(srv.service, "127.0.0.1", 0)
+    try:
+        with pytest.raises(urllib.error.HTTPError) as err:
+            urllib.request.urlopen("http://127.0.0.1:{}/view.jpg".format(view.server_address[1]), timeout=5)
+        assert err.value.code == 503
+    finally:
+        view.shutdown()
+        view.server_close()

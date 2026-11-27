@@ -4,7 +4,10 @@
   w  go straight at a fixed slow speed until you press s (or something is in front)
   d  turn right 90 degrees in place (uses /odom yaw feedback, stops by itself)
   a  turn left 90 degrees in place
-  s  stop now (space also works). q quits (and stops).
+  s  stop now (space also works); also cancels a running search (/objmem/cancel). q quits (and stops).
+
+While nothing is pressed the teleop is silent on /cmd_vel, so it can stay open while the
+robot drives to an object by itself (gridnav / Nav2); `s` is then the emergency stop.
 
 Why: the stock teleop changes speeds in steps and a turn is easy to overshoot, which
 spoils SLAM. Fixed slow speeds and exact 90 degree turns keep the map clean.
@@ -28,6 +31,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 
 
 def wrap(a):
@@ -41,6 +45,8 @@ def main():
     rclpy.init()
     n = rclpy.create_node("ofb_teleop4")
     pub = n.create_publisher(Twist, "/cmd_vel", 10)
+    cancel_pub = n.create_publisher(String, "/objmem/cancel", 10)
+    zeros_left = 0      # zero commands still to send after a stop; then silence
     st = {"yaw": None, "x": 0.0, "y": 0.0, "t_odom": 0.0, "front": 9.9, "t_scan": 0.0}
 
     def on_odom(m):
@@ -95,7 +101,8 @@ def main():
                 if k == "":             # the terminal is gone: stop and quit, never keep driving
                     break
                 if k in ("s", " "):
-                    mode = "stop"; say("stop")
+                    mode = "stop"; zeros_left = 10; say("stop")
+                    cancel_pub.publish(String(data="teleop4 stop"))
                 elif k == "q":
                     break
                 elif k == "w" and alive:
@@ -129,7 +136,12 @@ def main():
                     mode = "stop"; say("turned %.0f deg" % math.degrees(done))
                 else:
                     tw.angular.z = sign * turn
-            pub.publish(tw)
+            if mode != "stop":
+                zeros_left = 10             # whenever this motion ends, stop the wheels
+                pub.publish(tw)
+            elif zeros_left > 0:
+                zeros_left -= 1
+                pub.publish(tw)             # tw is zero here
     except KeyboardInterrupt:
         pass
     finally:

@@ -32,6 +32,8 @@ fi
 # memory holds only real detections), OFB_DET_THRESHOLD=0.25 (confidence, default per detector).
 if [ -n "${OFB_OWL_PROMPTS:-}" ]; then ARGS+=(--owl-prompts "$OFB_OWL_PROMPTS"); fi
 if [ "${OFB_TILES:-1}" = 0 ]; then ARGS+=(--no-tiles); fi
+# Live camera view for people (boxes drawn): http://<jetson-ip>:8601/  (OFB_VIEW_PORT=0 turns it off)
+if [ "${OFB_VIEW_PORT:-8601}" != 0 ]; then ARGS+=(--view-port "${OFB_VIEW_PORT:-8601}"); fi
 if [ -n "${OFB_DET_THRESHOLD:-}" ]; then ARGS+=(--threshold "$OFB_DET_THRESHOLD"); fi
 ARGS+=("$@")
 
