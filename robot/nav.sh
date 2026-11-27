@@ -33,6 +33,14 @@ if pgrep -f 'async_slam_toolbox|sync_slam_toolbox|cartographer_node' >/dev/null 
 fi
 
 PARAMS="${NAV2_PARAMS:-}"
+# Foxy: the apt turtlebot3_navigation2 waffle_pi.yaml is in the old layout
+# (dwb_controller, no FollowPath section), so nav2 0.4.7's controller_server ran with
+# empty limits ("No valid trajectories out of 0") and bt_navigator aborted every goal
+# (2026-11-27). robot/config/nav2_foxy_waffle_pi.yaml is nav2_bringup's own params
+# file with xy_goal_tolerance 0.10 and a minimal behavior tree; it drove 1 m and back.
+if [ -z "$PARAMS" ] && [ "${ROS_DISTRO:-}" = foxy ] && [ -f "$OFB_ROBOT_DIR/config/nav2_foxy_waffle_pi.yaml" ]; then
+  PARAMS="$OFB_ROBOT_DIR/config/nav2_foxy_waffle_pi.yaml"
+fi
 if [ -z "$PARAMS" ]; then
   TB3_NAV="$(ros2 pkg prefix turtlebot3_navigation2 2>/dev/null)/share/turtlebot3_navigation2/param"
   for cand in "$TB3_NAV/$ROS_DISTRO/$TURTLEBOT3_MODEL.yaml" "$TB3_NAV/$TURTLEBOT3_MODEL.yaml"; do
@@ -46,6 +54,7 @@ if [ -n "$PARAMS" ] && [ -f "$PARAMS" ]; then
     -e "s/^([[:space:]]*max_vel_x:[[:space:]]*)[0-9.]+/\1$OFB_MAX_VEL/" \
     -e "s/^([[:space:]]*max_speed_xy:[[:space:]]*)[0-9.]+/\1$OFB_MAX_VEL/" \
     -e "s/^([[:space:]]*max_velocity:[[:space:]]*)\[[[:space:]]*[0-9.]+/\1[$OFB_MAX_VEL/" \
+    -e "s#@OFB_CONFIG_DIR@#$OFB_ROBOT_DIR/config#g" \
     "$PARAMS" > "$OFB_LOG_DIR/nav2_params.yaml"
   PARAMS="$OFB_LOG_DIR/nav2_params.yaml"
   info "speed cap $OFB_MAX_VEL m/s -> $PARAMS"

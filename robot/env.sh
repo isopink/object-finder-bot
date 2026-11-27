@@ -31,6 +31,15 @@ export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-30}"       # unique per team in the class
 # Everything runs on the Jetson: keep DDS traffic on this machine so other
 # teams' robots on the same Wi-Fi are never seen. Set to 0 to talk to a laptop.
 export ROS_LOCALHOST_ONLY="${ROS_LOCALHOST_ONLY:-1}"
+# OFB_DDS_WIDE=1: Fast DDS on loopback only, with discovery over 40 participant ports
+# instead of Foxy's localhost-only default (only the first few participants find each
+# other). On 2026-11-25/27 nodes started later (SLAM, teleop, map_saver, test scripts)
+# could not see /odom or /map; with robot/config/fastdds_wide.xml they all could.
+# Every ROS process must use the same setting, so set it before starting anything.
+if [ "${OFB_DDS_WIDE:-0}" = 1 ]; then
+  export ROS_LOCALHOST_ONLY=0
+  export FASTRTPS_DEFAULT_PROFILES_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config/fastdds_wide.xml"
+fi
 export PYTHONUNBUFFERED=1
 export RCUTILS_COLORIZED_OUTPUT="${RCUTILS_COLORIZED_OUTPUT:-0}"
 
