@@ -13,6 +13,23 @@ existence confidence p. ``update_frame`` fuses one camera frame of observations:
 * memories in view but unmatched: the negative Bayes update;
 * unmatched observations: new memories with ``p_init``.
 
+Three optional rules keep one object from becoming several memories (each is
+off at 0, the default):
+
+* ``cos_thresh_same_label``: the cosine gate used instead of ``cos_thresh`` when
+  the observation and the memory carry the same detector label (the same object
+  seen from another side can fall below the plain gate);
+* ``merge_dist``: after every frame, two memories that pass the cosine gate, do
+  not carry different labels, and lie closer than this are merged into one;
+* ``pos_std_min``: a floor on the position standard deviation after fusion. A
+  static Kalman filter shrinks cov toward zero with every look, below the pose
+  error of the robot that repeated looks do not average away.
+
+The first two lean on position instead of appearance, so they apply only when
+both positions are known: largest variance at most ``pos_cov_max``. A nodepth
+memory that is still a long ray keeps the plain gate and is not merged (in the
+toy world the looser gate fused two different mugs along one ray).
+
 Time decay ``p <- 0.5 + (p - 0.5) exp(-dt / tau)`` is applied lazily: every
 memory remembers the time its p was last decayed to, so the same interval is
 never decayed twice, whichever method triggers it.
@@ -117,6 +134,17 @@ def bearing_update(mu: np.ndarray, cov: np.ndarray, origin: np.ndarray, bearing:
     return x, cov_new
 
 
+def floor_cov(cov: np.ndarray, std_min: float) -> np.ndarray:
+    """Raise every eigenvalue of cov below std_min^2 to std_min^2 (std_min <= 0: unchanged)."""
+    if std_min <= 0.0:
+        return cov
+    w, v = np.linalg.eigh(_sym(np.asarray(cov, dtype=float)))
+    lo = float(std_min) ** 2
+    if float(w.min()) >= lo:
+        return cov
+    return _sym((v * np.maximum(w, lo)).dot(v.T))
+
+
 def mahalanobis(mu_a: np.ndarray, cov_a: np.ndarray, mu_b: np.ndarray, cov_b: np.ndarray) -> float:
     diff = np.asarray(mu_a, dtype=float) - np.asarray(mu_b, dtype=float)
     S = np.asarray(cov_a, dtype=float) + np.asarray(cov_b, dtype=float)
@@ -135,6 +163,7 @@ class ObjectMemory:
         self._items = []  # type: List[MemoryItem]
         self._t_p = {}  # type: Dict[int, float]  # time each item's p was last decayed to
         self._next_id = 0
+        self._merged_into = {}  # type: Dict[int, int]  # id removed by a merge -> id that absorbed it
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------ access
@@ -148,10 +177,21 @@ class ObjectMemory:
 
     def get(self, item_id: int) -> Optional[MemoryItem]:
         with self._lock:
+            item_id = self._merged_into.get(item_id, item_id)
             for item in self._items:
                 if item.id == item_id:
                     return item
             return None
+
+    def _pos_known(self, cov: np.ndarray) -> bool:
+        return float(np.linalg.eigvalsh(_sym(np.asarray(cov, dtype=float))).max()) <= self.params.pos_cov_max
+
+    def _cos_gate(self, label_a: Optional[str], cov_a: np.ndarray, label_b: Optional[str], cov_b: np.ndarray) -> float:
+        pr = self.params
+        if (pr.cos_thresh_same_label > 0.0 and label_a is not None and label_a == label_b
+                and self._pos_known(cov_a) and self._pos_known(cov_b)):
+            return float(pr.cos_thresh_same_label)
+        return float(pr.cos_thresh)
 
     def decay_to(self, t: float) -> None:
         """Decay every p to time t (idempotent for the same t)."""
@@ -188,7 +228,9 @@ class ObjectMemory:
 
     def associate(self, observations: List[Observation]) -> List[Tuple[int, int]]:
         """One-to-one (observation index, item index) pairs that pass both gates,
-        chosen greedily by Mahalanobis distance (ties: higher cosine first)."""
+        chosen greedily by Mahalanobis distance (ties: higher cosine first).
+        The cosine gate is ``cos_thresh``, or ``cos_thresh_same_label`` for equal labels
+        and known positions."""
         with self._lock:
             pr = self.params
             pairs = []
@@ -196,7 +238,7 @@ class ObjectMemory:
                 e = _normalize(obs.embedding)
                 for j, item in enumerate(self._items):
                     cos = float(np.dot(e, item.embedding))
-                    if cos < pr.cos_thresh:
+                    if cos < self._cos_gate(obs.label, obs.cov, item.label, item.cov):
                         continue
                     dm = mahalanobis(obs.mu, obs.cov, item.mu, item.cov)
                     if dm > pr.maha_thresh:
@@ -219,6 +261,7 @@ class ObjectMemory:
         else:
             origin = np.array([obs.view_pose.x, obs.view_pose.y], dtype=float)
             item.mu, item.cov = bearing_update(item.mu, item.cov, origin, float(obs.bearing), pr.sigma_bearing)
+        item.cov = floor_cov(item.cov, pr.pos_std_min)
         n = item.n_obs
         item.embedding = _normalize(item.embedding.astype(float) * n + _normalize(obs.embedding).astype(float))
         item.n_obs = n + 1
@@ -246,6 +289,68 @@ class ObjectMemory:
             for i, obs in enumerate(observations):
                 if i not in matched_obs:
                     self.add(obs, t)
+            if pr.merge_dist > 0.0:
+                self.merge_duplicates(t)
+
+    def _mergeable(self, a: MemoryItem, b: MemoryItem) -> Optional[float]:
+        """Distance (m) between two memories that count as one object, else None."""
+        if a.label is not None and b.label is not None and a.label != b.label:
+            return None
+        dist = float(np.linalg.norm(np.asarray(a.mu, dtype=float) - np.asarray(b.mu, dtype=float)))
+        if dist > self.params.merge_dist:
+            return None
+        if not (self._pos_known(a.cov) and self._pos_known(b.cov)):
+            return None
+        if float(np.dot(a.embedding, b.embedding)) < self._cos_gate(a.label, a.cov, b.label, b.cov):
+            return None
+        return dist
+
+    def merge_duplicates(self, t: Optional[float] = None) -> List[Tuple[int, int]]:
+        """Merge memories of one object: closer than ``merge_dist``, positions known,
+        not differently labeled, cosine above the gate. Closest pair first, until no pair is left.
+
+        The memory with more observations stays and absorbs the other: positions
+        fused as two independent estimates, embeddings averaged by n_obs, p the
+        larger of the two (both decayed to ``t`` when given), n_obs added.
+        Returns (kept id, removed id) pairs; ``get(removed id)`` gives the kept memory.
+        """
+        merged = []  # type: List[Tuple[int, int]]
+        with self._lock:
+            if self.params.merge_dist <= 0.0:
+                return merged
+            while True:
+                best = None
+                for i in range(len(self._items)):
+                    for j in range(i + 1, len(self._items)):
+                        dist = self._mergeable(self._items[i], self._items[j])
+                        if dist is not None and (best is None or dist < best[0]):
+                            best = (dist, i, j)
+                if best is None:
+                    return merged
+                a, b = self._items[best[1]], self._items[best[2]]
+                keep, drop = (a, b) if (-a.n_obs, a.id) <= (-b.n_obs, b.id) else (b, a)
+                if t is not None:
+                    self._decay_item(keep, t)
+                    self._decay_item(drop, t)
+                keep.mu, keep.cov = kalman_update(keep.mu, keep.cov, drop.mu, drop.cov)
+                keep.cov = floor_cov(keep.cov, self.params.pos_std_min)
+                keep.embedding = _normalize(keep.embedding.astype(float) * keep.n_obs
+                                            + drop.embedding.astype(float) * drop.n_obs)
+                keep.n_obs += drop.n_obs
+                keep.p = max(keep.p, drop.p)
+                if drop.t_last > keep.t_last:
+                    keep.t_last = drop.t_last
+                    keep.view_pose = Pose2D(drop.view_pose.x, drop.view_pose.y, drop.view_pose.yaw)
+                if keep.label is None:
+                    keep.label = drop.label
+                self._t_p[keep.id] = max(self._t_p.get(keep.id, keep.t_last), self._t_p.get(drop.id, drop.t_last))
+                self._items = [it for it in self._items if it.id != drop.id]
+                self._t_p.pop(drop.id, None)
+                for old, new in list(self._merged_into.items()):
+                    if new == drop.id:
+                        self._merged_into[old] = keep.id
+                self._merged_into[drop.id] = keep.id
+                merged.append((keep.id, drop.id))
 
     # ------------------------------------------------------------ search
     def query(self, text_embedding: np.ndarray, t: float, k: Optional[int] = None) -> List[Candidate]:

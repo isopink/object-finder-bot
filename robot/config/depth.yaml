@@ -10,6 +10,12 @@ p_init: 0.7         # confidence of a new memory
 # Same-object test (proposal 4.2)
 maha_thresh: 4.0    # Mahalanobis distance gate (3.0 split one cup into 3 memories 10-20 cm apart, 2026-11-28)
 cos_thresh: 0.75    # CLIP image-image cosine gate (0.8; the cup seen from other sides fell below it)
+# One object, one memory. All three are off (0) until checked on the robot; values to try: 0.5, 0.2, 0.03.
+# In the 2026-11-28 memory, 0.5 and 0.2 merge the two laptop memories 9 cm apart (cosine 0.74) and nothing else:
+#   python scripts/merge_memory.py robot/memory/room_l4_nav_depth.npz --config robot/config/depth.yaml --merge-dist 0.2 --cos-same-label 0.5
+cos_thresh_same_label: 0.0  # cosine gate when observation and memory have the same label; 0 = use cos_thresh
+merge_dist: 0.0     # merge two memories of the same object closer than this (m); 0 = never merge
+pos_std_min: 0.0    # smallest position std kept after fusion (m); 0 = no floor
 
 # Search (proposal 4.4)
 T: 0.05             # softmax temperature

@@ -55,7 +55,7 @@ Two camera versions are supported end to end, selected by `camera_mode` in
 |------|----------|
 | `src/objmem/` | The Python package (no ROS): memory, geometry, search, vision, toy world |
 | `config/default.yaml` | Every tunable value. In the classroom edit this file, not the code |
-| `scripts/` | `vision_worker.py`, `demo_offline.py`, `evaluate.py`, `tune_verify.py` |
+| `scripts/` | `vision_worker.py`, `demo_offline.py`, `evaluate.py`, `tune_verify.py`, `merge_memory.py` |
 | `ros/objmem_ros/` | ROS 2 package: `observer`, `finder`, `mapview`, `ask`, launch file ([ros/README.md](ros/README.md)) |
 | `robot/` | Bash scripts for the Jetson on the robot, one per step ([robot/README.md](robot/README.md)) |
 | `vision/` | Camera-only demo and benchmarks for the Jetson ([vision/README.md](vision/README.md)) |

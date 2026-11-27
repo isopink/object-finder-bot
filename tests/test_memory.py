@@ -362,3 +362,122 @@ def test_save_path_without_npz_suffix(tmp_path):
     path = str(tmp_path / "memory.bin")
     mem.save(path)
     assert len(ObjectMemory.load(path)) == 1
+
+
+# ------------------------------------------------- one object, one memory
+SMALL = [[0.0025, 0.0], [0.0, 0.0025]]  # 5 cm std
+
+
+def test_new_rules_are_off_by_default():
+    p = Params()
+    assert (p.cos_thresh_same_label, p.merge_dist, p.pos_std_min) == (0.0, 0.0, 0.0)
+
+
+def test_same_label_gate_fuses_another_side_of_the_object():
+    """Cosine 0.74 is below cos_thresh 0.75: a second memory, and the first one is punished.
+    With the same-label gate the observation is fused instead."""
+    front, back = unit(0), mix(unit(0), unit(1), 0.4763)  # cosine 0.74
+    assert abs(float(front.dot(back)) - 0.74) < 0.005
+    for gate, n_items in ((0.0, 2), (0.5, 1)):
+        mem = ObjectMemory(Params(cos_thresh=0.75, cos_thresh_same_label=gate))
+        mem.update_frame([obs([2.0, 1.0], SMALL, front, label="laptop")], Pose2D(0, 0, 0), always, 0.0)
+        mem.update_frame([obs([2.05, 1.0], SMALL, back, label="laptop")], Pose2D(0, 0, 0), always, 1.0)
+        assert len(mem.items) == n_items
+        first = mem.get(0)
+        if gate:
+            assert first.n_obs == 2 and first.p > 0.7
+        else:
+            assert first.n_obs == 1 and first.p < 0.7
+
+
+def test_same_label_gate_needs_equal_labels():
+    front, back = unit(0), mix(unit(0), unit(1), 0.4763)
+    for other in ("cup", None):
+        mem = ObjectMemory(Params(cos_thresh=0.75, cos_thresh_same_label=0.5))
+        mem.update_frame([obs([2.0, 1.0], SMALL, front, label="laptop")], Pose2D(0, 0, 0), never, 0.0)
+        mem.update_frame([obs([2.05, 1.0], SMALL, back, label=other)], Pose2D(0, 0, 0), never, 1.0)
+        assert len(mem.items) == 2
+
+
+def test_position_rules_wait_for_a_known_position():
+    """A memory that is still a long ray (variance above pos_cov_max) keeps the plain
+    cosine gate and is not merged: position cannot stand in for appearance yet."""
+    ray = [[2.25, 0.0], [0.0, 0.0036]]
+    front, back = unit(0), mix(unit(0), unit(1), 0.4763)
+    mem = ObjectMemory(Params(cos_thresh=0.75, cos_thresh_same_label=0.5, merge_dist=0.2))
+    mem.update_frame([obs([2.0, 1.0], ray, front, label="cup")], Pose2D(0, 0, 0), never, 0.0)
+    mem.update_frame([obs([2.05, 1.0], ray, back, label="cup")], Pose2D(0, 0, 0), never, 1.0)
+    mem.update_frame([obs([2.1, 1.0], ray, front, label="cup")], Pose2D(5, 5, 0), never, 2.0)
+    assert sorted(it.n_obs for it in mem.items) == [1, 2]   # front fused with front only; nothing merged
+
+
+def test_merge_duplicates_hand_computed():
+    mem = ObjectMemory(Params(merge_dist=0.2, tau=1e12))
+    a = mem.add(obs([1.0, 0.0], [[0.01, 0.0], [0.0, 0.01]], unit(0), t=0.0, label="cup"))
+    b = mem.add(obs([1.1, 0.0], [[0.03, 0.0], [0.0, 0.03]], unit(0), t=5.0, pose=Pose2D(3.0, 4.0, 0.5), label="cup"))
+    a.n_obs, a.p, b.p = 3, 0.6, 0.9
+    assert mem.merge_duplicates(t=10.0) == [(0, 1)]
+    (item,) = mem.items
+    # information fusion: weights 0.03 : 0.01 -> 1.025; variance 0.01 * 0.03 / 0.04
+    assert np.allclose(item.mu, [1.025, 0.0])
+    assert np.allclose(item.cov, np.eye(2) * 0.0075)
+    assert item.id == 0 and item.n_obs == 4 and item.t_last == 5.0
+    assert item.p == pytest.approx(0.9, abs=1e-6)
+    assert (item.view_pose.x, item.view_pose.y, item.view_pose.yaw) == (3.0, 4.0, 0.5)
+    assert mem.get(1) is item                      # the removed id still reaches the memory
+    mem.mark_not_found(1, 10.0)
+    assert item.p < 0.9
+
+
+def test_merge_keeps_what_is_not_the_same_object():
+    mem = ObjectMemory(Params(merge_dist=0.2))
+    mem.add(obs([1.0, 0.0], SMALL, unit(0), label="cup"))
+    mem.add(obs([1.1, 0.0], SMALL, unit(0), label="laptop"))   # another label
+    mem.add(obs([1.0, 0.5], SMALL, unit(0), label="cup"))      # too far
+    mem.add(obs([1.0, 0.1], SMALL, unit(1), label="cup"))      # looks different
+    assert mem.merge_duplicates() == []
+    assert len(mem.items) == 4
+
+
+def test_merge_chain_and_embedding_average():
+    mem = ObjectMemory(Params(merge_dist=0.2))
+    for x in (0.0, 0.10, 0.22):   # 0 and 1 merge at 0.05, then 2 is 0.17 away
+        mem.add(obs([x, 0.0], SMALL, unit(0), label="cup"))
+    mem.get(2).embedding = mix(unit(0), unit(1), 0.3)
+    merged = mem.merge_duplicates()
+    assert len(merged) == 2 and len(mem.items) == 1
+    assert mem.get(1) is mem.get(2) is mem.items[0]
+    assert abs(float(np.linalg.norm(mem.items[0].embedding)) - 1.0) < 1e-6
+
+
+def test_update_frame_merges_only_when_enabled():
+    for dist, n_items in ((0.0, 2), (0.2, 1)):
+        mem = ObjectMemory(Params(merge_dist=dist, maha_thresh=0.5))   # tight gate splits the object
+        mem.update_frame([obs([2.0, 1.0], SMALL, unit(0), label="cup")], Pose2D(0, 0, 0), never, 0.0)
+        mem.update_frame([obs([2.1, 1.0], SMALL, unit(0), label="cup")], Pose2D(0, 0, 0), never, 1.0)
+        assert len(mem.items) == n_items
+
+
+def test_pos_std_min_floors_the_covariance():
+    for floor, lo in ((0.0, 0.0), (0.03, 0.03)):
+        mem = ObjectMemory(Params(pos_std_min=floor))
+        for k in range(200):
+            mem.update_frame([obs([2.0, 1.0], SMALL, unit(0))], Pose2D(0, 0, 0), never, float(k))
+        (item,) = mem.items
+        std = math.sqrt(float(np.linalg.eigvalsh(item.cov).min()))
+        if floor:
+            assert std == pytest.approx(0.03, abs=1e-9)
+        else:
+            assert std < 0.004                      # 5 cm / sqrt(200)
+
+
+def test_merged_memory_survives_save_and_load(tmp_path):
+    mem = ObjectMemory(Params(merge_dist=0.2))
+    mem.add(obs([1.0, 0.0], SMALL, unit(0), label="cup"))
+    mem.add(obs([1.1, 0.0], SMALL, unit(0), label="cup"))
+    mem.merge_duplicates()
+    path = str(tmp_path / "m.npz")
+    mem.save(path)
+    back = ObjectMemory.load(path, mem.params)
+    assert [it.id for it in back.items] == [0] and back.items[0].n_obs == 2
+    assert back.add(obs([5.0, 5.0], SMALL, unit(2))).id == 2   # ids are not reused

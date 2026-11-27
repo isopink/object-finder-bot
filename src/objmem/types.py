@@ -105,6 +105,9 @@ class Params:
     # Same-object test (proposal 4.2)
     maha_thresh: float = 3.0    # Mahalanobis distance gate
     cos_thresh: float = 0.8     # CLIP image-image cosine gate
+    cos_thresh_same_label: float = 0.0  # cosine gate when observation and memory have the same label; 0 = use cos_thresh
+    merge_dist: float = 0.0     # merge two memories of the same object closer than this (m); 0 = never merge
+    pos_std_min: float = 0.0    # smallest position std kept after fusion (m); 0 = no floor
     # Search (proposal 4.4)
     T: float = 0.05             # softmax temperature over query-memory similarity
     top_k: int = 3
