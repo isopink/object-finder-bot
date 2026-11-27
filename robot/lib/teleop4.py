@@ -8,8 +8,10 @@
 
 Why: the stock teleop changes speeds in steps and a turn is easy to overshoot, which
 spoils SLAM. Fixed slow speeds and exact 90 degree turns keep the map clean.
-The robot stops by itself when /odom or /scan stop arriving, or when something is closer
-than --stop-dist in front (LiDAR 0 degrees, the direction w drives).
+The robot stops by itself when /odom or /scan stop arriving, when something is closer
+than 0.30 m in front (LiDAR 0 degrees, the direction w drives), and when /odom keeps the same
+value while the robot is told to move (frozen odometry, seen on 2026-11-27: the map of that
+session was useless; restart bringup.sh when this message appears).
 Env: OFB_T4_SPEED (m/s, default 0.08), OFB_T4_TURN (rad/s, default 0.25).
 """
 import math
@@ -38,11 +40,12 @@ def main():
     rclpy.init()
     n = rclpy.create_node("ofb_teleop4")
     pub = n.create_publisher(Twist, "/cmd_vel", 10)
-    st = {"yaw": None, "t_odom": 0.0, "front": 9.9, "t_scan": 0.0}
+    st = {"yaw": None, "x": 0.0, "y": 0.0, "t_odom": 0.0, "front": 9.9, "t_scan": 0.0}
 
     def on_odom(m):
         q = m.pose.pose.orientation
         st["yaw"] = math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+        st["x"], st["y"] = m.pose.pose.position.x, m.pose.pose.position.y
         st["t_odom"] = time.time()
 
     def on_scan(m):
@@ -58,6 +61,12 @@ def main():
     n.create_subscription(LaserScan, "/scan", on_scan, qos_profile_sensor_data)
 
     mode, target_acc, last_yaw = "stop", 0.0, None
+    ref = {"t": 0.0, "x": 0.0, "y": 0.0, "acc": 0.0}     # last time /odom showed progress
+
+    def progress_mark():
+        ref.update(t=time.time(), x=st["x"], y=st["y"], acc=target_acc)
+
+    FROZEN = "STOP: /odom does not change while the robot moves (odometry frozen). Restart bringup.sh."
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     tty.setcbreak(fd)
@@ -83,16 +92,21 @@ def main():
                 elif k == "q":
                     break
                 elif k == "w" and alive:
-                    mode = "fwd"; say("straight")
+                    mode = "fwd"; progress_mark(); say("straight")
                 elif k in ("a", "d") and alive and st["yaw"] is not None:
                     mode = "left" if k == "a" else "right"
                     target_acc, last_yaw = 0.0, st["yaw"]
+                    progress_mark()
                     say("turning %s 90" % ("left" if k == "a" else "right"))
                 elif k in ("w", "a", "d"):
                     say("not now: no /odom or /scan")
             if mode == "fwd":
                 if st["front"] < stop_dist:
                     mode = "stop"; say("STOP: something %.2f m in front" % st["front"])
+                elif math.hypot(st["x"] - ref["x"], st["y"] - ref["y"]) > 0.02:
+                    progress_mark(); tw.linear.x = speed
+                elif now - ref["t"] > 3.0:
+                    mode = "stop"; say(FROZEN)
                 else:
                     tw.linear.x = speed
             elif mode in ("left", "right"):
@@ -100,7 +114,11 @@ def main():
                 target_acc += d
                 sign = 1.0 if mode == "left" else -1.0
                 done = sign * target_acc
-                if done >= math.radians(89.5):          # 0.5 degree of lead: measured coast after stop at 0.3 rad/s was about 0.5 deg
+                if abs(target_acc - ref["acc"]) > math.radians(2.0):
+                    progress_mark()
+                if now - ref["t"] > 3.0:
+                    mode = "stop"; say(FROZEN)
+                elif done >= math.radians(89.5):          # 0.5 degree of lead: measured coast after stop at 0.3 rad/s was about 0.5 deg
                     mode = "stop"; say("turned %.0f deg" % math.degrees(done))
                 else:
                     tw.angular.z = sign * turn

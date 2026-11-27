@@ -38,8 +38,20 @@ case "$OFB_ROS_MODE" in
           else fail "Humble container did not start" "./robot/docker/run.sh build, then retry"; fi ;;
   *) fail "no ROS" "./robot/install_foxy_jetson.sh or ./robot/docker/run.sh build" ;;
 esac
+# After ./robot/stop_all.sh --keep-worker the session holds only the worker pane: reuse it
+# (restarting the worker often fails on the Jetson GPU until the next reboot).
+REUSE_WORKER=0
 if tmux has-session -t "$SESSION" 2>/dev/null; then
-  fail "tmux session '$SESSION' already exists" "./robot/stop_all.sh first, or: tmux attach -t $SESSION"
+  TITLES="$(tmux list-panes -s -t "$SESSION" -F '#{pane_title}' | tr '
+' ' ')"
+  HEALTH="$(curl -sf -m 3 "$OFB_WORKER_URL/health" 2>/dev/null || true)"
+  if [ "$TITLES" = "worker " ] && echo "$HEALTH" | grep -q "\"camera_mode\": \"$MODE\""; then
+    REUSE_WORKER=1; ok "reusing the running vision worker ($HEALTH)"
+  elif [ "$TITLES" = "worker " ]; then
+    fail "the kept worker does not fit (health: ${HEALTH:-no answer}, wanted camera mode $MODE)" "./robot/stop_all.sh, then retry"
+  else
+    fail "tmux session '$SESSION' already exists" "./robot/stop_all.sh --keep-worker first, or: tmux attach -t $SESSION"
+  fi
 fi
 if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
 
@@ -51,7 +63,7 @@ NOCONDA="{ command -v conda >/dev/null && conda deactivate 2>/dev/null; true; } 
 
 pane() {  # pane <title> <command>
   local title="$1" cmd="$2" id
-  if [ -z "${FIRST_DONE:-}" ]; then
+  if [ -z "${FIRST_DONE:-}" ] && [ "$REUSE_WORKER" = 0 ]; then
     tmux new-session -d -s "$SESSION" -n main -x 220 -y 60
     id="$(tmux display-message -p -t "$SESSION:main" '#{pane_id}')"
     FIRST_DONE=1
@@ -71,7 +83,7 @@ pane() {  # pane <title> <command>
 WAITW="{ timeout 420 bash -c 'until curl -sf -m 2 $OFB_WORKER_URL/health >/dev/null 2>&1; do sleep 3; done'; true; } &&"
 
 echo "== Starting tmux session '$SESSION' (logs: $OFB_LOG_DIR)"
-pane worker  "$R/worker.sh $MODE"
+if [ "$REUSE_WORKER" = 1 ]; then echo "  pane worker: kept"; else pane worker  "$R/worker.sh $MODE"; fi
 pane bringup "$NOCONDA $WAITW $R/bringup.sh"
 pane nav     "$NOCONDA $WAITW sleep 10 && $R/nav.sh '$MAP_FILE'"
 if [ "$OFB_IMAGE_SOURCE" = ros ]; then

@@ -116,13 +116,23 @@ def plan(grid, start_xy, start_k, goal_xy, turn_cost_m=0.6, max_snap_m=0.7):
 
     Returns (segments, goal_xy_used) or (None, None). segments = [(k, ex, ey), ...]: heading
     index k and the world end point of each straight run. The start and the goal move to the
-    nearest free cell within max_snap_m (the robot may stand inside the grown obstacles).
+    nearest free cell within max_snap_m. A robot that stands inside the grown obstacles (close
+    to a desk, on the edge of the aisle) first leaves along an L to that cell; the front LiDAR
+    stop still protects it there.
     The cost is path length plus turn_cost_m per 90 degree turn, so the path has few turns.
     """
-    s = grid.nearest_free(*grid.cell(*start_xy), max_m=max_snap_m)
+    sc = grid.cell(*start_xy)
+    s = grid.nearest_free(*sc, max_m=max_snap_m)
     g = grid.nearest_free(*grid.cell(*goal_xy), max_m=max_snap_m)
     if s is None or g is None:
         return None, None
+    free = grid.free
+    if s != sc and grid.inside(*sc):
+        free = free.copy()
+        (x0, y0), (x1, y1) = sc, s
+        free[y0, min(x0, x1):max(x0, x1) + 1] = True      # along x at the robot's y,
+        free[min(y0, y1):max(y0, y1) + 1, x1] = True      # then along y to the free cell
+        s = sc
     res = grid.res
     tc = turn_cost_m / res                     # in cells
     start = (s[0], s[1], start_k % 4)
@@ -143,7 +153,7 @@ def plan(grid, start_xy, start_k, goal_xy, turn_cost_m=0.6, max_snap_m=0.7):
                 continue                       # no U-turns: they are two 90 degree turns, planned as a detour
             dx, dy = STEPS[k2]
             nx, ny = ix + dx, iy + dy
-            if not grid.is_free(nx, ny):
+            if not (grid.inside(nx, ny) and free[ny, nx]):
                 continue
             c = cost + 1.0 + float(grid.pen[ny, nx]) + (tc if k2 != k else 0.0)
             st2 = (nx, ny, k2)
@@ -178,12 +188,17 @@ class Runner(object):
     """
 
     def __init__(self, io, grid_fn, speed=0.08, turn_rate=0.25, front_stop=0.30, goal_tol=0.15,
-                 lateral_tol=0.30, lead_deg=0.5, blocked_wait_s=6.0, max_replans=8, dt=0.05):
+                 lateral_tol=0.30, lead_deg=0.5, blocked_wait_s=6.0, max_replans=8, dt=0.05,
+                 stall_s=3.0):
         self.io, self.grid_fn = io, grid_fn
         self.speed, self.turn_rate, self.front_stop = speed, turn_rate, front_stop
         self.goal_tol, self.lateral_tol = goal_tol, lateral_tol
         self.lead, self.blocked_wait_s = math.radians(lead_deg), blocked_wait_s
         self.max_replans, self.dt = max_replans, dt
+        # A motion command with no change of the pose for stall_s seconds: the odometry is
+        # frozen (seen on 2026-11-27: /odom kept its value while the wheels turned) or the
+        # wheels do not turn. Stop instead of driving blind.
+        self.stall_s = stall_s
 
     # -- the four commands
     def stop(self):
@@ -203,9 +218,10 @@ class Runner(object):
 
     def turn_to(self, k, timeout_s=25.0):
         """Turn in place (right or left, 90 degrees at a time) until the heading is axis k.
-        Returns "ok", "lost" (no pose) or "cancel"/"timeout"."""
+        Returns "ok", "lost" (no pose), "stuck" (the heading does not change) or "cancel"/"timeout"."""
         target = k * HALF_PI
         t0 = self.io.now()
+        ref_yaw, ref_t = None, t0
         while True:
             if self.io.cancelled():
                 self.stop(); return "cancel"
@@ -217,6 +233,11 @@ class Runner(object):
             d = wrap(target - p[2])
             if abs(d) <= max(self.lead, math.radians(1.0)):
                 self.stop(); return "ok"
+            now = self.io.now()
+            if ref_yaw is None or abs(wrap(p[2] - ref_yaw)) > math.radians(2.0):
+                ref_yaw, ref_t = p[2], now
+            elif now - ref_t > self.stall_s:
+                self.stop(); return "stuck"
             w = self.turn_rate if d > 0 else -self.turn_rate
             # near the target the last 0.5 degrees are covered by the stopping delay
             self.io.cmd(0.0, w)
@@ -224,11 +245,12 @@ class Runner(object):
 
     def drive_to(self, k, ex, ey):
         """Straight along axis k until the position along that axis reaches the end point.
-        Returns "ok", "blocked", "drift" (left the line, replan), "lost", "cancel"."""
+        Returns "ok", "blocked", "drift" (left the line, replan), "lost", "stuck", "cancel"."""
         ax = 0 if k in (0, 2) else 1
         sign = 1.0 if k in (0, 1) else -1.0
         end = (ex, ey)
         blocked_since = None
+        ref_pos, ref_t = None, None
         while True:
             if self.io.cancelled():
                 self.stop(); return "cancel"
@@ -244,18 +266,24 @@ class Runner(object):
                 self.io.cmd(0.0, 0.0)
                 now = self.io.now()
                 blocked_since = now if blocked_since is None else blocked_since
+                ref_pos = None                          # standing still on purpose
                 if now - blocked_since > self.blocked_wait_s:
                     self.stop(); return "blocked"
                 self.io.sleep(self.dt)
                 continue
             blocked_since = None
+            now = self.io.now()
+            if ref_pos is None or abs(p[ax] - ref_pos) > 0.02:
+                ref_pos, ref_t = p[ax], now
+            elif now - ref_t > self.stall_s:
+                self.stop(); return "stuck"
             v = min(self.speed, 0.4 * remaining + 0.02)     # slow down on the last 10 cm
             self.io.cmd(v, 0.0)
             self.io.sleep(self.dt)
 
     def go(self, goal_xy, goal_yaw=None, max_time_s=180.0):
         """Drive to goal_xy (map metres), then turn to the axis heading nearest goal_yaw.
-        Returns "ok" or a failure word: "no_path", "lost", "blocked", "timeout", "cancel"."""
+        Returns "ok" or a failure word: "no_path", "lost", "stuck", "blocked", "timeout", "cancel"."""
         t0 = self.io.now()
         last = "no_path"
         for attempt in range(self.max_replans + 1):
@@ -277,7 +305,7 @@ class Runner(object):
                     status = self.drive_to(k, ex, ey)
                 if status != "ok":
                     break
-            if status in ("cancel", "lost", "timeout"):
+            if status in ("cancel", "lost", "timeout", "stuck"):
                 return status
             last = status
             p = self._pose_or_wait()

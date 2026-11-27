@@ -42,7 +42,7 @@ def main(argv=None):
     radius = param("radius", 0.20)
     front_stop = param("front_stop", 0.30)
     goal_tol = param("goal_tol", 0.15)
-    max_time = param("max_time_s", 150.0)
+    max_time = param("max_time_s", 220.0)
     log = node.get_logger()
 
     pub = node.create_publisher(Twist, "/cmd_vel", 10)
@@ -121,6 +121,9 @@ def main(argv=None):
             status = runner.go((p.position.x, p.position.y), yaw, max_time_s=max_time)
             runner.stop()
             log.info("goal finished: {}".format(status))
+            if status == "stuck":
+                log.error("the pose did not change while the robot was told to move: odometry frozen "
+                          "(restart bringup.sh) or the motors are off (battery, OpenCR)")
             if status == "ok":
                 handle.succeed()
             elif status == "cancel":

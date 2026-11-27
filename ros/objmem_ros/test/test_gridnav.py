@@ -137,6 +137,15 @@ def test_plan_start_on_the_edge_still_plans(occ):
     assert segs is not None
 
 
+def test_robot_next_to_the_wall_leaves_it_first_and_arrives(occ):
+    wide = lambda: make_grid(occ, radius=0.45)          # a wide robot radius: free only within 0.25 m of the centre line
+    io = SimIO(occ, (1.0, 0.55, 0.0))                   # 0.30 m outside that free band, 15 cm from the wall
+    r = gn.Runner(io, wide)
+    assert r.go((3.0, -2.0)) == "ok"
+    assert math.hypot(io.p[0] - 3.0, io.p[1] + 2.0) < 0.25
+    assert only_four_commands(io.cmds, r.speed, r.turn_rate)
+
+
 # ---------------------------------------------------------------- runner
 def runner(io, occ, **kw):
     return gn.Runner(io, lambda: make_grid(occ), **kw)
@@ -201,3 +210,31 @@ def test_lost_pose_stops(occ):
     io.pose = flaky
     assert runner(io, occ).go((6.0, -3.0)) == "lost"
     assert io.cmds[-1] == (0.0, 0.0)
+
+
+def test_frozen_odometry_stops_instead_of_driving_blind(occ):
+    # 2026-11-27: /odom kept publishing the same pose while the wheels turned.
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+    io.pose = lambda: (0.0, 0.0, 0.0)                   # the robot moves, the reported pose does not
+    r = runner(io, occ)
+    assert r.go((6.0, -3.0)) == "stuck"
+    assert io.cmds[-1] == (0.0, 0.0)
+    assert io.t < 5.0                                   # gave up after about 3 s, about 25 cm
+    assert math.hypot(io.p[0], io.p[1]) < 0.4
+
+
+def test_frozen_heading_stops_the_turn(occ):
+    io = SimIO(occ, (3.0, -2.0, -math.pi / 2))
+    io.pose = lambda: (3.0, -2.0, -math.pi / 2)         # asked to turn around, heading never changes
+    r = runner(io, occ)
+    assert r.go((3.0, 0.0)) == "stuck"
+    assert io.cmds[-1] == (0.0, 0.0) and io.t < 5.0
+
+
+def test_reaches_the_goal_at_the_robot_speed(occ):
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+    r = runner(io, occ, speed=0.12)                     # the speed objmem.sh uses
+    assert r.go((6.0, -3.0), goal_yaw=0.0) == "ok"
+    assert math.hypot(io.p[0] - 6.0, io.p[1] + 3.0) < 0.2
+    assert only_four_commands(io.cmds, r.speed, r.turn_rate)
+    assert io.t < 120.0
