@@ -80,6 +80,14 @@ echo "   map view: http://<jetson-ip>:$OFB_MAPVIEW_PORT    queries: the ask pane
 # left 90, stop) instead of Nav2 curves. Nav2 keeps running for map_server + AMCL.
 NAV_ACTION=navigate_to_pose
 NAV_TIMEOUT=120
+# OFB_OBSERVE_MOVING=1 (default since 2026-11-28): remember objects while driving straight,
+# not only after stopping; frames taken while turning are skipped. 0 = only when stopped.
+if [ "${OFB_OBSERVE_MOVING:-1}" = 1 ]; then
+  ONLY_STOPPED=false; SKIP_TURNING=true; OBS_RATE="${OFB_OBSERVE_RATE:-2.0}"
+else
+  ONLY_STOPPED=true; SKIP_TURNING=false; OBS_RATE="${OFB_OBSERVE_RATE:-1.0}"
+fi
+echo "   observing: $([ "$ONLY_STOPPED" = true ] && echo 'only when stopped' || echo 'while driving straight and when stopped') ($OBS_RATE per second)"
 if [ "${OFB_NAV4:-1}" = 1 ]; then
   NAV_ACTION=navigate_to_pose_4cmd
   NAV_TIMEOUT=240      # 9 m of aisle at 0.12 m/s is 75 s plus turns; gridnav itself stops at 220 s
@@ -90,4 +98,5 @@ if [ "${OFB_NAV4:-1}" = 1 ]; then
 fi
 ros2 launch objmem_ros objmem.launch.py \
   config:="$CONFIG" memory_file:="$MEM" image_source:="$OFB_IMAGE_SOURCE" \
-  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG" nav_action:="$NAV_ACTION" nav_timeout_s:="$NAV_TIMEOUT"
+  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG" nav_action:="$NAV_ACTION" nav_timeout_s:="$NAV_TIMEOUT" \
+  only_when_stopped:="$ONLY_STOPPED" skip_while_turning:="$SKIP_TURNING" observe_rate:="$OBS_RATE"

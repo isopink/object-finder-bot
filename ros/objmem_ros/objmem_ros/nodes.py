@@ -130,6 +130,7 @@ class ObserverNode(Node):
         self.image_source = _declare(self, "image_source", "worker")
         rate = float(_declare(self, "observe_rate", 1.0))
         only_stopped = bool(_declare(self, "only_when_stopped", True))
+        skip_turning = bool(_declare(self, "skip_while_turning", False))
         pause_nav = bool(_declare(self, "pause_while_navigating", True))
         save_period = float(_declare(self, "save_period_s", 30.0))
         settle = float(_declare(self, "settle_s", 0.5))
@@ -141,7 +142,7 @@ class ObserverNode(Node):
 
         self.core = core.ObserverCore(self.shared.memory, p, rate_hz=rate, only_when_stopped=only_stopped,
                                       save_path=self.shared.memory_file, save_period_s=save_period,
-                                      settle_s=settle)
+                                      settle_s=settle, skip_while_turning=skip_turning)
         self.tf = TfPose(self, map_frame, base_frame)
         self._color_jpeg = None
         self._depth = None
@@ -156,8 +157,8 @@ class ObserverNode(Node):
         self.emit = _status_publisher(self)
         self._busy = False
         self.create_timer(0.1, self._on_timer)
-        self.get_logger().info("observer: image_source={} rate={} Hz only_when_stopped={} worker={}".format(
-            self.image_source, rate, only_stopped, self.worker_url))
+        self.get_logger().info("observer: image_source={} rate={} Hz only_when_stopped={} skip_while_turning={} worker={}".format(
+            self.image_source, rate, only_stopped, skip_turning, self.worker_url))
 
     def _subscribe_ros_images(self):
         from sensor_msgs.msg import CameraInfo, CompressedImage, Image

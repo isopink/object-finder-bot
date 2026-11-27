@@ -394,3 +394,37 @@ def test_probe_all_lists_only_missing_modules():
         assert "memory" not in missing
     except ImportError:
         assert "memory" in missing
+
+
+def test_observer_on_the_move_skips_only_the_turns():
+    mem = RecordingMemory()
+    oc = core.ObserverCore(mem, Params(), rate_hz=2.0, only_when_stopped=False, skip_while_turning=True)
+    calls = []
+
+    def get():
+        calls.append(1)
+        return []
+    t, x, yaw, steps = 0.0, 0.0, 0.0, {}
+    for phase, (v, w, dur) in enumerate([(0.12, 0.0, 3.0), (0.0, 0.25, 3.0), (0.12, 0.0, 3.0), (0.0, 0.0, 2.0)]):
+        n0 = len(calls)
+        end = t + dur - 1e-9
+        while t < end:
+            t += 0.1
+            x += v * 0.1
+            yaw += w * 0.1
+            oc.tick(Pose2D(x, 0.0, yaw), t, get)
+        steps[phase] = len(calls) - n0
+    assert steps[0] >= 5            # driving straight: observes (2 per second)
+    assert steps[1] == 0            # turning in place: nothing
+    assert steps[2] >= 4            # straight again (the first 0.5 s after the turn are skipped)
+    assert steps[3] >= 3            # standing still: observes
+
+
+def test_motion_gate_turning_and_stopped():
+    from objmem.types import Pose2D
+    g = core.MotionGate(settle_s=0.5)
+    g.update(Pose2D(0, 0, 0.0), 0.0)
+    g.update(Pose2D(0, 0, 0.05), 0.1)       # 0.5 rad/s
+    assert g.turning(0.15) and not g.stopped(0.15)
+    g.update(Pose2D(0, 0, 0.05), 0.7)
+    assert not g.turning(0.7) and g.stopped(0.7)

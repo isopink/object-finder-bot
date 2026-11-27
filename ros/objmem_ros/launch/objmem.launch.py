@@ -22,6 +22,7 @@ ARGS = [
     ("nav_timeout_s", "120.0", "the finder gives up on one goal after this many seconds"),
     ("observe_rate", "1.0", "observer steps per second (1 to 2)"),
     ("only_when_stopped", "true", "observe only while the robot stands still"),
+    ("skip_while_turning", "false", "skip frames while the robot turns (for observing on the move)"),
     ("color_topic", "/camera/color/image_raw/compressed", "image_source:=ros compressed color topic"),
     ("depth_topic", "/camera/aligned_depth_to_color/image_raw", "image_source:=ros aligned depth topic"),
     ("camera_info_topic", "/camera/color/camera_info", "image_source:=ros color camera_info topic"),

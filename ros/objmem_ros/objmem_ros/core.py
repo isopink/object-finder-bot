@@ -185,10 +185,13 @@ class MotionGate(object):
     `lin_eps` meters or `ang_eps` radians from the previous sample.
     """
 
-    def __init__(self, lin_eps=0.02, ang_eps=0.03, settle_s=0.5):
+    def __init__(self, lin_eps=0.02, ang_eps=0.03, settle_s=0.5, turn_rate=0.08, turn_hold_s=0.5):
         self.lin_eps, self.ang_eps, self.settle_s = lin_eps, ang_eps, settle_s
+        self.turn_rate, self.turn_hold_s = turn_rate, turn_hold_s
         self._prev = None
+        self._t_prev = None
         self._t_moved = None
+        self._t_turned = None
 
     def update(self, pose, t):
         if self._prev is None:
@@ -198,10 +201,20 @@ class MotionGate(object):
             da = abs(math.atan2(math.sin(pose.yaw - self._prev.yaw), math.cos(pose.yaw - self._prev.yaw)))
             if dl > self.lin_eps or da > self.ang_eps:
                 self._t_moved = t
+            dt = t - self._t_prev if self._t_prev is not None else 0.0
+            if dt > 1e-3 and da / dt > self.turn_rate:
+                self._t_turned = t
         self._prev = pose
+        self._t_prev = t
+        # A sample that counts as motion keeps its pose as the reference; a small step is
+        # compared with the next one instead (slow drift still adds up to "moved").
 
     def stopped(self, t):
         return self._t_moved is not None and t - self._t_moved >= self.settle_s
+
+    def turning(self, t):
+        """The heading changed faster than turn_rate (rad/s) within the last turn_hold_s."""
+        return self._t_turned is not None and t - self._t_turned < self.turn_hold_s
 
 
 class ObserverCore(object):
@@ -214,11 +227,16 @@ class ObserverCore(object):
     """
 
     def __init__(self, memory, params, rate_hz=1.0, only_when_stopped=True, save_path="",
-                 save_period_s=30.0, settle_s=0.5, observe=None, make_in_view=None):
+                 save_period_s=30.0, settle_s=0.5, observe=None, make_in_view=None,
+                 skip_while_turning=False):
         self.memory = memory
         self.params = params
         self.limiter = RateLimiter(rate_hz)
         self.only_when_stopped = only_when_stopped
+        # Observing while driving straight is fine (0.12 m/s: the pose moves 1 to 2 cm between
+        # the TF lookup and the camera frame); while turning the picture smears and the same
+        # delay is a few degrees of bearing, so those frames are skipped.
+        self.skip_while_turning = skip_while_turning
         self.gate = MotionGate(settle_s=settle_s)
         self.save_path = save_path
         self.save_period_s = save_period_s
@@ -237,6 +255,8 @@ class ObserverCore(object):
         if self.paused:
             return False
         if self.only_when_stopped and not self.gate.stopped(t):
+            return False
+        if self.skip_while_turning and self.gate.turning(t):
             return False
         return self.limiter.ready(t)
 
