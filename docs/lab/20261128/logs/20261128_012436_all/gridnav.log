@@ -1,0 +1,11 @@
+[INFO] [1795796808.025603949] [gridnav]: aisle map /home/device06/object-finder-bot/robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795796808.178965817] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795797068.066774712] [gridnav]: goal: x 1.78 y -0.78 yaw -0.59
+[INFO] [1795797068.437765098] [gridnav]: plan #1: +y0.22 -x1.81 +y3.22 -x4.16
+[INFO] [1795797180.191826095] [gridnav]: goal finished: ok
+[INFO] [1795797182.054164128] [gridnav]: goal: x 1.68 y -0.83 yaw -0.36
+[INFO] [1795797182.064022504] [gridnav]: plan #1: -y0.07 -x0.11
+[INFO] [1795797224.211767446] [gridnav]: goal finished: ok
+[INFO] [1795797226.834572802] [gridnav]: goal: x 4.97 y -3.17 yaw -0.50
+[INFO] [1795797227.305748748] [gridnav]: plan #1: +x1.55 -y2.91 +x4.16 -y4.31
+[INFO] [1795797326.405463657] [gridnav]: goal finished: ok

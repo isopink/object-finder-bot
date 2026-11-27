@@ -1,0 +1,15 @@
+[INFO] [1795792565.344709173] [gridnav]: aisle map /home/device06/object-finder-bot/robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795792565.464325970] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795793207.800459101] [gridnav]: aisle map robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795793207.903311896] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795793975.961745932] [gridnav]: aisle map robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795793976.099814132] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795794210.327732712] [gridnav]: goal: x 3.50 y -3.28 yaw -2.82
+[INFO] [1795794210.862877795] [gridnav]: plan #1: +x3.62 -y4.88 +x5.14
+[INFO] [1795794303.502974952] [gridnav]: goal finished: ok
+[INFO] [1795794612.883398148] [gridnav]: aisle map robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795794613.037606182] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795794850.976127897] [gridnav]: aisle map robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795794851.068267023] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m
+[INFO] [1795795238.306706794] [gridnav]: aisle map robot/maps/room_l4_nav.yaml: 278x156 cells, 0.05 m/cell, free after the 0.20 m robot radius: 9.4 m2
+[INFO] [1795795238.440762149] [gridnav]: navigate_to_pose_4cmd ready: straight 0.12 m/s, turns 0.25 rad/s, front stop 0.30 m

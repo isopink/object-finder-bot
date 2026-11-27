@@ -1,0 +1,106 @@
+== bringup  2026-11-28 01:26:02  log: /home/device06/object-finder-bot/robot/logs/20261128_012436_all/bringup.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== Devices
+  [OK]   OpenCR at /dev/opencr
+  [OK]   LiDAR at /dev/lidar
+  [OK]   LDS_MODEL=LDS-02
+  [..]   this turtlebot3_bringup ignores LDS_MODEL; using robot/launch/robot_ld08.launch.py (ld08_driver)
+== Starting turtlebot3_bringup (Ctrl+C to stop). Check it from another pane: ./robot/check_stage1.sh
+[INFO] [launch]: All log files can be found below /home/device06/.ros/log/2026-11-28-01-26-06-130334-ubuntu-140748
+[INFO] [launch]: Default logging verbosity is set to INFO
+urdf_file_name : turtlebot3_waffle_pi.urdf
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_executable' is deprecated, use 'executable' instead
+  Node(
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_name' is deprecated, use 'name' instead
+  Node(
+[INFO] [robot_state_publisher-1]: process started with pid [140756]
+[INFO] [ld08_driver-2]: process started with pid [140758]
+[INFO] [python3-3]: process started with pid [140760]
+[INFO] [turtlebot3_ros-4]: process started with pid [140762]
+[INFO] [python3-5]: process started with pid [140764]
+[turtlebot3_ros-4] [INFO] [1795796766.679494298] [turtlebot3_node]: Init TurtleBot3 Node Main
+[turtlebot3_ros-4] [INFO] [1795796766.680295359] [turtlebot3_node]: Init DynamixelSDKWrapper
+[turtlebot3_ros-4] [INFO] [1795796766.681100260] [DynamixelSDKWrapper]: Succeeded to open the port(/dev/opencr)!
+[turtlebot3_ros-4] [INFO] [1795796766.700114045] [DynamixelSDKWrapper]: Succeeded to change the baudrate!
+[robot_state_publisher-1] [WARN] [1795796766.716018209] [robot_state_publisher]: No robot_description parameter, but command-line argument available.  Assuming argument is name of URDF file.  This backwards compatibility fallback will be removed in the future.
+[robot_state_publisher-1] Parsing robot urdf xml string.
+[robot_state_publisher-1] Link base_link had 7 children
+[robot_state_publisher-1] Link camera_link had 1 children
+[robot_state_publisher-1] Link camera_rgb_frame had 1 children
+[robot_state_publisher-1] Link camera_rgb_optical_frame had 0 children
+[robot_state_publisher-1] Link caster_back_left_link had 0 children
+[robot_state_publisher-1] Link caster_back_right_link had 0 children
+[robot_state_publisher-1] Link imu_link had 0 children
+[robot_state_publisher-1] Link base_scan had 0 children
+[robot_state_publisher-1] Link wheel_left_link had 0 children
+[robot_state_publisher-1] Link wheel_right_link had 0 children
+[robot_state_publisher-1] [INFO] [1795796766.739342197] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-1] [INFO] [1795796766.739456470] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-1] [INFO] [1795796766.739502070] [robot_state_publisher]: got segment base_scan
+[robot_state_publisher-1] [INFO] [1795796766.739540022] [robot_state_publisher]: got segment camera_link
+[robot_state_publisher-1] [INFO] [1795796766.739578262] [robot_state_publisher]: got segment camera_rgb_frame
+[robot_state_publisher-1] [INFO] [1795796766.739615863] [robot_state_publisher]: got segment camera_rgb_optical_frame
+[robot_state_publisher-1] [INFO] [1795796766.739654103] [robot_state_publisher]: got segment caster_back_left_link
+[robot_state_publisher-1] [INFO] [1795796766.739692119] [robot_state_publisher]: got segment caster_back_right_link
+[robot_state_publisher-1] [INFO] [1795796766.739756408] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-1] [INFO] [1795796766.739816440] [robot_state_publisher]: got segment wheel_left_link
+[robot_state_publisher-1] [INFO] [1795796766.739884376] [robot_state_publisher]: got segment wheel_right_link
+[turtlebot3_ros-4] [INFO] [1795796766.740818622] [turtlebot3_node]: Start Calibration of Gyro
+[ld08_driver-2] /dev/ttyACM0    OpenCR Virtual ComPort in FS Mode
+[ld08_driver-2] /dev/ttyUSB0    CP2102 USB to UART Bridge Controller
+[ld08_driver-2] FOUND LDS-02
+[ld08_driver-2] LDS-02 started successfully 
+[python3-3] [INFO] [1795796771.271902855] [ofb_scan_filter]: /scan_raw -> /scan, beams 240, rotated 180 deg, dropping returns closer than 0.00 m
+[python3-3] [INFO] [1795796771.295154490] [ofb_scan_filter]: scan 1: 240 beams, dropped 0 returns (< 0.00 m)
+[turtlebot3_ros-4] [INFO] [1795796771.741088769] [turtlebot3_node]: Calibration End
+[turtlebot3_ros-4] [INFO] [1795796771.741249986] [turtlebot3_node]: Add Motors
+[turtlebot3_ros-4] [INFO] [1795796771.741600996] [turtlebot3_node]: Add Wheels
+[turtlebot3_ros-4] [INFO] [1795796771.741806374] [turtlebot3_node]: Add Sensors
+[turtlebot3_ros-4] [INFO] [1795796771.754087155] [turtlebot3_node]: Succeeded to create battery state publisher
+[turtlebot3_ros-4] [INFO] [1795796771.767312231] [turtlebot3_node]: Succeeded to create imu publisher
+[turtlebot3_ros-4] [INFO] [1795796771.778305965] [turtlebot3_node]: Succeeded to create sensor state publisher
+[turtlebot3_ros-4] [INFO] [1795796771.797275621] [turtlebot3_node]: Succeeded to create joint state publisher
+[turtlebot3_ros-4] [INFO] [1795796771.797430534] [turtlebot3_node]: Add Devices
+[turtlebot3_ros-4] [INFO] [1795796771.797515974] [turtlebot3_node]: Succeeded to create motor power server
+[turtlebot3_ros-4] [INFO] [1795796771.807176387] [turtlebot3_node]: Succeeded to create reset server
+[turtlebot3_ros-4] [INFO] [1795796771.814254032] [turtlebot3_node]: Succeeded to create sound server
+[turtlebot3_ros-4] [INFO] [1795796771.825651736] [turtlebot3_node]: Run!
+[turtlebot3_ros-4] [INFO] [1795796771.983076189] [diff_drive_controller]: Init Odometry
+[turtlebot3_ros-4] [INFO] [1795796772.002429975] [diff_drive_controller]: Run!
+[python3-5] [INFO] [1795796772.179058581] [ofb_wheel_odom]: wheel odometry: radius 0.033 m, separation 0.287 m -> /odom, TF odom -> base_footprint
+[python3-5] [INFO] [1795796773.304376105] [ofb_wheel_odom]: wheels: left = wheel_left_joint, right = wheel_right_joint
+[python3-3] [INFO] [1795796802.889477118] [ofb_scan_filter]: scan 300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795796833.134899829] [ofb_wheel_odom]: odom x 0.00 y 0.00 heading 0.0 deg
+[python3-3] [INFO] [1795796834.926805741] [ofb_scan_filter]: scan 600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795796866.986797790] [ofb_scan_filter]: scan 900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795796893.136929182] [ofb_wheel_odom]: odom x 0.00 y 0.00 heading 0.0 deg
+[python3-3] [INFO] [1795796899.046831067] [ofb_scan_filter]: scan 1200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795796931.370520296] [ofb_scan_filter]: scan 1500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795796953.146736728] [ofb_wheel_odom]: odom x 3.81 y -0.07 heading -91.6 deg
+[python3-3] [INFO] [1795796963.730413600] [ofb_scan_filter]: scan 1800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795796996.117955431] [ofb_scan_filter]: scan 2100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797013.142308644] [ofb_wheel_odom]: odom x 4.52 y -2.81 heading 10.4 deg
+[python3-3] [INFO] [1795797028.455975536] [ofb_scan_filter]: scan 2400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797060.789843450] [ofb_scan_filter]: scan 2700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797073.136793836] [ofb_wheel_odom]: odom x 5.76 y -2.58 heading 75.3 deg
+[python3-3] [INFO] [1795797093.002487371] [ofb_scan_filter]: scan 3000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797125.425822198] [ofb_scan_filter]: scan 3300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797133.136132703] [ofb_wheel_odom]: odom x 3.02 y -0.82 heading 137.9 deg
+[python3-3] [INFO] [1795797157.928612325] [ofb_scan_filter]: scan 3600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797190.218984571] [ofb_scan_filter]: scan 3900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797193.136222080] [ofb_wheel_odom]: odom x 1.77 y -1.60 heading -112.9 deg
+[python3-3] [INFO] [1795797222.539181702] [ofb_scan_filter]: scan 4200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797253.146129715] [ofb_wheel_odom]: odom x 3.37 y -1.66 heading -78.4 deg
+[python3-3] [INFO] [1795797254.869875406] [ofb_scan_filter]: scan 4500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797287.275774069] [ofb_scan_filter]: scan 4800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797313.140489059] [ofb_wheel_odom]: odom x 5.46 y -3.38 heading 34.2 deg
+[python3-3] [INFO] [1795797319.679201661] [ofb_scan_filter]: scan 5100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797351.860715627] [ofb_scan_filter]: scan 5400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797373.140441860] [ofb_wheel_odom]: odom x 5.46 y -3.38 heading 15.1 deg
+[python3-3] [INFO] [1795797384.027133623] [ofb_scan_filter]: scan 5700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797416.185455539] [ofb_scan_filter]: scan 6000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797433.147653903] [ofb_wheel_odom]: odom x 5.46 y -3.38 heading 15.1 deg
+[python3-3] [INFO] [1795797448.332570861] [ofb_scan_filter]: scan 6300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795797480.465349947] [ofb_scan_filter]: scan 6600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795797493.148934898] [ofb_wheel_odom]: odom x 5.46 y -3.38 heading 15.1 deg
+[python3-3] [INFO] [1795797512.625833118] [ofb_scan_filter]: scan 6900: 240 beams, dropped 0 returns (< 0.00 m)

@@ -8,6 +8,9 @@ copied back with scp), and anything sent along with them.
 | 2026-11-18 | [`20261118/`](20261118/) | First run: Foxy install, bringup, C920 vision worker. Issue index: `README_이슈색인.md` |
 | 2026-11-20 | [`20261120/`](20261120/) | LDS-02 bringup, D455 build and depth check. Summary: `1120_진행정리.pdf`; next lab: `다음실습_D455_실행순서.pdf` |
 | 2026-11-24 | [`20261124/`](20261124/) | NanoOWL detector, spoken queries from the laptop, mast LiDAR filter. Team notes: `README_먼저읽기.md`, photos in `사진/` |
+| 2026-11-25 | [`20261125/`](20261125/) | Team session: odometry heading option, live SLAM map, the five map images in `maps/` |
+| 2026-11-27 | [`20261127/`](20261127/) | Team session: Nav2 on a Cartographer map (Foxy params, wide DDS discovery, aisle-only nav map) |
+| 2026-11-28 | [`20261128/`](20261128/) | **First full run**: remember a cup or laptop, ask, drive with four commands, re-check. 3 of 3 queries found. D455 depth, own wheel odometry, AMCL on the full map. How to run it: `README.md` |
 
 Problems hit in the lab and how they were solved: [`트러블슈팅_기록.md`](트러블슈팅_기록.md).
 

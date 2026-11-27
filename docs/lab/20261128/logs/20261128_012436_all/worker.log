@@ -1,0 +1,21 @@
+== worker  2026-11-28 01:24:47  log: /home/device06/object-finder-bot/robot/logs/20261128_012436_all/worker.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+  [OK]   conda env test1001
+  [..]   python /home/device06/miniforge3/envs/test1001/bin/python (Python 3.8.20)
+  [..]   config /home/device06/object-finder-bot/robot/logs/20261128_012436_all/config_depth.yaml (camera_mode depth)
+== python scripts/vision_worker.py --config /home/device06/object-finder-bot/robot/logs/20261128_012436_all/config_depth.yaml --port 8600 --detector owl --camera realsense --owl-prompts a cup,a laptop --no-tiles --view-port 8601
+   first start loads CLIP and may build a TensorRT engine: allow 1-5 minutes
+  [..]   dropping the page cache so the GPU can allocate (robot/lib/drop_cache.py)
+drop_cache: 5229 files; MemFree 3617 -> 4333 MB, Cached 1112 -> 229 MB
+Loading CLIP ViT-B-32 / laion2b_s34b_b79k ... (about 15 s)
+CLIP ready on cuda (fp16=True) in 24.6 s
+/home/device06/miniforge3/envs/test1001/lib/python3.8/site-packages/torch/functional.py:505: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/TensorShape.cpp:3490.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+[11/28/2026-01:25:49] [TRT] [W] Using an engine plan file across different models of devices is not recommended and is likely to affect performance or even cause errors.
+/home/device06/nanoowl/nanoowl/image_preprocessor.py:71: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /opt/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:206.)
+  image = torch.from_numpy(np.asarray(image))
+[OK] the camera delivers frames
+Vision worker on http://0.0.0.0:8600  (camera_mode=depth, camera=RealSenseCamera, detector=OwlDetector, fake=False)
+Live camera view on http://0.0.0.0:8601/
+/home/device06/miniforge3/envs/test1001/lib/python3.8/site-packages/torch/nn/modules/activation.py:1186: UserWarning: Converting mask without torch.bool dtype to bool; this will negatively affect performance. Prefer to use a boolean mask directly. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/transformers/attention.cpp:150.)
+  return torch._native_multi_head_attention(

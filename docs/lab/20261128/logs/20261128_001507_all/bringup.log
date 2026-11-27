@@ -1,0 +1,212 @@
+== bringup  2026-11-28 00:15:20  log: /home/device06/object-finder-bot/robot/logs/20261128_001507_all/bringup.log
+== ROS_DISTRO=foxy mode=native ROS_DOMAIN_ID=30 LOCALHOST_ONLY=0 MODEL=waffle_pi LDS=LDS-02
+== Devices
+  [OK]   OpenCR at /dev/opencr
+  [OK]   LiDAR at /dev/lidar
+  [OK]   LDS_MODEL=LDS-02
+  [..]   this turtlebot3_bringup ignores LDS_MODEL; using robot/launch/robot_ld08.launch.py (ld08_driver)
+== Starting turtlebot3_bringup (Ctrl+C to stop). Check it from another pane: ./robot/check_stage1.sh
+[INFO] [launch]: All log files can be found below /home/device06/.ros/log/2026-11-28-00-15-23-952442-ubuntu-114228
+[INFO] [launch]: Default logging verbosity is set to INFO
+urdf_file_name : turtlebot3_waffle_pi.urdf
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_executable' is deprecated, use 'executable' instead
+  Node(
+/opt/ros/foxy/share/turtlebot3_bringup/launch/turtlebot3_state_publisher.launch.py:47: UserWarning: The parameter 'node_name' is deprecated, use 'name' instead
+  Node(
+[INFO] [robot_state_publisher-1]: process started with pid [114238]
+[INFO] [ld08_driver-2]: process started with pid [114240]
+[INFO] [python3-3]: process started with pid [114242]
+[INFO] [turtlebot3_ros-4]: process started with pid [114244]
+[INFO] [python3-5]: process started with pid [114246]
+[turtlebot3_ros-4] [INFO] [1795792524.481137834] [turtlebot3_node]: Init TurtleBot3 Node Main
+[turtlebot3_ros-4] [INFO] [1795792524.481875600] [turtlebot3_node]: Init DynamixelSDKWrapper
+[turtlebot3_ros-4] [INFO] [1795792524.484451557] [DynamixelSDKWrapper]: Succeeded to open the port(/dev/opencr)!
+[robot_state_publisher-1] [WARN] [1795792524.493477198] [robot_state_publisher]: No robot_description parameter, but command-line argument available.  Assuming argument is name of URDF file.  This backwards compatibility fallback will be removed in the future.
+[turtlebot3_ros-4] [INFO] [1795792524.498681688] [DynamixelSDKWrapper]: Succeeded to change the baudrate!
+[robot_state_publisher-1] Parsing robot urdf xml string.
+[robot_state_publisher-1] Link base_link had 7 children
+[robot_state_publisher-1] Link camera_link had 1 children
+[robot_state_publisher-1] Link camera_rgb_frame had 1 children
+[robot_state_publisher-1] Link camera_rgb_optical_frame had 0 children
+[robot_state_publisher-1] Link caster_back_left_link had 0 children
+[robot_state_publisher-1] Link caster_back_right_link had 0 children
+[robot_state_publisher-1] Link imu_link had 0 children
+[robot_state_publisher-1] Link base_scan had 0 children
+[robot_state_publisher-1] Link wheel_left_link had 0 children
+[robot_state_publisher-1] Link wheel_right_link had 0 children
+[robot_state_publisher-1] [INFO] [1795792524.521628177] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-1] [INFO] [1795792524.521747346] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-1] [INFO] [1795792524.521795666] [robot_state_publisher]: got segment base_scan
+[robot_state_publisher-1] [INFO] [1795792524.521838034] [robot_state_publisher]: got segment camera_link
+[robot_state_publisher-1] [INFO] [1795792524.521879923] [robot_state_publisher]: got segment camera_rgb_frame
+[robot_state_publisher-1] [INFO] [1795792524.521922771] [robot_state_publisher]: got segment camera_rgb_optical_frame
+[robot_state_publisher-1] [INFO] [1795792524.521965684] [robot_state_publisher]: got segment caster_back_left_link
+[robot_state_publisher-1] [INFO] [1795792524.522010612] [robot_state_publisher]: got segment caster_back_right_link
+[robot_state_publisher-1] [INFO] [1795792524.522090901] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-1] [INFO] [1795792524.522139701] [robot_state_publisher]: got segment wheel_left_link
+[robot_state_publisher-1] [INFO] [1795792524.522182645] [robot_state_publisher]: got segment wheel_right_link
+[turtlebot3_ros-4] [INFO] [1795792524.541802836] [turtlebot3_node]: Start Calibration of Gyro
+[ld08_driver-2] /dev/ttyACM0    OpenCR Virtual ComPort in FS Mode
+[ld08_driver-2] /dev/ttyUSB0    CP2102 USB to UART Bridge Controller
+[ld08_driver-2] FOUND LDS-02
+[ld08_driver-2] LDS-02 started successfully 
+[python3-3] [INFO] [1795792529.523326307] [ofb_scan_filter]: /scan_raw -> /scan, beams 240, rotated 180 deg, dropping returns closer than 0.00 m
+[python3-3] [INFO] [1795792529.539306468] [ofb_scan_filter]: scan 1: 240 beams, dropped 0 returns (< 0.00 m)
+[turtlebot3_ros-4] [INFO] [1795792529.542194779] [turtlebot3_node]: Calibration End
+[turtlebot3_ros-4] [INFO] [1795792529.542342781] [turtlebot3_node]: Add Motors
+[turtlebot3_ros-4] [INFO] [1795792529.543170627] [turtlebot3_node]: Add Wheels
+[turtlebot3_ros-4] [INFO] [1795792529.543399205] [turtlebot3_node]: Add Sensors
+[turtlebot3_ros-4] [INFO] [1795792529.548844145] [turtlebot3_node]: Succeeded to create battery state publisher
+[turtlebot3_ros-4] [INFO] [1795792529.556435086] [turtlebot3_node]: Succeeded to create imu publisher
+[turtlebot3_ros-4] [INFO] [1795792529.562641728] [turtlebot3_node]: Succeeded to create sensor state publisher
+[turtlebot3_ros-4] [INFO] [1795792529.568249549] [turtlebot3_node]: Succeeded to create joint state publisher
+[turtlebot3_ros-4] [INFO] [1795792529.568361646] [turtlebot3_node]: Add Devices
+[turtlebot3_ros-4] [INFO] [1795792529.568411567] [turtlebot3_node]: Succeeded to create motor power server
+[turtlebot3_ros-4] [INFO] [1795792529.588188462] [turtlebot3_node]: Succeeded to create reset server
+[turtlebot3_ros-4] [INFO] [1795792529.597990237] [turtlebot3_node]: Succeeded to create sound server
+[turtlebot3_ros-4] [INFO] [1795792529.612626355] [turtlebot3_node]: Run!
+[turtlebot3_ros-4] [INFO] [1795792529.822807505] [diff_drive_controller]: Init Odometry
+[turtlebot3_ros-4] [INFO] [1795792529.851371480] [diff_drive_controller]: Run!
+[python3-5] [INFO] [1795792530.404797956] [ofb_wheel_odom]: wheel odometry: radius 0.033 m, separation 0.287 m -> /odom, TF odom -> base_footprint
+[python3-5] [INFO] [1795792530.420074815] [ofb_wheel_odom]: wheels: left = wheel_left_joint, right = wheel_right_joint
+[python3-3] [INFO] [1795792561.117542390] [ofb_scan_filter]: scan 300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792589.926679226] [ofb_wheel_odom]: odom x 0.00 y -0.00 heading 0.0 deg
+[python3-3] [INFO] [1795792593.028295835] [ofb_scan_filter]: scan 600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792624.893325338] [ofb_scan_filter]: scan 900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792649.924194661] [ofb_wheel_odom]: odom x -0.00 y 0.00 heading 85.6 deg
+[python3-3] [INFO] [1795792656.762463044] [ofb_scan_filter]: scan 1200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792688.627502196] [ofb_scan_filter]: scan 1500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792709.927573565] [ofb_wheel_odom]: odom x -0.00 y 0.00 heading 85.6 deg
+[python3-3] [INFO] [1795792720.471780768] [ofb_scan_filter]: scan 1800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792752.393661237] [ofb_scan_filter]: scan 2100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792769.921595011] [ofb_wheel_odom]: odom x 0.14 y 0.57 heading -58.6 deg
+[python3-3] [INFO] [1795792784.313085645] [ofb_scan_filter]: scan 2400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792816.242287760] [ofb_scan_filter]: scan 2700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792829.923741532] [ofb_wheel_odom]: odom x 2.07 y 1.28 heading 21.4 deg
+[python3-3] [INFO] [1795792848.187940434] [ofb_scan_filter]: scan 3000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792880.150943057] [ofb_scan_filter]: scan 3300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792889.923532118] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795792912.050588524] [ofb_scan_filter]: scan 3600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795792943.928024718] [ofb_scan_filter]: scan 3900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795792949.923689458] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795792975.822014099] [ofb_scan_filter]: scan 4200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793007.740306710] [ofb_scan_filter]: scan 4500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793009.923529963] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793039.626653526] [ofb_scan_filter]: scan 4800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793069.927590200] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793071.523647781] [ofb_scan_filter]: scan 5100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793103.410672512] [ofb_scan_filter]: scan 5400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793129.930090645] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793135.333849909] [ofb_scan_filter]: scan 5700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793167.269395265] [ofb_scan_filter]: scan 6000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793189.923676975] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793199.179855760] [ofb_scan_filter]: scan 6300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793231.051514577] [ofb_scan_filter]: scan 6600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793249.934467907] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793262.937672528] [ofb_scan_filter]: scan 6900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793294.825770292] [ofb_scan_filter]: scan 7200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793309.926579624] [ofb_wheel_odom]: odom x 2.55 y 3.06 heading 113.2 deg
+[python3-3] [INFO] [1795793326.686839069] [ofb_scan_filter]: scan 7500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793358.543532459] [ofb_scan_filter]: scan 7800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793369.924551816] [ofb_wheel_odom]: odom x 2.45 y 3.02 heading -58.8 deg
+[python3-3] [INFO] [1795793390.445575740] [ofb_scan_filter]: scan 8100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793422.382823999] [ofb_scan_filter]: scan 8400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793429.931556492] [ofb_wheel_odom]: odom x 1.72 y 0.69 heading -147.4 deg
+[python3-3] [INFO] [1795793454.357129288] [ofb_scan_filter]: scan 8700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793486.388582102] [ofb_scan_filter]: scan 9000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793489.924760660] [ofb_wheel_odom]: odom x 0.93 y 0.18 heading -147.6 deg
+[python3-3] [INFO] [1795793518.312573948] [ofb_scan_filter]: scan 9300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793549.926729910] [ofb_wheel_odom]: odom x 0.93 y 0.18 heading -147.6 deg
+[python3-3] [INFO] [1795793550.217614176] [ofb_scan_filter]: scan 9600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793582.125538978] [ofb_scan_filter]: scan 9900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793609.936945719] [ofb_wheel_odom]: odom x 0.93 y 0.18 heading -147.6 deg
+[python3-3] [INFO] [1795793614.027865799] [ofb_scan_filter]: scan 10200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793645.926998840] [ofb_scan_filter]: scan 10500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793669.926836811] [ofb_wheel_odom]: odom x 0.93 y 0.18 heading -147.6 deg
+[python3-3] [INFO] [1795793677.832752047] [ofb_scan_filter]: scan 10800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793709.723623488] [ofb_scan_filter]: scan 11100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793729.934782305] [ofb_wheel_odom]: odom x 1.47 y -0.60 heading -55.5 deg
+[python3-3] [INFO] [1795793741.687910744] [ofb_scan_filter]: scan 11400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793773.596075177] [ofb_scan_filter]: scan 11700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793789.928515890] [ofb_wheel_odom]: odom x 3.15 y -3.04 heading -55.4 deg
+[python3-3] [INFO] [1795793805.499211350] [ofb_scan_filter]: scan 12000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793837.388756177] [ofb_scan_filter]: scan 12300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793849.925923077] [ofb_wheel_odom]: odom x 3.15 y -3.04 heading -55.4 deg
+[python3-3] [INFO] [1795793869.271752846] [ofb_scan_filter]: scan 12600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793901.175266270] [ofb_scan_filter]: scan 12900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793909.932468293] [ofb_wheel_odom]: odom x 3.15 y -3.04 heading -55.4 deg
+[python3-3] [INFO] [1795793933.106406116] [ofb_scan_filter]: scan 13200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795793965.029878022] [ofb_scan_filter]: scan 13500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795793969.929394152] [ofb_wheel_odom]: odom x 3.15 y -3.04 heading -55.4 deg
+[python3-3] [INFO] [1795793996.936979115] [ofb_scan_filter]: scan 13800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794028.839021177] [ofb_scan_filter]: scan 14100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794029.935595582] [ofb_wheel_odom]: odom x 3.57 y -3.65 heading -55.5 deg
+[python3-3] [INFO] [1795794060.738776806] [ofb_scan_filter]: scan 14400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794089.940291735] [ofb_wheel_odom]: odom x 3.57 y -3.65 heading -55.3 deg
+[python3-3] [INFO] [1795794092.686765203] [ofb_scan_filter]: scan 14700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794124.623263133] [ofb_scan_filter]: scan 15000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794149.934245557] [ofb_wheel_odom]: odom x 3.57 y -3.65 heading -55.3 deg
+[python3-3] [INFO] [1795794156.523798107] [ofb_scan_filter]: scan 15300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794188.487625193] [ofb_scan_filter]: scan 15600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794209.937071702] [ofb_wheel_odom]: odom x 3.57 y -3.65 heading -55.3 deg
+[python3-3] [INFO] [1795794220.478381147] [ofb_scan_filter]: scan 15900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794252.636412479] [ofb_scan_filter]: scan 16200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794269.936568341] [ofb_wheel_odom]: odom x 4.04 y -8.13 heading -142.2 deg
+[python3-3] [INFO] [1795794284.811095777] [ofb_scan_filter]: scan 16500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794316.892725510] [ofb_scan_filter]: scan 16800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794329.930022151] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 138.5 deg
+[python3-3] [INFO] [1795794348.908169043] [ofb_scan_filter]: scan 17100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794380.938039013] [ofb_scan_filter]: scan 17400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794389.932613741] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 138.5 deg
+[python3-3] [INFO] [1795794412.941813053] [ofb_scan_filter]: scan 17700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794444.908041878] [ofb_scan_filter]: scan 18000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794449.943280634] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 138.5 deg
+[python3-3] [INFO] [1795794476.890158568] [ofb_scan_filter]: scan 18300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794508.848517599] [ofb_scan_filter]: scan 18600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794509.935416887] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 138.5 deg
+[python3-3] [INFO] [1795794540.797446686] [ofb_scan_filter]: scan 18900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794569.932239193] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.5 deg
+[python3-3] [INFO] [1795794572.749599233] [ofb_scan_filter]: scan 19200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794604.752902184] [ofb_scan_filter]: scan 19500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794629.941747051] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.5 deg
+[python3-3] [INFO] [1795794636.702978432] [ofb_scan_filter]: scan 19800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794668.687965488] [ofb_scan_filter]: scan 20100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794689.932004994] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.6 deg
+[python3-3] [INFO] [1795794700.692264483] [ofb_scan_filter]: scan 20400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794732.655444577] [ofb_scan_filter]: scan 20700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794749.933777047] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.6 deg
+[python3-3] [INFO] [1795794764.570020138] [ofb_scan_filter]: scan 21000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794796.416449842] [ofb_scan_filter]: scan 21300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794809.940518334] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.6 deg
+[python3-3] [INFO] [1795794828.243131875] [ofb_scan_filter]: scan 21600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794860.059516847] [ofb_scan_filter]: scan 21900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794869.943873067] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.6 deg
+[python3-3] [INFO] [1795794891.894975209] [ofb_scan_filter]: scan 22200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794923.702722431] [ofb_scan_filter]: scan 22500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794929.937733196] [ofb_wheel_odom]: odom x 3.31 y -8.84 heading 140.6 deg
+[python3-3] [INFO] [1795794955.621810000] [ofb_scan_filter]: scan 22800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795794987.642267621] [ofb_scan_filter]: scan 23100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795794989.942772182] [ofb_wheel_odom]: odom x 0.37 y -6.43 heading 140.6 deg
+[python3-3] [INFO] [1795795019.573168644] [ofb_scan_filter]: scan 23400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795049.943031804] [ofb_wheel_odom]: odom x 0.36 y -6.41 heading 48.7 deg
+[python3-3] [INFO] [1795795051.489244024] [ofb_scan_filter]: scan 23700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795083.438281704] [ofb_scan_filter]: scan 24000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795109.936822434] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 54.8 deg
+[python3-3] [INFO] [1795795115.426698910] [ofb_scan_filter]: scan 24300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795147.284006664] [ofb_scan_filter]: scan 24600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795169.935568149] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
+[python3-3] [INFO] [1795795179.179739527] [ofb_scan_filter]: scan 24900: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795211.038712839] [ofb_scan_filter]: scan 25200: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795229.935445832] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
+[python3-3] [INFO] [1795795242.925083462] [ofb_scan_filter]: scan 25500: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795274.763908373] [ofb_scan_filter]: scan 25800: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795289.936468772] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
+[python3-3] [INFO] [1795795306.601140384] [ofb_scan_filter]: scan 26100: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795338.430526300] [ofb_scan_filter]: scan 26400: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795349.942124422] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
+[python3-3] [INFO] [1795795370.282285971] [ofb_scan_filter]: scan 26700: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795402.081783811] [ofb_scan_filter]: scan 27000: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795409.937614447] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
+[python3-3] [INFO] [1795795433.925392635] [ofb_scan_filter]: scan 27300: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-3] [INFO] [1795795465.764247254] [ofb_scan_filter]: scan 27600: 240 beams, dropped 0 returns (< 0.00 m)
+[python3-5] [INFO] [1795795469.948358575] [ofb_wheel_odom]: odom x 0.57 y -6.03 heading 146.5 deg
