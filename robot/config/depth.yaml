@@ -34,7 +34,7 @@ depth_max: 4.0
 # level, looking along +x = the direction `w` drives)
 cam_x: 0.205
 cam_y: 0.05
-cam_z: 0.825
+cam_z: 0.815
 cam_yaw: 0.0
 cam_pitch: 0.0      # rad, positive = tilted down
 
