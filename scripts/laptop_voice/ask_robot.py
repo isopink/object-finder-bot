@@ -100,7 +100,10 @@ def publish(text, host, topic, dry_run):
     # A small rclpy publisher instead of `ros2 topic pub --once`: it waits until the
     # finder is subscribed, then publishes once. About 6 s faster, and it says so when
     # nobody listens (measured 2026-11-24: 11.8 s with the CLI, about 5 s this way).
-    script = ("source ~/object-finder-bot/robot/env.sh >/dev/null 2>&1\n"
+    # Same DDS and odometry settings as the robot stack (every ROS process must use the
+    # same ones, see robot/env.sh OFB_DDS_WIDE; the 11/27 run used both).
+    script = ("export OFB_DDS_WIDE=${OFB_DDS_WIDE:-1} OFB_ODOM_IMU=${OFB_ODOM_IMU:-0}\n"
+              "source ~/object-finder-bot/robot/env.sh >/dev/null 2>&1\n"
               "/usr/bin/python3 - %s %s <<'PY'\n"
               "import sys, time, rclpy\n"
               "from std_msgs.msg import String\n"
