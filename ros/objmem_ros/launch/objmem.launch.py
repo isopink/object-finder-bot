@@ -21,7 +21,7 @@ ARGS = [
     ("start_mark", "", "map view: 'x y' of the start point, drawn as an X (empty = none)"),
     ("nav_action", "navigate_to_pose", "NavigateToPose action the finder sends goals to (navigate_to_pose_4cmd: gridnav)"),
     ("nav_timeout_s", "120.0", "the finder gives up on one goal after this many seconds"),
-    ("observe_rate", "1.0", "observer steps per second (1 to 2)"),
+    ("observe_rate", "1.0", "observer steps per second asked for (robot/objmem.sh passes 5 while driving)"),
     ("only_when_stopped", "true", "observe only while the robot stands still"),
     ("skip_while_turning", "false", "skip frames while the robot turns (for observing on the move)"),
     ("color_topic", "/camera/color/image_raw/compressed", "image_source:=ros compressed color topic"),

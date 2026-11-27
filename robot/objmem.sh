@@ -86,8 +86,11 @@ NAV_TIMEOUT=120
 [ "${OFB_START_MARK:-}" = none ] && OFB_START_MARK=" "
 # OFB_OBSERVE_MOVING=1 (default since 2026-11-28): remember objects while driving straight,
 # not only after stopping; frames taken while turning are skipped. 0 = only when stopped.
+# OFB_OBSERVE_RATE: looks per second asked for (5.0; it was 2.0 until 2026-11-28, which gave 1.76).
+# The observer waits for each worker answer, so a slow answer lowers the real rate: read it off the
+# times of the "observe:" lines. Every look is one Bayes update of p, so p also moves 2.5 times faster.
 if [ "${OFB_OBSERVE_MOVING:-1}" = 1 ]; then
-  ONLY_STOPPED=false; SKIP_TURNING=true; OBS_RATE="${OFB_OBSERVE_RATE:-2.0}"
+  ONLY_STOPPED=false; SKIP_TURNING=true; OBS_RATE="${OFB_OBSERVE_RATE:-5.0}"
 else
   ONLY_STOPPED=true; SKIP_TURNING=false; OBS_RATE="${OFB_OBSERVE_RATE:-1.0}"
 fi
