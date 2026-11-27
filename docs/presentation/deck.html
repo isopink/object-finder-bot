@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Is My Cup? — Team 6</title>
+<!-- Built from Text.md following DESIGN.md and Rules.md (UOS standard template). -->
+<!-- Everything is local (vendor/): the deck opens offline and on networks that block CDNs. -->
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<script defer src="vendor/katex/katex.min.js"></script>
+<style>
+  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:400;src:url(vendor/fonts/source-sans-3-latin-400-normal.woff2) format('woff2')}
+  @font-face{font-family:'Source Sans 3';font-style:italic;font-weight:400;src:url(vendor/fonts/source-sans-3-latin-400-italic.woff2) format('woff2')}
+  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:500;src:url(vendor/fonts/source-sans-3-latin-500-normal.woff2) format('woff2')}
+  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:600;src:url(vendor/fonts/source-sans-3-latin-600-normal.woff2) format('woff2')}
+  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:700;src:url(vendor/fonts/source-sans-3-latin-700-normal.woff2) format('woff2')}
+  :root{
+    --blue:#004094; --maroon:#8C2D2D; --ink:#222222; --summary:#8a8f96; --footer:#a2a8ae;
+    --rule:#e4e7ea; --rule-soft:#eceef1; --card:#fafbfc; --sub:#444444; --callout:#2a2f35;
+    --d-ink:#24405e; --d-line:#a8b0b8; --d-flow:#8a9bb0; --d-label:#667080;
+  }
+  html,body{margin:0;background:#e9ecef}
+  body{font-family:'Source Sans 3','Noto Sans KR',sans-serif;color:var(--ink)}
+  .deck{display:flex;flex-direction:column;align-items:center;gap:40px;padding:40px 0}
+  .slide{width:1920px;height:1080px;box-sizing:border-box;padding:52px 316px 60px;display:flex;flex-direction:column;
+    background:#fff;position:relative;overflow:hidden;flex:none}
+  .slide.dense{padding:44px 316px 52px}
+  /* presentation mode */
+  body.present{background:#000;overflow:hidden}
+  body.present .deck{display:block;padding:0}
+  body.present .slide{position:absolute;left:50%;top:50%;transform-origin:center center;display:none}
+  body.present .slide.on{display:flex}
+  /* export / print mode */
+  body.export{background:#fff}
+  body.export .deck{gap:0;padding:0}
+  @page{size:1920px 1080px;margin:0}
+  @media print{
+    html,body{background:#fff}
+    .deck{gap:0;padding:0;display:block}
+    .slide{break-after:page;page-break-after:always}
+    .slide:last-child{break-after:auto}
+  }
+
+  /* title */
+  .title{align-items:center;justify-content:center;text-align:center;padding:70px 320px}
+  .title .emb{width:261px;height:261px;margin-bottom:22px}
+  .title .eyebrow{font-size:24px;letter-spacing:.32em;text-transform:uppercase;color:var(--maroon);font-weight:700;margin-bottom:28px}
+  .title h1{margin:0;font-size:60px;font-weight:600;color:var(--blue);line-height:1.16;max-width:1180px}
+  .title .subt{margin-top:14px;font-size:32px;color:var(--d-ink)}
+  .title .rl{width:130px;height:3px;background:var(--blue);margin:44px 0}
+  .title .spk{font-size:26px;color:var(--summary)}
+  .title .date{font-size:20px;color:var(--footer);margin-top:10px}
+
+  /* outline */
+  .outline h2{font-size:50px}
+  .ol{flex:1;display:flex;flex-direction:column;justify-content:center}
+  .ol .rows{width:100%;max-width:960px;display:flex;flex-direction:column}
+  .ol .row{display:flex;align-items:baseline;gap:30px;padding:27px 0;border-bottom:1px solid var(--rule-soft)}
+  .ol .row:last-child{border-bottom:none}
+  .ol .pn{flex:none;width:132px;font-size:27px;font-weight:700;color:var(--blue)}
+  .ol .nm{font-size:31px;font-weight:500;color:var(--ink)}
+
+  /* content */
+  h2{margin:0;font-size:44px;font-weight:700;color:var(--blue);line-height:1.1}
+  .sum{margin-top:8px;font-size:27px;color:var(--summary)}
+  .sum strong{color:var(--summary);font-weight:600}
+  .body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;min-height:0}
+  .bl{display:flex;flex-direction:column;gap:22px}
+  .b{display:flex;gap:16px;font-size:27px;line-height:1.35}
+  .b .dot{color:#111;flex:none}
+  .bl.sm .b{font-size:25px}
+  strong{color:var(--maroon);font-weight:700}
+  .m{font-family:Georgia,'Times New Roman',serif;font-style:italic}
+  .callout{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:34px;flex:none}
+  .callout .bar{width:56px;height:3px;background:var(--maroon);border-radius:2px}
+  .callout .tx{font-size:29px;font-weight:500;color:var(--callout);text-align:center}
+  .foot{display:flex;align-items:center;font-size:18px;color:var(--footer);border-top:1px solid var(--rule);padding-top:10px;flex:none}
+  .foot span{flex:1}
+  .foot .c{text-align:center}
+  .foot .r{text-align:right}
+
+  .cols{display:flex;align-items:flex-start}
+  .cols>.col{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0}
+  .cols>.col:first-child{padding-right:48px}
+  .cols>.col+.col{padding-left:48px;border-left:1px solid var(--rule);align-self:stretch}
+  .ct{font-size:29px;font-weight:700;color:var(--blue)}
+
+  .cards{display:flex;gap:20px;align-items:stretch;justify-content:center}
+  .card{background:var(--card);border:1px solid var(--rule-soft);border-left:4px solid var(--blue);border-radius:10px;padding:26px 28px;box-sizing:border-box}
+  .card.hi{background:#f5eae9;border-color:#cf9a9a;border-left-color:var(--maroon)}
+  .card .k{font-size:27px;font-weight:700;color:var(--blue)}
+  .card .s{font-size:21px;color:#555;margin-top:8px;line-height:1.35}
+  .arrow{font-size:40px;color:var(--summary);flex:none;align-self:center}
+
+  .ph{border:2px dashed var(--d-line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:var(--summary);background:var(--card);box-sizing:border-box;text-align:center;gap:6px}
+  .ph .pl{font-size:24px;font-weight:600;color:var(--d-label)}
+  .ph .pd{font-size:18px;color:var(--summary)}
+  .blank{color:var(--d-label);font-weight:600}
+  .frame{border:1px solid #e2e5e8;border-radius:8px;display:block}
+  .cap{font-size:16px;font-style:italic;color:#999;text-align:center}
+  .eq{display:flex;justify-content:center}
+  .eq .katex-display{margin:0}
+  .eq .katex{font-size:34px}
+  .eq.sm .katex{font-size:28px}
+
+  .chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:10px;font-size:22px;font-weight:600;
+        background:#eaf1f9;border:1.5px solid #9fbde0;color:var(--blue);box-sizing:border-box}
+  .chip.mar{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon)}
+
+  /* system overview grid */
+  .grid{display:grid;grid-template-columns:150px repeat(6,1fr);gap:8px}
+  .grid .hd{font-size:20px;font-weight:700;color:var(--blue);text-align:center;padding:6px 0 2px}
+  .grid .hd.pre{color:var(--summary)}
+  .grid .ly{font-size:19px;font-weight:700;color:#5a7396;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center}
+  .grid .cell{background:var(--card);border:1px solid #c9d3de;border-radius:10px;padding:12px 10px;font-size:19px;line-height:1.3;
+             text-align:center;color:var(--d-ink);display:flex;align-items:center;justify-content:center;min-height:86px;box-sizing:border-box}
+  .grid .cell.pre{background:#fff;border-color:#d5dae0;color:var(--d-label)}
+  .grid .cell.own{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon);font-weight:600}
+  .grid .os{grid-column:2 / span 6;background:#eef3f9;border:1px solid #9fbde0;border-radius:10px;font-size:18px;color:var(--blue);
+            text-align:center;padding:8px 0;font-weight:600}
+
+  /* stats */
+  .stats{display:flex;justify-content:space-between;gap:24px}
+  .stat{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  .stat .n{font-size:56px;font-weight:700;color:var(--blue);line-height:1}
+  .stat .l{font-size:20px;color:var(--d-label);line-height:1.3}
+
+  /* bars */
+  .bars{display:flex;flex-direction:column;gap:18px}
+  .brow{display:flex;align-items:center;gap:18px}
+  .brow .bn{width:230px;font-size:24px;font-weight:600;color:var(--d-ink);flex:none;text-align:right}
+  .brow .track{flex:1;display:flex;align-items:center;gap:14px}
+  .brow .fill{height:38px;border-radius:6px;background:#9fbde0}
+  .brow .fill.mar{background:var(--maroon)}
+  .brow .fill.blue{background:var(--blue)}
+  .brow .bv{font-size:24px;font-weight:700;color:var(--d-ink);flex:none}
+  .brow .be{font-size:19px;color:var(--d-label);flex:none}
+
+  .tbl{border-collapse:collapse;font-size:22px}
+  .tbl td{padding:8px 18px;border-bottom:1px solid var(--rule)}
+  .tbl td:last-child{text-align:right;font-weight:700;color:var(--d-ink)}
+  .tbl tr.bad td:last-child{color:var(--maroon)}
+  .refs{display:flex;flex-direction:column;justify-content:center;gap:17px;font-size:20px;line-height:1.34;color:#333;flex:1}
+  .refs .r{display:flex;gap:12px}
+  .refs .rn{color:var(--blue);font-weight:700;flex:none;width:40px}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 Title -->
+<section class="slide title" data-notes="인사, 팀 소개. &quot;오늘은 물건을 기억하고 찾아가는 로봇 이야기입니다.&quot;">
+  <img class="emb" src="assets/emblem.png" alt="University of Seoul emblem">
+  <div class="eyebrow">2026 Fall · Intelligent Robotics</div>
+  <h1>Where Is My Cup?</h1>
+  <div class="subt">A Robot That Remembers Where Things Are</div>
+  <div class="rl"></div>
+  <div class="spk">Speaker : Team 6</div>
+  <div class="date">December 10, 2026</div>
+</section>
+
+<!-- 2 Outline -->
+<section class="slide outline content" data-notes="네 부분으로 진행. 2부(이론)와 3부(트러블슈팅)가 중심.">
+  <h2>Outline</h2>
+  <div class="ol"><div class="rows">
+    <div class="row"><span class="pn">Part 1</span><span class="nm">Motivation &amp; System</span></div>
+    <div class="row"><span class="pn">Part 2</span><span class="nm">Theory in Practice</span></div>
+    <div class="row"><span class="pn">Part 3</span><span class="nm">Troubleshooting</span></div>
+    <div class="row"><span class="pn">Part 4</span><span class="nm">Results</span></div>
+  </div></div>
+</section>
+
+<!-- 3 Motivation -->
+<section class="slide content" data-notes="실제 경험으로 시작. 분명 봤는데 어디였는지 기억이 안 난다.">
+  <div><h2>I Always Forget Where I Put Things</h2><div class="sum">Where did I leave my <strong>red cup</strong>?</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;gap:56px">
+    <div class="bl" style="flex:1">
+      <div class="b"><span class="dot">•</span><span>Cup, charger, earphones</span></div>
+      <div class="b"><span class="dot">•</span><span>I saw it — but <strong>where</strong>?</span></div>
+    </div>
+    <div class="ph" style="width:620px;height:520px;flex:none"><div class="pl">[ Photo 1 ]</div><div class="pd">Red cup on a desk (Demo Day)</div></div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">What if a robot remembered for me?</div></div>
+</section>
+
+<!-- 4 Idea -->
+<section class="slide content" data-notes="순찰하면서 본 물건을 위치와 함께 기억. 말로 물으면 그 자리로 가서 다시 확인. 핵심은 &quot;확률로 기억한다&quot; → 2부로 연결.">
+  <div><h2>A Robot That Remembers</h2><div class="sum">See → Ask → Go</div></div>
+  <div class="body">
+    <div class="cards">
+      <div class="card" style="width:360px"><div class="k">1. See</div><div class="s">Patrol, remember<br>what &amp; where</div></div>
+      <div class="arrow">→</div>
+      <div class="card" style="width:360px"><div class="k">2. Ask</div><div class="s">“Where is the red cup?”</div></div>
+      <div class="arrow">→</div>
+      <div class="card" style="width:360px"><div class="k">3. Go</div><div class="s">Drive there,<br>look again</div></div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Remember with <strong>probability</strong>, not certainty</div></div>
+</section>
+
+<!-- 5 System Overview -->
+<section class="slide content dense" data-notes="표를 왼쪽에서 오른쪽으로 한 번 훑기. 질문은 노트북 faster-whisper → SSH → /query. CLIP으로 순위, gridnav로 이동, 도착하면 NanoOWL+CLIP으로 재확인. 직접 만든 부분은 마룬.">
+  <div><h2>System Overview</h2><div class="sum">From one question to one cup</div></div>
+  <div class="body" style="gap:0">
+    <div class="grid">
+      <div></div>
+      <div class="hd pre">0. Remember</div><div class="hd">1. Ask</div><div class="hd">2. Rank</div>
+      <div class="hd">3. Drive</div><div class="hd">4. Re-check</div><div class="hd">5. Report</div>
+
+      <div class="ly">Software</div>
+      <div class="cell pre">NanoOWL · CLIP<br>Kalman · Bayes</div>
+      <div class="cell">faster-whisper</div>
+      <div class="cell own">CLIP text<br>× belief</div>
+      <div class="cell own">gridnav<br>AMCL</div>
+      <div class="cell own">NanoOWL<br>+ CLIP ≥ 0.5</div>
+      <div class="cell">mapview</div>
+
+      <div class="ly">Middleware</div>
+      <div class="cell pre">ROS 2 · TF2</div>
+      <div class="cell">SSH → /query</div>
+      <div class="cell">HTTP :8600</div>
+      <div class="cell">ROS 2 action<br>Fast DDS</div>
+      <div class="cell">HTTP :8600</div>
+      <div class="cell">/objmem/status</div>
+
+      <div class="ly">Hardware</div>
+      <div class="cell pre">D455f<br>Jetson GPU</div>
+      <div class="cell">Laptop mic</div>
+      <div class="cell">Jetson Xavier NX</div>
+      <div class="cell">LDS-02 · OpenCR</div>
+      <div class="cell">D455f</div>
+      <div class="cell">Laptop</div>
+
+      <div></div>
+      <div class="os">Ubuntu 20.04 · JetPack 5.1.5 · ROS 2 Foxy · Jetson on a power bank</div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx"><strong>Maroon</strong> = what we built</div></div>
+</section>
+
+<!-- 6 Camera to Map -->
+<section class="slide content" data-notes="첫 식(역투영)은 강의 밖 우리 추가분. 둘째 식은 강의의 Combining Transformations 그대로. A = AMCL 로봇 자세, B = 카메라 장착 위치(실측).">
+  <div><h2>From Camera to Map</h2><div class="sum">Pixel + depth → one point on the map</div></div>
+  <div class="body" style="gap:44px">
+    <div class="cards" style="gap:14px">
+      <div class="card" style="width:230px;text-align:center"><div class="k">Pixel</div><div class="s"><span class="m">u, v, Z</span></div></div>
+      <div class="arrow"><span class="m" style="font-size:26px">K</span><sup style="font-size:16px">−1</sup> →</div>
+      <div class="card" style="width:230px;text-align:center"><div class="k">Camera</div><div class="s">D455f</div></div>
+      <div class="arrow"><span class="m" style="font-size:26px">B</span> →</div>
+      <div class="card" style="width:230px;text-align:center"><div class="k">Robot</div><div class="s">mount</div></div>
+      <div class="arrow"><span class="m" style="font-size:26px">A</span> →</div>
+      <div class="card hi" style="width:230px;text-align:center"><div class="k">Map</div><div class="s">AMCL pose</div></div>
+    </div>
+    <div class="eq" data-tex="\mathbf{p}_{cam} = Z\,K^{-1}\,[\,u,\ v,\ 1\,]^{\top}"></div>
+    <div class="eq" data-tex="\mathbf{p}_{map} = A\,B\,\mathbf{p}_{cam}, \qquad T = \begin{bmatrix} R & \mathbf{t} \\ \mathbf{0}^{\top} & 1 \end{bmatrix}"></div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Homogeneous coordinates: one matrix per hop</div></div>
+</section>
+
+<!-- 7 Bayes -->
+<section class="slide content" data-notes="강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8, 못 보면 ln(2/9). 시간 감쇠는 강의 밖 추가분: 컵은 &quot;world is static&quot; 가정을 깨므로 예측 단계를 넣음. 오른쪽: CLIP 유사도 × 존재 확률.">
+  <div><h2>Is the Cup Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds</div></div>
+  <div class="body">
+    <div class="cols">
+      <div class="col">
+        <div class="ct">Is it there?</div>
+        <div class="eq sm" data-tex="l_t = l_{t-1} + \log \frac{p(z \mid \text{present})}{p(z \mid \text{absent})}"></div>
+        <div class="bl sm">
+          <div class="b"><span class="dot">•</span><span>Seen: <strong>+2.08</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>In view, not seen: <strong>−1.50</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>Cups move → prediction step</span></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="ct">Which one?</div>
+        <div class="eq sm" data-tex="\text{score}_i = \operatorname{softmax}\!\left(\frac{\cos(\text{CLIP}(q),\, e_i)}{T}\right)\cdot p_i"></div>
+        <div class="bl sm">
+          <div class="b"><span class="dot">•</span><span>Top 3 → visit in order</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Seen raises the belief, missing lowers it</div></div>
+</section>
+
+<!-- 8 Kalman -->
+<section class="slide content" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자: N(8,4)와 N(6,1)을 합치면 N(6.4,0.8).">
+  <div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction — the cup does not move</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;gap:40px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:30px">
+      <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
+      <div class="eq sm" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
+      <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
+    </div>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <svg id="gauss" width="600" height="340" style="font-family:'Source Sans 3',sans-serif"></svg>
+      <div class="cap" style="font-style:normal;color:var(--d-label);font-size:19px">It's a weighted mean</div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span></div></div>
+</section>
+
+<!-- 9 Mapping & Localization -->
+<section class="slide content dense" data-notes="Cartographer = 강의 Three Traditional Paradigms 중 graph-based. 2D LiDAR는 책상 윗판을 못 보고, 회색(unknown)을 빈 곳으로 읽으면 안 됨 → 실제 지나간 통로만 남김. AMCL은 강의의 MCL 그대로.">
+  <div><h2>Mapping and Localization</h2><div class="sum">Graph-based SLAM, then Monte Carlo Localization</div></div>
+  <div class="body">
+    <div class="cols">
+      <div class="col" style="gap:16px">
+        <div class="ct">Mapping</div>
+        <div style="display:flex;gap:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_full.png" style="width:290px"><div class="cap" style="font-style:normal">Cartographer map</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_aisle.png" style="width:290px"><div class="cap" style="font-style:normal">Nav map: aisles only</div></div>
+        </div>
+        <div class="bl sm" style="gap:12px">
+          <div class="b"><span class="dot">•</span><span>Graph-based SLAM · loop closure</span></div>
+          <div class="b"><span class="dot">•</span><span>Unknown ≠ free</span></div>
+        </div>
+      </div>
+      <div class="col" style="gap:16px">
+        <div class="ct">Localization (AMCL = MCL)</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="chip" style="justify-content:flex-start">Predict — odometry motion model</div>
+          <div class="chip" style="justify-content:flex-start">Weight — likelihood field</div>
+          <div class="chip" style="justify-content:flex-start">Resample — low variance</div>
+        </div>
+        <div class="ph" style="height:190px"><div class="pl">[ Photo 2 ]</div><div class="pd">AMCL particles converging (Demo Day)</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">Known map → errors stop piling up</div></div>
+</section>
+
+<!-- 10 26 problems -->
+<section class="slide content" data-notes="트러블슈팅 기록 26건을 층별로 분류. 다음 네 장에서 대표 사례.">
+  <div><h2>26 Problems at a Glance</h2><div class="sum">Grouped by layer</div></div>
+  <div class="body">
+    <div class="bars">
+      <div class="brow"><div class="bn">Software</div><div class="track"><div class="fill blue" style="width:500px"></div><div class="bv">10</div><div class="be">SLAM crash · Nav2 · odom heading</div></div></div>
+      <div class="brow"><div class="bn">Network &amp; tools</div><div class="track"><div class="fill" style="width:300px"></div><div class="bv">6</div><div class="be">lab Wi-Fi · SSH</div></div></div>
+      <div class="brow"><div class="bn">Hardware</div><div class="track"><div class="fill" style="width:250px"></div><div class="bv">5</div><div class="be">battery · motors · power</div></div></div>
+      <div class="brow"><div class="bn">Middleware</div><div class="track"><div class="fill" style="width:250px"></div><div class="bv">5</div><div class="be">DDS discovery · clock</div></div></div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Find the layer first, then the bug</div></div>
+</section>
+
+<!-- 11 Case 1 -->
+<section class="slide content" data-notes="ㄱ자로 운전했는데 지도는 일자. 원인은 SLAM이 아니라 odometry: 방향을 IMU로 계산하는 설정이 간헐적으로 0. 바퀴로 방향 계산(differential drive)하자 해결.">
+  <div><h2>Case 1 : The Map That Wouldn't Turn</h2><div class="sum">A 90° turn, 0° in odometry</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;gap:60px">
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:8px">
+      <img class="frame" src="assets/map_straight.png" style="height:560px">
+      <div class="cap">L-shaped drive → straight map</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:34px">
+      <table class="tbl">
+        <tr><td>Wheels</td><td>+97.7°</td></tr>
+        <tr><td>IMU</td><td>+91.7°</td></tr>
+        <tr class="bad"><td>/odom</td><td>0°</td></tr>
+      </table>
+      <div class="eq sm" data-tex="\theta = \int \omega\, dt, \qquad \omega = \frac{v_r - v_l}{l}"></div>
+      <div class="chip mar">Heading from wheels → +91.6°</div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Check odometry before blaming SLAM</div></div>
+</section>
+
+<!-- 12 Case 2: mast rods in the LiDAR scan -->
+<section class="slide content" data-notes="카메라 기둥의 막대 네 개가 LiDAR 스캔 평면에 들어와서 로봇 자신이 장애물로 보임 → 항상 충돌 상태, 지도에 유령 점. 해결: LiDAR 중심에서 r_min보다 가까운 점은 버림(scan_filter.py --min-range, OFB_SCAN_MIN). r_min은 가장 먼 막대보다 크고 로봇 앞 끝보다 작게. 값은 빈칸에 채우기. ※ 실제 해결 방법·값 확인 필요.">
+  <div><h2>Case 2 : Four Posts in the Scan</h2><div class="sum">The camera mast stands inside the LiDAR plane</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;gap:56px">
+    <svg width="520" height="520" viewBox="0 0 520 520" style="font-family:'Source Sans 3',sans-serif;flex:none">
+      <rect x="150" y="150" width="220" height="220" rx="18" fill="#fafbfc" stroke="#c9d3de" stroke-width="2"/>
+      <text x="260" y="140" font-size="19" fill="#667080" text-anchor="middle">front</text>
+      <circle cx="260" cy="260" r="170" fill="none" stroke="#8C2D2D" stroke-width="2.5" stroke-dasharray="9 7"/>
+      <text x="260" y="78" font-size="22" fill="#8C2D2D" text-anchor="middle" font-family="Georgia,serif" font-style="italic">r<tspan font-size="15" dy="5">min</tspan></text>
+      <circle cx="260" cy="260" r="22" fill="#24405e"/>
+      <text x="260" y="300" font-size="18" fill="#24405e" text-anchor="middle">LiDAR</text>
+      <circle cx="205" cy="205" r="11" fill="#8C2D2D"/><circle cx="315" cy="205" r="11" fill="#8C2D2D"/>
+      <circle cx="205" cy="315" r="11" fill="#8C2D2D"/><circle cx="315" cy="315" r="11" fill="#8C2D2D"/>
+      <text x="260" y="500" font-size="19" fill="#667080" text-anchor="middle">4 rods = 4 fixed "obstacles"</text>
+    </svg>
+    <div style="flex:1;display:flex;flex-direction:column;gap:30px">
+      <div class="bl">
+        <div class="b"><span class="dot">•</span><span>Robot sees <strong>itself</strong> → always “colliding”</span></div>
+        <div class="b"><span class="dot">•</span><span>Fix: drop returns closer than <span class="m">r</span><sub>min</sub></span></div>
+      </div>
+      <div class="eq sm" data-tex="d_{\text{rod}} \;<\; r_{\min} \;<\; d_{\text{front}}"></div>
+      <div class="b" style="font-size:25px"><span class="dot">•</span><span><span class="m">r</span><sub>min</sub> = <span class="blank">[ ___ m ]</span></span></div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">The robot was seeing itself</div></div>
+</section>
+
+<!-- 13 Case 3 -->
+<section class="slide content dense" data-notes="강의 odometry motion model: 회전할 때마다 방향 오차(α), 이동 거리가 그걸 옆 오차로 키움. 그래서 지도 그릴 때도, 찾아갈 때도 직진과 정확한 90° 회전만. 위치는 AMCL(지도 기준)이라 바퀴 오차가 쌓이지 않음. 복귀 오차는 데모데이 실측.">
+  <div><h2>Case 3 : Only 90° Turns</h2><div class="sum">Every turn adds heading error</div></div>
+  <div class="body" style="gap:26px">
+    <div style="display:flex;align-items:center;gap:40px;justify-content:center">
+      <svg width="560" height="200" viewBox="0 0 560 200" style="font-family:'Source Sans 3',sans-serif;flex:none">
+        <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8C2D2D"/></marker></defs>
+        <circle cx="40" cy="150" r="9" fill="#24405e"/>
+        <line x1="40" y1="150" x2="500" y2="150" stroke="#004094" stroke-width="3.5" stroke-dasharray="11 9"/>
+        <line x1="40" y1="150" x2="496" y2="78" stroke="#8C2D2D" stroke-width="3.5" marker-end="url(#ah)"/>
+        <line x1="500" y1="150" x2="500" y2="80" stroke="#667080" stroke-width="2"/>
+        <text x="512" y="122" font-size="24" fill="#24405e" font-family="Georgia,serif" font-style="italic">e⊥</text>
+        <path d="M 190 150 A 150 150 0 0 0 188.2 126.6" fill="none" stroke="#24405e" stroke-width="2"/>
+        <text x="200" y="146" font-size="22" fill="#24405e" font-family="Georgia,serif" font-style="italic">Δθ</text>
+        <text x="270" y="184" font-size="22" fill="#24405e" font-family="Georgia,serif" font-style="italic" text-anchor="middle">s</text>
+        <text x="300" y="40" font-size="19" fill="#667080" text-anchor="middle">planned (dashed) vs driven</text>
+      </svg>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="eq sm" data-tex="e_{\perp} \approx s \cdot \sin \Delta\theta"></div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span>5 m: 1° → <strong>9 cm</strong>, 5° → <strong>44 cm</strong></span></div>
+      </div>
+    </div>
+    <div class="cols">
+      <div class="col" style="gap:10px">
+        <div class="ct">Mapping — teleop4</div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span>straight · 90° · stop</span></div>
+      </div>
+      <div class="col" style="gap:10px">
+        <div class="ct">Navigation — gridnav</div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span>grid path · pose from AMCL</span></div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span>Return error : <span class="blank">[ ___ m ]</span></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">Every turn adds error — so every turn is exactly 90°</div></div>
+</section>
+
+<!-- 13 Case 3 -->
+<section class="slide content" data-notes="프로그램을 많이 켤수록 나중에 켠 노드가 /odom, /map을 못 찾음. Fast DDS가 루프백에서 앞번호 포트 몇 개만 두드리기 때문. 모든 프로세스에 같은 설정(40개 포트) → /odom 10초에 184개, 지도 저장 즉시 성공.">
+  <div><h2>Case 4 : Nodes That Couldn't Hear</h2><div class="sum">More processes → late nodes find nobody</div></div>
+  <div class="body" style="gap:40px">
+    <svg width="1288" height="250" viewBox="0 0 1288 250" style="font-family:'Source Sans 3',sans-serif">
+      <text x="0" y="62" font-size="22" font-weight="600" fill="#24405e">Default</text>
+      <text x="0" y="192" font-size="22" font-weight="600" fill="#24405e">Fix</text>
+      <g id="ports"></g>
+    </svg>
+    <div class="bl">
+      <div class="b"><span class="dot">•</span><span>Cause: loopback discovery probes <strong>few ports</strong></span></div>
+      <div class="b"><span class="dot">•</span><span>Fix: <strong>one</strong> wider DDS profile for all</span></div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Same symptom three times — fix the middleware, not the node</div></div>
+</section>
+
+<!-- 14 Case 4 -->
+<section class="slide content dense" data-notes="강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 컵이 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.">
+  <div><h2>Case 5 : Design Changed by Constraints</h2><div class="sum">C920 → D455f : bearing-only → range-bearing</div></div>
+  <div class="body" style="gap:28px">
+    <svg width="1288" height="330" viewBox="0 0 1288 330" style="font-family:'Source Sans 3',sans-serif">
+      <!-- left panel: bearing-only -->
+      <text x="300" y="28" font-size="24" font-weight="700" fill="#004094" text-anchor="middle">C920 : bearing-only</text>
+      <line x1="20" y1="290" x2="600" y2="290" stroke="#a8b0b8" stroke-width="3"/>
+      <circle cx="90" cy="272" r="10" fill="#24405e"/><circle cx="170" cy="272" r="10" fill="#24405e"/>
+      <line x1="90" y1="272" x2="470" y2="90" stroke="#8a9bb0" stroke-width="2.5" stroke-dasharray="9 7"/>
+      <line x1="170" y1="272" x2="470" y2="90" stroke="#8a9bb0" stroke-width="2.5" stroke-dasharray="9 7"/>
+      <ellipse cx="470" cy="90" rx="120" ry="16" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(-27 470 90)"/>
+      <circle cx="470" cy="90" r="7" fill="#8C2D2D"/>
+      <text x="300" y="320" font-size="19" fill="#667080" text-anchor="middle">two nearly parallel sight lines → ≈ 0.5 m along the line</text>
+      <!-- right panel: range-bearing -->
+      <text x="980" y="28" font-size="24" font-weight="700" fill="#004094" text-anchor="middle">D455f : range-bearing</text>
+      <line x1="700" y1="290" x2="1270" y2="290" stroke="#a8b0b8" stroke-width="3"/>
+      <circle cx="800" cy="272" r="10" fill="#24405e"/>
+      <line x1="800" y1="272" x2="1150" y2="90" stroke="#004094" stroke-width="3"/>
+      <ellipse cx="1150" cy="90" rx="20" ry="13" fill="#eef3f9" stroke="#004094" stroke-width="2.5"/>
+      <circle cx="1150" cy="90" r="7" fill="#004094"/>
+      <text x="955" y="166" font-size="24" fill="#24405e" font-family="Georgia,serif" font-style="italic">r, φ</text>
+      <text x="980" y="320" font-size="19" fill="#667080" text-anchor="middle">one look → position</text>
+    </svg>
+    <div class="cards" style="gap:24px">
+      <div class="chip">detectNet → <b style="margin-left:6px">NanoOWL</b>&nbsp;(clear bottle missed)</div>
+      <div class="chip">Whisper → <b style="margin-left:6px">laptop</b>&nbsp;(4.2 / 6.8 GB)</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">A direction is not a position</div></div>
+</section>
+
+<!-- 15 Measured -->
+<section class="slide content dense" data-notes="실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움.">
+  <div><h2>Measured on the Robot</h2></div>
+  <div class="body" style="gap:34px">
+    <div class="stats">
+      <div class="stat"><div class="n">0.09 m</div><div class="l">Nav2 error, 1 m goal</div></div>
+      <div class="stat"><div class="n">90.9°</div><div class="l">odom for a 90° turn</div></div>
+      <div class="stat"><div class="n">0.08 s</div><div class="l">detection + depth / frame</div></div>
+      <div class="stat"><div class="n">4.2 GB</div><div class="l">vision worker memory</div></div>
+    </div>
+    <div style="display:flex;gap:40px;align-items:center">
+      <div class="ph" style="width:760px;height:420px;flex:none"><div class="pl">[ Video 1 ]</div><div class="pd">“Where is the red cup?” → drive → found (Demo Day)</div></div>
+      <div class="bl" style="flex:1">
+        <div class="b"><span class="dot">•</span><span>Demo Day success : <span class="blank">[ ___ / ___ ]</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 Probabilistic memory -->
+<section class="slide content dense" data-notes="장난감 세계 시뮬레이션: 위치가 완벽해서 절대값보다 비교가 의미. 옮긴 물체는 확률 메모리가 한 번에 찾음. 데모 영상으로 실제 확인.">
+  <div><h2>Why Probabilistic Memory Helps</h2><div class="sum">After moving objects (simulation, 5 seeds × 20 queries)</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;gap:48px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:30px">
+      <div class="ct" style="font-size:25px">Moved object found first try</div>
+      <div class="bars">
+        <div class="brow"><div class="bn" style="width:170px">Probabilistic</div><div class="track"><div class="fill mar" style="width:340px"></div><div class="bv">100%</div></div></div>
+        <div class="brow"><div class="bn" style="width:170px">Similarity only</div><div class="track"><div class="fill" style="width:170px"></div><div class="bv">50%</div></div></div>
+      </div>
+      <div class="ct" style="font-size:25px">Visits per query</div>
+      <div class="bars">
+        <div class="brow"><div class="bn" style="width:170px">Probabilistic</div><div class="track"><div class="fill mar" style="width:189px"></div><div class="bv">1.00</div></div></div>
+        <div class="brow"><div class="bn" style="width:170px">Similarity only</div><div class="track"><div class="fill" style="width:340px"></div><div class="bv">1.80</div></div></div>
+      </div>
+    </div>
+    <div class="ph" style="width:560px;height:440px;flex:none"><div class="pl">[ Video 2 ]</div><div class="pd">Move the red cup, ask again<br>old place → new place (Demo Day)</div></div>
+  </div>
+  <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">Lowering the old belief finds the new place</div></div>
+</section>
+
+<!-- 17 Limitations -->
+<section class="slide content" data-notes="한계 세 개, 배운 점 세 개. 질문 받는 동안 이 화면 유지.">
+  <div><h2>Limitations and Lessons</h2></div>
+  <div class="body">
+    <div class="cols">
+      <div class="col">
+        <div class="ct">Limitations</div>
+        <div class="bl">
+          <div class="b"><span class="dot">•</span><span>Clear cups break depth</span></div>
+          <div class="b"><span class="dot">•</span><span>Aisles only</span></div>
+          <div class="b"><span class="dot">•</span><span>Desk tops invisible to 2D LiDAR</span></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="ct">Lessons</div>
+        <div class="bl">
+          <div class="b"><span class="dot">•</span><span>Check the layer below first</span></div>
+          <div class="b"><span class="dot">•</span><span>Simple motion in tight spaces</span></div>
+          <div class="b"><span class="dot">•</span><span>Keep uncertainty explicit</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="callout"><div class="bar"></div><div class="tx">Thank you</div></div>
+</section>
+
+<!-- 18 References -->
+<section class="slide content" data-notes="참고 문헌.">
+  <h2 style="margin-bottom:24px">References</h2>
+  <div class="refs">
+    <div class="r"><span class="rn">[1]</span><span>S. Thrun, W. Burgard, and D. Fox, <em>Probabilistic Robotics</em>. MIT Press, 2005.</span></div>
+    <div class="r"><span class="rn">[2]</span><span>A. Radford et al., “Learning transferable visual models from natural language supervision,” in <em>Proc. ICML</em>, 2021.</span></div>
+    <div class="r"><span class="rn">[3]</span><span>M. Minderer et al., “Simple open-vocabulary object detection with vision transformers,” in <em>Proc. ECCV</em>, 2022.</span></div>
+    <div class="r"><span class="rn">[4]</span><span>W. Hess, D. Kohler, H. Rapp, and D. Andor, “Real-time loop closure in 2D LIDAR SLAM,” in <em>Proc. ICRA</em>, 2016.</span></div>
+    <div class="r"><span class="rn">[5]</span><span>S. Macenski, F. Martín, R. White, and J. Ginés Clavero, “The Marathon 2: A navigation system,” in <em>Proc. IROS</em>, 2020.</span></div>
+    <div class="r"><span class="rn">[6]</span><span>A. Radford et al., “Robust speech recognition via large-scale weak supervision,” in <em>Proc. ICML</em>, 2023.</span></div>
+    <div class="r"><span class="rn">[7]</span><span>Intelligent Robotics lecture slides, University of Seoul, Fall 2026.</span></div>
+  </div>
+</section>
+
+</div>
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var N = slides.length;
+  // footers
+  slides.forEach(function(s, i){
+    if(!s.classList.contains('content')) return;
+    var f = document.createElement('div'); f.className = 'foot';
+    f.innerHTML = '<span>Team 6 · Intelligent Robotics, UOS</span><span class="c">Where Is My Cup?</span><span class="r">' + (i+1) + ' / ' + N + '</span>';
+    s.appendChild(f);
+  });
+  // gaussians (slide 8): prior N(8,4), measurement N(6,1), fused N(6.4,0.8)
+  var g = document.getElementById('gauss');
+  if(g){
+    var W=600,H=340,x0=1,x1=13,top=30,base=290;
+    function X(x){return 20+(x-x0)/(x1-x0)*(W-40);}
+    function pdf(x,m,v){return Math.exp(-(x-m)*(x-m)/(2*v))/Math.sqrt(2*Math.PI*v);}
+    var peak=pdf(6.4,6.4,0.8);
+    function Y(p){return base-(p/peak)*(base-top);}
+    function path(m,v){var d='';for(var x=x0;x<=x1;x+=0.05){d+=(d?' L ':'M ')+X(x).toFixed(1)+' '+Y(pdf(x,m,v)).toFixed(1);}return d;}
+    var ns='http://www.w3.org/2000/svg';
+    function el(n,a){var e=document.createElementNS(ns,n);for(var k in a)e.setAttribute(k,a[k]);g.appendChild(e);return e;}
+    el('line',{x1:20,y1:base,x2:W-20,y2:base,stroke:'#a8b0b8','stroke-width':2});
+    el('path',{d:path(8,4),fill:'none',stroke:'#004094','stroke-width':3.5,'stroke-dasharray':'11 9'});
+    el('path',{d:path(6,1),fill:'none',stroke:'#8a9bb0','stroke-width':3});
+    el('path',{d:path(6.4,0.8),fill:'none',stroke:'#8C2D2D','stroke-width':4});
+    function t(x,y,s,c){var e=el('text',{x:x,y:y,'font-size':20,fill:c,'text-anchor':'middle'});e.textContent=s;}
+    t(X(10.9),150,'memory N(8, 4)','#004094');
+    t(X(3.4),110,'new look N(6, 1)','#667080');
+    t(X(6.4),top-6,'fused N(6.4, 0.8)','#8C2D2D');
+  }
+  // ports (slide 13)
+  var p = document.getElementById('ports');
+  if(p){
+    var ns2='http://www.w3.org/2000/svg';
+    function r(x,y,fill,stroke){var e=document.createElementNS(ns2,'rect');e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('width',40);e.setAttribute('height',40);e.setAttribute('rx',6);e.setAttribute('fill',fill);e.setAttribute('stroke',stroke);e.setAttribute('stroke-width',1.5);p.appendChild(e);}
+    function tx(x,y,s,c,anchor){var e=document.createElementNS(ns2,'text');e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size',19);e.setAttribute('fill',c);if(anchor)e.setAttribute('text-anchor',anchor);e.textContent=s;p.appendChild(e);}
+    for(var i=0;i<20;i++){
+      var x=120+i*52;
+      var probed=i<4, used=i<9;
+      r(x,36, probed?'#eaf1f9':'#ffffff', probed?'#9fbde0':'#d5dae0');
+      if(used){ var c=document.createElementNS(ns2,'circle');c.setAttribute('cx',x+20);c.setAttribute('cy',56);c.setAttribute('r',8);c.setAttribute('fill',i<4?'#24405e':'#8C2D2D');p.appendChild(c); }
+      r(x,166,'#eaf1f9','#9fbde0');
+      if(used){ var c2=document.createElementNS(ns2,'circle');c2.setAttribute('cx',x+20);c2.setAttribute('cy',186);c2.setAttribute('r',8);c2.setAttribute('fill','#24405e');p.appendChild(c2); }
+    }
+    tx(120,110,'probed','#5a7396'); tx(120+4*52,110,'late nodes: not found','#8C2D2D');
+    tx(120,240,'probed up to 40 ports: every node found','#5a7396');
+    tx(1180,62,'…','#667080'); tx(1180,192,'…','#667080');
+  }
+  // math
+  function renderMath(){
+    if(!window.katex) return false;
+    document.querySelectorAll('[data-tex]').forEach(function(e){
+      if(e.dataset.done) return;
+      katex.render(e.getAttribute('data-tex'), e, {displayMode:true, throwOnError:false});
+      e.dataset.done='1';
+    });
+    return true;
+  }
+  var tries=0, iv=setInterval(function(){ if(renderMath()||++tries>80){ clearInterval(iv); document.body.dataset.ready='1'; } },100);
+
+  // modes: ?export (stacked, for PDF/PPTX), default viewer: click "present" with F or P
+  var q = location.search;
+  if(q.indexOf('export')>=0){ document.body.classList.add('export'); return; }
+  var cur=0;
+  function fit(){
+    var s=Math.min(window.innerWidth/1920, window.innerHeight/1080);
+    slides.forEach(function(el){ el.style.transform='translate(-50%,-50%) scale('+s+')'; });
+  }
+  function show(i){ cur=Math.max(0,Math.min(N-1,i)); slides.forEach(function(el,k){ el.classList.toggle('on',k===cur); }); }
+  function present(on){ document.body.classList.toggle('present',on); if(on){fit();show(cur);} else {slides.forEach(function(el){el.style.transform='';});} }
+  window.addEventListener('resize',function(){ if(document.body.classList.contains('present')) fit(); });
+  document.addEventListener('keydown',function(e){
+    var on=document.body.classList.contains('present');
+    if(e.key==='f'||e.key==='p'){ present(!on); return; }
+    if(!on) return;
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ show(cur+1); e.preventDefault(); }
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){ show(cur-1); e.preventDefault(); }
+    if(e.key==='Escape'){ present(false); }
+  });
+  if(q.indexOf('present')>=0) present(true);
+})();
+</script>
+</body>
+</html>
