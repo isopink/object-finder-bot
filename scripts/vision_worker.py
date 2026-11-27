@@ -133,6 +133,21 @@ def main(argv=None):
               "and see robot/lib/drop_cache.py", flush=True)
         sys.exit(1)
 
+    # Say now whether the camera delivers frames (a RealSense whose stream never started
+    # answered every request with 503 on 2026-11-27; RealSenseCamera.read() restarts it).
+    if camera is not None:
+        got = False
+        try:
+            for _ in range(6):
+                if camera.read() is not None:
+                    got = True
+                    break
+        except Exception as exc:  # noqa: BLE001
+            print("[WARN] camera read failed: {}: {}".format(type(exc).__name__, exc), flush=True)
+        print("[OK] the camera delivers frames" if got else
+              "[WARN] no frame from the camera yet: check the USB cable (USB 3 port); the worker keeps trying",
+              flush=True)
+
     from objmem.worker import serve
 
     print("Vision worker on http://{}:{}  (camera_mode={}, camera={}, detector={}, fake={})".format(

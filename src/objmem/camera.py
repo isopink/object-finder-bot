@@ -81,11 +81,18 @@ class RealSenseCamera(object):
 
     Depth is converted to float32 meters with the device depth scale; 0 = no depth.
     `intrinsics()` gives the color intrinsics as config keys.
+
+    When the stream has stopped (`restart_after` reads in a row without a frame) read()
+    restarts the pipeline, and every third restart resets the device first. On 2026-11-27
+    a D455F delivered no frame at all after the worker had started (every request answered
+    "no frame from the camera"), and restarting the whole worker to get the camera back is
+    not possible on the Jetson (its GPU memory does not come back without a reboot).
     """
 
     def __init__(self, width: Optional[int] = None, height: Optional[int] = None, fps: int = 30,
                  serial: Optional[str] = None, timeout_ms: int = 1000,
                  size: Optional[Tuple[int, int]] = None, first_timeout_ms: int = 10000,
+                 restart_after: int = 2, restart_gap_s: float = 5.0, reset_wait_s: float = 5.0,
                  **_unused: Any) -> None:
         import pyrealsense2 as rs
         self._rs = rs
@@ -103,6 +110,14 @@ class RealSenseCamera(object):
             config.enable_device(str(serial))
         config.enable_stream(rs.stream.color, self.width, self.height, rs.format.rgb8, self.fps)
         config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, self.fps)
+        self._config = config
+        self.restart_after = max(1, int(restart_after))
+        self.restart_gap_s = float(restart_gap_s)
+        self.reset_wait_s = float(reset_wait_s)
+        self._fails = 0             # reads without a frame since the last frame or restart
+        self._restarts = 0          # restarts since the last frame
+        self._last_restart = 0.0
+        self.total_restarts = 0
         self.profile = self.pipeline.start(config)
         self.depth_scale = float(self.profile.get_device().first_depth_sensor().get_depth_scale())
         self.align = rs.align(rs.stream.color)
@@ -113,19 +128,51 @@ class RealSenseCamera(object):
         try:
             frames = self.pipeline.wait_for_frames(timeout)
         except RuntimeError:
-            return None  # "Frame didn't arrive within ..." timeout
+            return self._no_frame()  # "Frame didn't arrive within ..." timeout
         if not frames:
-            return None
+            return self._no_frame()
         self._got_frame = True
         aligned = self.align.process(frames)
         color_frame = aligned.get_color_frame()
         depth_frame = aligned.get_depth_frame()
         if not color_frame or not depth_frame:
-            return None
+            return self._no_frame()
+        self._fails = 0
+        self._restarts = 0
         color = to_rgb(np.asanyarray(color_frame.get_data()), self._color_order)
         raw = np.asanyarray(depth_frame.get_data())
         depth = raw.astype(np.float32) * np.float32(self.depth_scale)
         return Frame(color=color, depth=depth, t=time.time())
+
+    def _no_frame(self) -> None:
+        """Count a read without a frame; restart the stream when it has stopped. Returns None."""
+        self._fails += 1
+        now = time.time()
+        if self._fails < self.restart_after or now - self._last_restart < self.restart_gap_s:
+            return None
+        self._last_restart = now
+        self._fails = 0
+        self._restarts += 1
+        self.total_restarts += 1
+        hard = self._restarts % 3 == 0
+        print("[WARN] RealSense: no frames; restarting the stream{} (restart {})".format(
+            " after a device reset" if hard else "", self.total_restarts), flush=True)
+        try:
+            try:
+                self.pipeline.stop()
+            except Exception:  # noqa: BLE001 - a dead pipeline may refuse to stop
+                pass
+            if hard:
+                reset = getattr(self.profile.get_device(), "hardware_reset", None)
+                if reset is not None:
+                    reset()
+                    time.sleep(self.reset_wait_s)   # the device leaves the bus and comes back
+            self.pipeline = self._rs.pipeline()
+            self.profile = self.pipeline.start(self._config)
+            self._got_frame = False                 # wait first_timeout_ms for the next frame
+        except Exception as exc:  # noqa: BLE001 - keep serving; the next reads try again
+            print("[WARN] RealSense: restart failed: {}: {}".format(type(exc).__name__, exc), flush=True)
+        return None
 
     def intrinsics(self) -> Dict[str, float]:
         """Color intrinsics as config keys (img_w, img_h, fx, fy, cx, cy, hfov)."""

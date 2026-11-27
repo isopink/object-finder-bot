@@ -16,7 +16,7 @@ from objmem.types import Frame
 def install_realsense(monkeypatch, frames, depth_scale=0.001):
     """frames: list of (color, depth) arrays, or "timeout" / "missing" entries."""
     rs = types.ModuleType("pyrealsense2")
-    state = {"enabled": [], "stopped": False, "device": None}
+    state = {"enabled": [], "stopped": False, "device": None, "starts": 0, "stops": 0, "resets": 0}
 
     class stream(object):
         color, depth = "color", "depth"
@@ -68,6 +68,9 @@ def install_realsense(monkeypatch, frames, depth_scale=0.001):
         def get_depth_scale(self):
             return depth_scale
 
+        def hardware_reset(self):
+            state["resets"] += 1
+
         def get_stream(self, s):
             assert s == "color"
             return StreamProfile()
@@ -76,6 +79,7 @@ def install_realsense(monkeypatch, frames, depth_scale=0.001):
 
     class pipeline(object):
         def start(self, cfg):
+            state["starts"] += 1
             return Profile()
 
         def wait_for_frames(self, timeout_ms):
@@ -89,6 +93,7 @@ def install_realsense(monkeypatch, frames, depth_scale=0.001):
 
         def stop(self):
             state["stopped"] = True
+            state["stops"] += 1
 
     class align(object):
         def __init__(self, to):
@@ -124,6 +129,37 @@ def test_realsense_depth_in_meters_and_rgb(monkeypatch):
     assert cam.read() is None   # frameset without color/depth
     cam.close()
     assert state["stopped"]
+
+
+def test_realsense_restarts_a_stream_that_gives_no_frames(monkeypatch):
+    # 2026-11-27: the D455F gave no frame at all after the worker had started.
+    fs = (np.zeros((4, 6, 3), np.uint8), np.zeros((4, 6), np.uint16))
+    state = install_realsense(monkeypatch, ["timeout", "timeout", fs, fs])
+    cam = make_camera("realsense", size=(6, 4), restart_gap_s=0.0)
+    assert cam.read() is None and state["starts"] == 1          # one miss: keep waiting
+    assert cam.read() is None and state["starts"] == 2          # second miss: stream restarted
+    assert state["stops"] == 1 and state["resets"] == 0
+    assert cam.read() is not None and cam.read() is not None
+    assert state["starts"] == 2 and cam.total_restarts == 1     # frames again: no more restarts
+    assert state["timeouts"][2] == cam.first_timeout_ms         # waits long for the first frame after a restart
+
+
+def test_realsense_resets_the_device_on_the_third_restart(monkeypatch):
+    fs = (np.zeros((4, 6, 3), np.uint8), np.zeros((4, 6), np.uint16))
+    state = install_realsense(monkeypatch, ["timeout"] * 6 + [fs])
+    cam = make_camera("realsense", size=(6, 4), restart_gap_s=0.0, reset_wait_s=0.0)
+    for _ in range(6):
+        assert cam.read() is None
+    assert state["starts"] == 4 and state["resets"] == 1        # restart, restart, reset + restart
+    assert cam.read() is not None
+
+
+def test_realsense_does_not_restart_more_often_than_the_gap(monkeypatch):
+    state = install_realsense(monkeypatch, ["timeout"] * 8)
+    cam = make_camera("realsense", size=(6, 4), restart_gap_s=3600.0)
+    for _ in range(8):
+        assert cam.read() is None
+    assert state["starts"] == 2                                 # the first restart only
 
 
 def test_realsense_waits_longer_for_the_first_frame(monkeypatch):
