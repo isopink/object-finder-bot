@@ -100,7 +100,7 @@ def main():
                 target_acc += d
                 sign = 1.0 if mode == "left" else -1.0
                 done = sign * target_acc
-                if done >= math.radians(88.0):          # 2 degrees of lead for the stopping delay
+                if done >= math.radians(89.5):          # 0.5 degree of lead: measured coast after stop at 0.3 rad/s was about 0.5 deg
                     mode = "stop"; say("turned %.0f deg" % math.degrees(done))
                 else:
                     tw.angular.z = sign * turn
