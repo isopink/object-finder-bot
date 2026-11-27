@@ -31,6 +31,10 @@ fi
 # (comma separated, NanoOWL), OFB_TILES=0 (no tile crops when nothing is found, so the
 # memory holds only real detections), OFB_DET_THRESHOLD=0.25 (confidence, default per detector).
 if [ -n "${OFB_OWL_PROMPTS:-}" ]; then ARGS+=(--owl-prompts "$OFB_OWL_PROMPTS"); fi
+# Look-alikes NanoOWL asks for and drops, so that a monitor is not taken for a laptop.
+# Default "a computer monitor"; more: OFB_OWL_DISTRACTORS="a computer monitor,a television"; none: "none".
+# The live view draws them gray; the worker log counts them every 200 frames.
+if [ -n "${OFB_OWL_DISTRACTORS:-}" ]; then ARGS+=(--owl-distractors "$OFB_OWL_DISTRACTORS"); fi
 if [ "${OFB_TILES:-1}" = 0 ]; then ARGS+=(--no-tiles); fi
 # Live camera view for people (boxes drawn): http://<jetson-ip>:8601/  (OFB_VIEW_PORT=0 turns it off)
 if [ "${OFB_VIEW_PORT:-8601}" != 0 ]; then ARGS+=(--view-port "${OFB_VIEW_PORT:-8601}"); fi

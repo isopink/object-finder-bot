@@ -85,6 +85,7 @@ class VisionService:
         # For the live view (view_jpeg): what the last detection / re-check saw.
         self.last_color = None      # RGB frame of the last camera read
         self.last_boxes = (0.0, [])  # (time, [(box, text)]) of the last /detect_embed on the camera
+        self.last_ignored = (0.0, [])  # the same for the look-alike boxes the detector dropped
         self.last_verify = (0.0, "", None)  # (time, text, box or None) of the last /verify
         self._view_skip_until = 0.0  # the view does not read a camera that just gave no frame
 
@@ -135,6 +136,9 @@ class VisionService:
                 (o["box"], "{} {:.2f}{}".format(o["label"], o["conf"],
                                                "" if o["depth_m"] is None else "  {:.2f} m".format(o["depth_m"])))
                 for o in out if o["conf"] > 0.0])
+            self.last_ignored = (time.time(), [
+                (list(rb.box), "{} {:.2f} (ignored)".format(rb.label, rb.conf))
+                for rb in getattr(self.detector, "last_ignored", [])])
         return {"t": t, "detections": out}
 
     def verify(self, body: dict) -> dict:
@@ -166,6 +170,7 @@ class VisionService:
             if color is None:
                 color = self.last_color
             t_box, boxes = self.last_boxes
+            t_ign, ignored = self.last_ignored
             t_ver, ver_text, ver_box = self.last_verify
         if color is None:
             raise HttpError(503, "no frame from the camera")
@@ -182,6 +187,9 @@ class VisionService:
             draw.rectangle([l, y, l + w, y + 12], fill=rgb)
             draw.text((l + 3, y + 1), text, fill=(0, 0, 0))
 
+        if now - t_ign <= 2.0:
+            for box, text in ignored:
+                box_with_text(box, text, (170, 170, 170))
         if now - t_box <= 2.0:
             for box, text in boxes:
                 box_with_text(box, text, (60, 230, 60))
@@ -262,7 +270,7 @@ class _Handler(BaseHTTPRequestHandler):
 VIEW_PAGE = b"""<!doctype html><html><head><meta charset="utf-8"><title>Robot camera</title>
 <style>body{margin:0;background:#111;color:#ddd;font:14px sans-serif;text-align:center}
 img{max-width:100vw;max-height:calc(100vh - 30px)}#s{padding:5px}</style></head><body>
-<div id="s">robot camera: green = detection, yellow = re-check</div><img id="i" src="/stream">
+<div id="s">robot camera: green = detection, gray = look-alike (ignored), yellow = re-check</div><img id="i" src="/stream">
 <script>
 // one continuous stream (multipart JPEG); if it breaks, open it again
 var i=document.getElementById("i"),s=document.getElementById("s");
