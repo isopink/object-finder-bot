@@ -405,6 +405,15 @@ class MapviewNode(Node):
         self.port = int(_declare(self, "mapview_port", int(self.shared.params.mapview_port)))
         self.map_yaml = _declare(self, "map_yaml", "")
         refresh = float(_declare(self, "refresh_s", 2.0))
+        # "x y" in map metres: an X with the word "start" on the map (where the robot is put
+        # down before a run). Empty = none.
+        self.start_mark = None
+        mark = str(_declare(self, "start_mark", "")).replace(",", " ").split()
+        if len(mark) >= 2:
+            try:
+                self.start_mark = (float(mark[0]), float(mark[1]))
+            except ValueError:
+                self.get_logger().warn("start_mark {!r} is not 'x y'; no start mark".format(mark))
         self.draw_map = compat.draw_map_fn()
         self.watch = core.FileWatcher(self.shared.memory_file) if self.standalone else None
         self.tf = TfPose(self) if self.standalone else None
@@ -491,6 +500,17 @@ class MapviewNode(Node):
     def _draw(self, items, pose):
         """objmem.viz.draw_map; on failure retry without the grid, then the plain drawing."""
         occ = self._occupancy()
+        mark = getattr(self, "start_mark", None)
+        if mark is not None and occ is not None:
+            kw = {"truth": {"start": mark}}
+            if self.plan:
+                kw["plan"] = self.plan
+            try:
+                return self.draw_map(items, robot_pose=pose, occupancy=occ, **kw)
+            except TypeError:
+                pass
+            except Exception as exc:
+                self._warn_once("mark", "draw_map with the start mark failed ({}); drawing without it".format(exc))
         if self.plan and occ is not None:
             try:
                 return self.draw_map(items, robot_pose=pose, occupancy=occ, plan=self.plan)
