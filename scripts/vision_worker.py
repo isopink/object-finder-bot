@@ -16,6 +16,7 @@ import argparse
 import inspect
 import os
 import sys
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -116,10 +117,78 @@ def build_parts(args, params):
     return embedder, detector, camera
 
 
+def weight_dirs(args):
+    """Folders that hold the model files this worker reads at start."""
+    home = os.path.expanduser("~")
+    dirs = [os.path.join(home, ".cache", "huggingface"), os.path.join(home, ".cache", "clip"),
+            os.path.join(home, ".cache", "torch"), os.path.join(home, "nanoowl", "data")]
+    for f in (getattr(args, "owl_engine", None), getattr(args, "yolo_engine", None),
+              getattr(args, "yolo_model", None)):
+        if f and os.path.dirname(str(f)):
+            dirs.append(os.path.dirname(os.path.abspath(str(f))))
+    return [d for d in dirs if os.path.isdir(d)]
+
+
+def drop_file_cache(dirs, min_bytes=1 << 20):
+    """Ask the kernel to forget the cached pages of the big files under dirs. Returns the count."""
+    n = 0
+    if not hasattr(os, "posix_fadvise"):
+        return n
+    for root in dirs:
+        for dirpath, _dirnames, filenames in os.walk(root):
+            for name in filenames:
+                p = os.path.join(dirpath, name)
+                try:
+                    if os.path.getsize(p) < min_bytes:
+                        continue
+                    fd = os.open(p, os.O_RDONLY)
+                    try:
+                        os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+                    finally:
+                        os.close(fd)
+                    n += 1
+                except OSError:
+                    continue
+    return n
+
+
+class CacheDropper(threading.Thread):
+    """While the models load, keep dropping the page cache of the weight files.
+
+    Reading CLIP (577 MB), OWL-ViT (584 MB) and the TensorRT engine (184 MB) leaves 1.3 GB of
+    page cache behind. The Jetson GPU allocator cannot use page cache, so on every start that
+    was not the first after a boot the engine got no memory ("Engine deserialization failed",
+    2026-11-27, twice). The weights are in RAM or on the GPU by then; the cache is of no use.
+    """
+
+    def __init__(self, dirs, period=1.5):
+        threading.Thread.__init__(self, daemon=True)
+        self.dirs, self.period = dirs, period
+        self._stop_event = threading.Event()
+
+    def run(self):
+        while not self._stop_event.wait(self.period):
+            drop_file_cache(self.dirs)
+
+    def finish(self):
+        self._stop_event.set()
+        self.join(timeout=10.0)
+        drop_file_cache(self.dirs)
+
+
 def main(argv=None):
     args = build_parser().parse_args(argv)
     params = Params.load(args.config)
-    embedder, detector, camera = build_parts(args, params)
+    dropper = None
+    if not args.fake and os.environ.get("OFB_DROP_CACHE", "1") != "0" and hasattr(os, "posix_fadvise"):
+        dropper = CacheDropper(weight_dirs(args))
+        dropper.start()
+    try:
+        embedder, detector, camera = build_parts(args, params)
+    except BaseException:
+        if dropper is not None:
+            dropper.finish()
+        raise
 
     # Fail now, not at the first request: a detector whose TensorRT execution context
     # could not be created (GPU out of memory) loads without an error and then answers
@@ -132,6 +201,9 @@ def main(argv=None):
         print("       GPU out of memory? Start the worker before bringup/nav (start_all.sh does), "
               "and see robot/lib/drop_cache.py", flush=True)
         sys.exit(1)
+    finally:
+        if dropper is not None:
+            dropper.finish()
 
     # Say now whether the camera delivers frames (a RealSense whose stream never started
     # answered every request with 503 on 2026-11-27; RealSenseCamera.read() restarts it).
