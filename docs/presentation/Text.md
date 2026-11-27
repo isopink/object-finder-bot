@@ -98,9 +98,31 @@ $$ \mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t) \qquad \Sigma_t = (I - K_t)\,\
 
 (그림: 1D 가우시안 세 개 — 기억 N(8, 4), 새 관측 N(6, 1), 합친 결과 N(6.4, 0.8). "It's a weighted mean")
 
+- 223 looks → σ = 3 mm → floor at **3 cm**
+- One cup, two memories → merge within **20 cm**
+
 >> Every look shrinks Σ
 
-> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자.
+> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자. 11/28: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 3 cm 하한. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개)는 20 cm 안에서 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.
+
+---
+## When the Filter Is Too Sure
+### Five looks per second are not five pieces of evidence
+
+|||
+**What we saw**
+- 223 looks at one cup → p = **0.9999**
+- 2 missed frames → 0.70 → **0.10**
+- Near-identical frames counted as independent
+|||
+**What we changed**
+- One update of p per **20 cm** driven
+- p(z | present) by **distance**, measured
+(그림: 가로 막대 4개 — 0–1 m [ ___ ], 1–2 m [ ___ ], 2–3 m [ ___ ], 3–4 m [ ___ ]. 컵을 찾은 비율, 로봇 실측)
+
+>> Count evidence, not frames
+
+> 11/28 실측: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 Bayes filter는 측정이 서로 독립이라고 가정하는데, 초당 여러 장의 영상은 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 한 번만 p를 갱신. 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀 (멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전.
 
 ---
 ## Mapping and Localization
@@ -202,10 +224,11 @@ grid path · pose from AMCL
 
 - detectNet → **NanoOWL** (clear bottle missed)
 - Whisper → **laptop** (4.2 / 6.8 GB)
+- Monitor seen as laptop → ask for **“monitor”** too
 
 >> A direction is not a position
 
-> 강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.
+> 강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로. NanoOWL은 물어본 문구 중 가장 맞는 이름을 붙이므로 "a cup, a laptop"만 물으면 모니터가 laptop이 됨 → "a computer monitor"도 물어보고 그 상자는 버림. ※ 모니터 대책은 로봇 확인 전.
 
 ---
 ## Measured on the Robot
@@ -217,7 +240,7 @@ grid path · pose from AMCL
 
 - Success : [ ___ / ___ ]
 
-> 실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움.
+> 실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움. 영상의 지도 화면: 파란 선 = 지나온 경로, 주황 선 = 계획 경로.
 
 ---
 ## Why Probabilistic Memory Helps
@@ -240,6 +263,7 @@ grid path · pose from AMCL
 - Clear cups break depth
 - Aisles only
 - Desk tops invisible to 2D LiDAR
+- Detection table: one object, one room
 |||
 **Lessons**
 - Check the layer below first
@@ -248,7 +272,7 @@ grid path · pose from AMCL
 
 >> Thank you
 
-> 한계 세 개, 배운 점 세 개. 질문 받는 동안 이 화면 유지.
+> 한계 네 개, 배운 점 세 개. 질문 받는 동안 이 화면 유지. 거리별 검출 확률 표는 이 교실, 이 카메라 높이, 컵 하나로 잰 값.
 
 ---
 ## References
@@ -260,5 +284,6 @@ grid path · pose from AMCL
 - [5] S. Macenski, F. Martín, R. White, and J. Ginés Clavero, "The Marathon 2: A navigation system," in *Proc. IROS*, 2020.
 - [6] A. Radford et al., "Robust speech recognition via large-scale weak supervision," in *Proc. ICML*, 2023.
 - [7] Intelligent Robotics lecture slides, University of Seoul, Fall 2026.
+- [8] J. M. C. Marques et al., "On the overconfidence problem in semantic 3D mapping," in *Proc. ICRA*, 2024.
 
-> 참고 문헌.
+> 참고 문헌. ※ [8]의 저자와 학회는 원문으로 확인 필요.

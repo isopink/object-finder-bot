@@ -318,13 +318,17 @@
 </section>
 
 <!-- 8 Kalman -->
-<section class="slide content" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자: N(8,4)와 N(6,1)을 합치면 N(6.4,0.8).">
+<section class="slide content" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자: N(8,4)와 N(6,1)을 합치면 N(6.4,0.8). 11/28: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 3 cm 하한. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개)는 20 cm 안에서 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.">
   <div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction — the banana does not move</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:40px">
     <div style="flex:1;display:flex;flex-direction:column;gap:30px">
       <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
       <div class="eq sm" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
       <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
+      <div class="bl sm" style="gap:14px">
+        <div class="b"><span class="dot">•</span><span>223 looks → <span class="m">σ</span> = 3 mm → floor at <strong>3 cm</strong></span></div>
+        <div class="b"><span class="dot">•</span><span>One cup, two memories → merge within <strong>20 cm</strong></span></div>
+      </div>
     </div>
     <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:8px">
       <svg id="gauss" width="600" height="340" style="font-family:'Noto Serif',serif"></svg>
@@ -332,6 +336,38 @@
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span></div></div>
+</section>
+
+<!-- Too sure: evidence is not independent -->
+<section class="slide content dense" data-notes="11/28 실측: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 Bayes filter는 측정이 서로 독립이라고 가정하는데, 초당 여러 장의 영상은 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 한 번만 p를 갱신. 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀 (멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전.">
+  <div><h2>When the Filter Is Too Sure</h2><div class="sum">Five looks per second are not five pieces of evidence</div></div>
+  <div class="body">
+    <div class="cols">
+      <div class="col">
+        <div class="ct">What we saw</div>
+        <div class="bl sm">
+          <div class="b"><span class="dot">•</span><span>223 looks at one cup → <span class="m">p</span> = <strong>0.9999</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>2 missed frames → 0.70 → <strong>0.10</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>Near-identical frames counted as independent</span></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="ct">What we changed</div>
+        <div class="bl sm">
+          <div class="b"><span class="dot">•</span><span>One update of <span class="m">p</span> per <strong>20 cm</strong> driven</span></div>
+          <div class="b"><span class="dot">•</span><span><span class="m">p</span>(<span class="m">z</span> | present) by <strong>distance</strong>, measured</span></div>
+        </div>
+        <div class="bars" style="gap:10px">
+          <div class="brow"><div class="bn" style="width:120px;font-size:24px">0 – 1 m</div><div class="track"><div class="fill" style="width:300px;height:34px;background:none;border:2px dashed var(--d-line);box-sizing:border-box"></div><div class="bv blank" style="font-size:24px">[ ___ ]</div></div></div>
+          <div class="brow"><div class="bn" style="width:120px;font-size:24px">1 – 2 m</div><div class="track"><div class="fill" style="width:300px;height:34px;background:none;border:2px dashed var(--d-line);box-sizing:border-box"></div><div class="bv blank" style="font-size:24px">[ ___ ]</div></div></div>
+          <div class="brow"><div class="bn" style="width:120px;font-size:24px">2 – 3 m</div><div class="track"><div class="fill" style="width:300px;height:34px;background:none;border:2px dashed var(--d-line);box-sizing:border-box"></div><div class="bv blank" style="font-size:24px">[ ___ ]</div></div></div>
+          <div class="brow"><div class="bn" style="width:120px;font-size:24px">3 – 4 m</div><div class="track"><div class="fill" style="width:300px;height:34px;background:none;border:2px dashed var(--d-line);box-sizing:border-box"></div><div class="bv blank" style="font-size:24px">[ ___ ]</div></div></div>
+        </div>
+        <div class="cap" style="font-style:normal;color:var(--d-label);font-size:19px">Share of looks that found the cup (robot)</div>
+      </div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">Count evidence, not frames</div></div>
 </section>
 
 <!-- 9 Mapping & Localization -->
@@ -482,7 +518,7 @@
 </section>
 
 <!-- 14 Case 4 -->
-<section class="slide content dense" data-notes="강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.">
+<section class="slide content dense" data-notes="강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로. NanoOWL은 물어본 문구 중 가장 맞는 이름을 붙이므로 &quot;a cup, a laptop&quot;만 물으면 모니터가 laptop이 됨 → &quot;a computer monitor&quot;도 물어보고 그 상자는 버림. ※ 모니터 대책은 로봇 확인 전.">
   <div><h2>Case 5 : Design Changed by Constraints</h2><div class="sum">C920 → D455f : bearing-only → range-bearing</div></div>
   <div class="body" style="gap:28px">
     <svg width="1288" height="330" viewBox="0 0 1288 330" style="font-family:'Noto Serif',serif">
@@ -505,16 +541,17 @@
       <text x="955" y="166" font-size="24" fill="#24405e" font-family="Noto Serif,serif" font-style="italic">r, φ</text>
       <text x="980" y="320" font-size="19" fill="#667080" text-anchor="middle">one look → position</text>
     </svg>
-    <div class="cards" style="gap:24px">
+    <div class="cards" style="gap:16px 24px;flex-wrap:wrap">
       <div class="chip">detectNet → <b style="margin-left:6px">NanoOWL</b>&nbsp;(clear bottle missed)</div>
       <div class="chip">Whisper → <b style="margin-left:6px">laptop</b>&nbsp;(4.2 / 6.8 GB)</div>
+      <div class="chip">Monitor seen as laptop → ask for <b style="margin-left:6px">“monitor”</b>&nbsp;too</div>
     </div>
   </div>
   <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">A direction is not a position</div></div>
 </section>
 
 <!-- 15 Measured -->
-<section class="slide content dense" data-notes="실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움.">
+<section class="slide content dense" data-notes="실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움. 영상의 지도 화면: 파란 선 = 지나온 경로, 주황 선 = 계획 경로.">
   <div><h2>Measured on the Robot</h2></div>
   <div class="body" style="gap:34px">
     <div class="stats">
@@ -554,7 +591,7 @@
 </section>
 
 <!-- 17 Limitations -->
-<section class="slide content" data-notes="한계 세 개, 배운 점 세 개. 질문 받는 동안 이 화면 유지.">
+<section class="slide content" data-notes="한계 네 개, 배운 점 세 개. 질문 받는 동안 이 화면 유지. 거리별 검출 확률 표는 이 교실, 이 카메라 높이, 컵 하나로 잰 값.">
   <div><h2>Limitations and Lessons</h2></div>
   <div class="body">
     <div class="cols">
@@ -564,6 +601,7 @@
           <div class="b"><span class="dot">•</span><span>Clear cups break depth</span></div>
           <div class="b"><span class="dot">•</span><span>Aisles only</span></div>
           <div class="b"><span class="dot">•</span><span>Desk tops invisible to 2D LiDAR</span></div>
+          <div class="b"><span class="dot">•</span><span>Detection table: one object, one room</span></div>
         </div>
       </div>
       <div class="col">
@@ -580,7 +618,7 @@
 </section>
 
 <!-- 18 References -->
-<section class="slide content" data-notes="참고 문헌.">
+<section class="slide content" data-notes="참고 문헌. ※ [8]의 저자와 학회는 원문으로 확인 필요.">
   <h2 style="margin-bottom:24px">References</h2>
   <div class="refs">
     <div class="r"><span class="rn">[1]</span><span>S. Thrun, W. Burgard, and D. Fox, <em>Probabilistic Robotics</em>. MIT Press, 2005.</span></div>
@@ -590,6 +628,7 @@
     <div class="r"><span class="rn">[5]</span><span>S. Macenski, F. Martín, R. White, and J. Ginés Clavero, “The Marathon 2: A navigation system,” in <em>Proc. IROS</em>, 2020.</span></div>
     <div class="r"><span class="rn">[6]</span><span>A. Radford et al., “Robust speech recognition via large-scale weak supervision,” in <em>Proc. ICML</em>, 2023.</span></div>
     <div class="r"><span class="rn">[7]</span><span>Intelligent Robotics lecture slides, University of Seoul, Fall 2026.</span></div>
+    <div class="r"><span class="rn">[8]</span><span>J. M. C. Marques et al., “On the overconfidence problem in semantic 3D mapping,” in <em>Proc. ICRA</em>, 2024.</span></div>
   </div>
 </section>
 
