@@ -17,6 +17,7 @@ Env: OFB_T4_SPEED (m/s, default 0.08), OFB_T4_TURN (rad/s, default 0.25).
 import math
 import os
 import select
+import signal
 import sys
 import termios
 import time
@@ -67,6 +68,10 @@ def main():
         ref.update(t=time.time(), x=st["x"], y=st["y"], acc=target_acc)
 
     FROZEN = "STOP: /odom does not change while the robot moves (odometry frozen). Restart bringup.sh."
+    def on_signal(*_a):         # SSH dropped (SIGHUP) or kill: leave through `finally`, which stops the wheels
+        raise KeyboardInterrupt
+    for sig in (signal.SIGHUP, signal.SIGTERM):
+        signal.signal(sig, on_signal)
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     tty.setcbreak(fd)
@@ -87,6 +92,8 @@ def main():
                 say("STOP: no /odom or /scan for 1 s")
             if r := select.select([sys.stdin], [], [], 0)[0]:
                 k = sys.stdin.read(1).lower()
+                if k == "":             # the terminal is gone: stop and quit, never keep driving
+                    break
                 if k in ("s", " "):
                     mode = "stop"; say("stop")
                 elif k == "q":
@@ -123,6 +130,8 @@ def main():
                 else:
                     tw.angular.z = sign * turn
             pub.publish(tw)
+    except KeyboardInterrupt:
+        pass
     finally:
         for _ in range(10):
             pub.publish(Twist()); time.sleep(0.02)

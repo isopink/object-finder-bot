@@ -332,21 +332,21 @@
 </section>
 
 <!-- 10 26 problems -->
-<section class="slide content" data-notes="트러블슈팅 기록 26건을 층별로 분류. 다음 네 장에서 대표 사례.">
-  <div><h2>26 Problems at a Glance</h2><div class="sum">Grouped by layer</div></div>
+<section class="slide content" data-notes="트러블슈팅 기록 33건을 층별로 분류. 다음 다섯 장에서 대표 사례.">
+  <div><h2>33 Problems at a Glance</h2><div class="sum">Grouped by layer</div></div>
   <div class="body">
     <div class="bars">
-      <div class="brow"><div class="bn">Software</div><div class="track"><div class="fill blue" style="width:500px"></div><div class="bv">10</div><div class="be">SLAM crash · Nav2 · odom heading</div></div></div>
-      <div class="brow"><div class="bn">Network &amp; tools</div><div class="track"><div class="fill" style="width:300px"></div><div class="bv">6</div><div class="be">lab Wi-Fi · SSH</div></div></div>
-      <div class="brow"><div class="bn">Hardware</div><div class="track"><div class="fill" style="width:250px"></div><div class="bv">5</div><div class="be">battery · motors · power</div></div></div>
-      <div class="brow"><div class="bn">Middleware</div><div class="track"><div class="fill" style="width:250px"></div><div class="bv">5</div><div class="be">DDS discovery · clock</div></div></div>
+      <div class="brow"><div class="bn">Software</div><div class="track"><div class="fill blue" style="width:600px"></div><div class="bv">15</div><div class="be">SLAM · Nav2 · odom · GPU memory</div></div></div>
+      <div class="brow"><div class="bn">Hardware</div><div class="track"><div class="fill" style="width:280px"></div><div class="bv">7</div><div class="be">LiDAR backwards · battery · power</div></div></div>
+      <div class="brow"><div class="bn">Network &amp; tools</div><div class="track"><div class="fill" style="width:240px"></div><div class="bv">6</div><div class="be">lab Wi-Fi · SSH</div></div></div>
+      <div class="brow"><div class="bn">Middleware</div><div class="track"><div class="fill" style="width:200px"></div><div class="bv">5</div><div class="be">DDS discovery · clock</div></div></div>
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Find the layer first, then the bug</div></div>
 </section>
 
 <!-- 11 Case 1 -->
-<section class="slide content" data-notes="ㄱ자로 운전했는데 지도는 일자. 원인은 SLAM이 아니라 odometry: 방향을 IMU로 계산하는 설정이 간헐적으로 0. 바퀴로 방향 계산(differential drive)하자 해결.">
+<section class="slide content" data-notes="ㄱ자로 운전했는데 지도는 일자. 원인 1: odometry가 방향을 IMU로 계산하는 설정이 간헐적으로 0 → 바퀴로 계산(differential drive). 원인 2(11/27): LiDAR가 판 위에 180° 반대로 달려 있었음(앞 물체가 185°에 보임) → 스캔을 소프트웨어로 180° 돌림. 둘 다 고친 뒤 room_l4: 벽 직선, 출발점 복귀 오차 0.14 m.">
   <div><h2>Case 1 : The Map That Wouldn't Turn</h2><div class="sum">A 90° turn, 0° in odometry</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:60px">
     <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:8px">
@@ -361,6 +361,7 @@
       </table>
       <div class="eq sm" data-tex="\theta = \int \omega\, dt, \qquad \omega = \frac{v_r - v_l}{l}"></div>
       <div class="chip mar">Heading from wheels → +91.6°</div>
+      <div class="chip mar">LiDAR mounted 180° → rotate the scan</div>
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Check odometry before blaming SLAM</div></div>

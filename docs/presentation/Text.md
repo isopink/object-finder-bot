@@ -82,7 +82,7 @@ $$ l_t = l_{t-1} + \log \frac{p(z \mid \text{present})}{p(z \mid \text{absent})}
 - Cups move → prediction step
 |||
 **Which one?**
-$$ \text{score}_i = \operatorname{softmax}\!\Big(\tfrac{\cos(\text{CLIP}(q),\, e_i)}{T}\Big)\cdot p_i $$
+$$ \text{score}_i = \operatorname{softmax}\!\left(\frac{\cos(\text{CLIP}(q),\, e_i)}{T}\right)\cdot p_i $$
 - Top 3 → visit in order
 
 >> Seen raises the belief, missing lowers it
@@ -123,14 +123,14 @@ $$ \mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t) \qquad \Sigma_t = (I - K_t)\,\
 > Cartographer = 강의 Three Traditional Paradigms 중 graph-based. 2D LiDAR는 책상 윗판을 못 보고, 회색(unknown)을 빈 곳으로 읽으면 안 됨 → 실제 지나간 통로만 남김. AMCL은 강의의 MCL 그대로.
 
 ---
-## 26 Problems at a Glance
+## 33 Problems at a Glance
 ### Grouped by layer
 
-(그림: 막대 4개 — Software 10, Lab network & tools 6, Hardware 5, Middleware 5. 막대 옆에 대표 사례 키워드)
+(그림: 막대 4개 — Software 15, Hardware 7, Network & tools 6, Middleware 5. 막대 옆에 대표 사례 키워드)
 
 >> Find the layer first, then the bug
 
-> 트러블슈팅 기록 26건을 층별로 분류. 다음 네 장에서 대표 사례.
+> 트러블슈팅 기록 33건을 층별로 분류. 다음 다섯 장에서 대표 사례.
 
 ---
 ## Case 1 : The Map That Wouldn't Turn
@@ -139,13 +139,30 @@ $$ \mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t) \qquad \Sigma_t = (I - K_t)\,\
 ![[map_straight.png]]
 (그림: 표 — Wheels +97.7° / IMU +91.7° / odom 0° → heading from wheels: +91.6°)
 $$ \theta = \int \omega\, dt, \qquad \omega = \frac{v_r - v_l}{l} $$
+- LiDAR mounted 180° → rotate the scan
 
 >> Check odometry before blaming SLAM
 
-> ㄱ자로 운전했는데 지도는 일자. 원인은 SLAM이 아니라 odometry: 방향을 IMU로 계산하는 설정이 간헐적으로 0. 바퀴로 방향 계산(differential drive)하자 해결.
+> ㄱ자로 운전했는데 지도는 일자. 원인 1: odometry가 방향을 IMU로 계산하는 설정이 간헐적으로 0 → 바퀴로 계산(differential drive). 원인 2(11/27): LiDAR가 180° 반대로 달려 있었음(앞 물체가 185°에 보임) → 스캔을 180° 돌림. 둘 다 고친 뒤 room_l4: 벽 직선, 출발점 복귀 오차 0.14 m.
 
 ---
-## Case 2 : Only 90° Turns
+## Case 2 : Four Posts in the Scan
+### The camera mast stands inside the LiDAR plane
+
+(그림: 위에서 본 로봇 — 가운데 LiDAR, 막대 4개, 반지름 r_min 점선 원)
+
+- Robot sees **itself** → always "colliding"
+- Fix: drop returns closer than r_min
+
+$$ d_{\text{rod}} \;<\; r_{\min} \;<\; d_{\text{front}} $$
+- r_min = [ ___ m ]
+
+>> The robot was seeing itself
+
+> 카메라 기둥의 막대 네 개가 LiDAR 스캔 평면에 들어와서 로봇 자신이 장애물로 보임 → 항상 충돌 상태, 지도에 유령 점. 해결: LiDAR 중심에서 r_min보다 가까운 점은 버림(scan_filter.py --min-range, OFB_SCAN_MIN). r_min은 가장 먼 막대보다 크고 로봇 앞 끝보다 작게. ※ 실제 해결 방법과 값 확인 필요.
+
+---
+## Case 3 : Only 90° Turns
 ### Every turn adds heading error
 
 (그림: 직진 계획선 vs Δθ 틀어진 실제 선, 옆 오차 e⊥)
@@ -165,7 +182,7 @@ grid path · pose from AMCL
 > 강의 odometry motion model: 회전할 때마다 방향 오차(α), 이동 거리가 그걸 옆 오차로 키움. 그래서 지도 그릴 때도, 찾아갈 때도 직진과 정확한 90° 회전만. 위치는 AMCL(지도 기준)이라 바퀴 오차가 쌓이지 않음. 복귀 오차는 데모데이 실측.
 
 ---
-## Case 3 : Nodes That Couldn't Hear
+## Case 4 : Nodes That Couldn't Hear
 ### More processes → late nodes find nobody
 
 (그림: 포트 칸 — 기본은 앞 몇 칸만 탐색, 나중에 켠 노드는 범위 밖 / 수정 후 40칸)
@@ -178,7 +195,7 @@ grid path · pose from AMCL
 > 프로그램을 많이 켤수록 나중에 켠 노드가 /odom, /map을 못 찾음. Fast DDS가 루프백에서 앞번호 포트 몇 개만 두드리기 때문. 모든 프로세스에 같은 설정(40개 포트) → /odom 10초에 184개, 지도 저장 즉시 성공.
 
 ---
-## Case 4 : Design Changed by Constraints
+## Case 5 : Design Changed by Constraints
 ### C920 → D455f : bearing-only → range-bearing
 
 (그림: 왼쪽 C920 — 통로에서 거의 평행한 두 시선, 시선 방향으로 긴 오차 타원 / 오른쪽 D455f — 한 번에 거리+방향, 작은 타원)
