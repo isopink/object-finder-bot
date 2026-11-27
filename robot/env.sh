@@ -64,6 +64,9 @@ export OFB_SCAN_MIN="${OFB_SCAN_MIN:-0}"
 # 0: odometry heading from the wheels instead of /imu (robot_ld08.launch.py writes a
 # copy of the turtlebot3 parameters with use_imu: false). See troubleshooting 18.
 export OFB_ODOM_IMU="${OFB_ODOM_IMU:-1}"
+# /odom from our own wheel odometry (robot/lib/wheel_odom.py), default since 2026-11-28:
+# the controller's heading froze three times on 2026-11-27. 0 = the controller's /odom.
+export OFB_WHEEL_ODOM="${OFB_WHEEL_ODOM:-1}"
 export OFB_DOCKER_IMAGE="${OFB_DOCKER_IMAGE:-ofb-humble}"
 export OFB_DOCKER_NAME="${OFB_DOCKER_NAME:-ofb-humble}"
 

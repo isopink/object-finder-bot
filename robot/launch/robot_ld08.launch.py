@@ -62,15 +62,41 @@ def odom_param_file(param_file):
     the file's diff_drive_controller section wins (checked with ros2 param get). A copy
     with use_imu: false gave /odom +91.6 deg for a 91.6 deg wheel turn.
     OFB_ODOM_IMU=0 selects the copy; the default (1) keeps the installed file.
+
+    With our own wheel odometry (wheel_odom_on()) the copy also turns the controller's TF off:
+    robot/lib/wheel_odom.py publishes /odom and odom -> base_footprint instead.
     """
-    if os.environ.get("OFB_ODOM_IMU", "1").strip() != "0":
+    imu_off = os.environ.get("OFB_ODOM_IMU", "1").strip() == "0"
+    own = wheel_odom_on()
+    if not imu_off and not own:
         return param_file
     with open(param_file) as f:
         text = f.read()
-    out = os.path.join("/tmp", "ofb_" + os.path.basename(param_file).replace(".yaml", "_noimu.yaml"))
+    if imu_off:
+        text = text.replace("use_imu: true", "use_imu: false")
+    if own:
+        text = text.replace("publish_tf: true", "publish_tf: false")
+    tag = ("_noimu" if imu_off else "") + ("_notf" if own else "")
+    out = os.path.join("/tmp", "ofb_" + os.path.basename(param_file).replace(".yaml", tag + ".yaml"))
     with open(out, "w") as f:
-        f.write(text.replace("use_imu: true", "use_imu: false"))
+        f.write(text)
     return out
+
+
+def wheel_odom_on():
+    """OFB_WHEEL_ODOM (default 1): /odom from robot/lib/wheel_odom.py, not from the controller.
+
+    The controller's heading froze three times on 2026-11-27 while the wheel angles in
+    /joint_states stayed right (see wheel_odom.py)."""
+    return os.environ.get("OFB_WHEEL_ODOM", "1").strip() != "0"
+
+
+def odom_actions():
+    if not wheel_odom_on():
+        return []
+    here = os.path.dirname(os.path.abspath(__file__))
+    script = os.path.join(os.path.dirname(here), "lib", "wheel_odom.py")
+    return [ExecuteProcess(cmd=["python3", script], output="screen")]
 
 
 def generate_launch_description():
@@ -94,6 +120,8 @@ def generate_launch_description():
             executable="turtlebot3_ros",
             parameters=[odom_param_file(param_file)],
             arguments=["-i", usb_port],
+            # with our own wheel odometry, the controller's /odom is moved out of the way
+            remappings=[("odom", "odom_tb3")] if wheel_odom_on() else [],
             output="screen",
         ),
-    ])
+    ] + odom_actions())
