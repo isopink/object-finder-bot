@@ -38,20 +38,22 @@ EXTRACT_JS = r"""
     const R0 = sec.getBoundingClientRect();
     const items = [];
     const rect = (r) => ({x: r.left - R0.left, y: r.top - R0.top, w: r.width, h: r.height});
+    // CSS zoom: computed lengths are unzoomed, rects are zoomed; multiply by the ancestors' zoom
+    const ez = (el) => { let z = 1; for (let e = el; e; e = e.parentElement) z *= parseFloat(getComputedStyle(e).zoom) || 1; return z; };
     const isPic = (el) => el.matches('img, svg, .eq');
     const textItem = (el, cs) => {
       const runs = [];
-      const push = (s, st) => {
+      const push = (s, st, z) => {
         if (!s) return;
-        runs.push({s, color: st.color, size: parseFloat(st.fontSize), weight: parseInt(st.fontWeight) || 400,
+        runs.push({s, color: st.color, size: parseFloat(st.fontSize) * z, weight: parseInt(st.fontWeight) || 400,
                    italic: st.fontStyle === 'italic', family: st.fontFamily,
-                   ls: st.letterSpacing === 'normal' ? 0 : parseFloat(st.letterSpacing) || 0,
+                   ls: st.letterSpacing === 'normal' ? 0 : (parseFloat(st.letterSpacing) || 0) * z,
                    upper: st.textTransform === 'uppercase'});
       };
       let brs = 0;
       const walk = (n) => {
         for (const c of n.childNodes) {
-          if (c.nodeType === 3) push(c.textContent.replace(/\s+/g, ' '), getComputedStyle(c.parentElement));
+          if (c.nodeType === 3) push(c.textContent.replace(/\s+/g, ' '), getComputedStyle(c.parentElement), ez(c.parentElement));
           else if (c.nodeType === 1) {
             if (c.tagName === 'BR') { runs.push({br: true}); brs++; }
             else walk(c);
@@ -65,7 +67,8 @@ EXTRACT_JS = r"""
       if (runs.length) { const l = runs[runs.length - 1]; if (!l.br) l.s = l.s.replace(/\s+$/, ''); }
       const range = document.createRange(); range.selectNodeContents(el);
       const tr = range.getBoundingClientRect();
-      const lh = cs.lineHeight === 'normal' ? parseFloat(cs.fontSize) * 1.2 : parseFloat(cs.lineHeight);
+      const z = ez(el);
+      const lh = (cs.lineHeight === 'normal' ? parseFloat(cs.fontSize) * 1.2 : parseFloat(cs.lineHeight)) * z;
       const lines = Math.max(1, Math.round(tr.height / lh));
       let align = cs.textAlign;
       if (cs.display.includes('flex') && cs.justifyContent === 'center') align = 'center';
@@ -82,13 +85,14 @@ EXTRACT_JS = r"""
       }
       if (el !== sec) {
         const sides = ['Top', 'Right', 'Bottom', 'Left'];
-        const bw = sides.map(s => parseFloat(cs['border' + s + 'Width']) || 0);
+        const zz = ez(el);
+        const bw = sides.map(s => (parseFloat(cs['border' + s + 'Width']) || 0) * zz);
         const bc = sides.map(s => cs['border' + s + 'Color']);
         const bg = cs.backgroundColor;
         const hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
         if (hasBg || bw.some(w => w > 0)) {
           items.push(Object.assign({t: 'shape', bg: hasBg ? bg : null, bw, bc, dashed: cs.borderTopStyle === 'dashed',
-                                    rad: parseFloat(cs.borderTopLeftRadius) || 0}, rect(el.getBoundingClientRect())));
+                                    rad: (parseFloat(cs.borderTopLeftRadius) || 0) * zz}, rect(el.getBoundingClientRect())));
         }
       }
       const hasText = Array.from(el.childNodes).some(n => n.nodeType === 3 && n.textContent.trim());

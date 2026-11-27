@@ -26,6 +26,10 @@
   .slide{width:1920px;height:1080px;box-sizing:border-box;padding:52px 316px 60px;display:flex;flex-direction:column;
     background:#fff;position:relative;overflow:hidden;flex:none}
   .slide.dense{padding:44px 316px 52px}
+  /* Fill the 16:9 screen: narrower side margins, everything inside 20% larger.
+     (The template's 316 px margins come from a 4:3 body centered on 16:9.) */
+  .slide.content,.slide.content.dense{padding:36px 150px 40px}
+  .slide.content > *{zoom:1.2}
   /* presentation mode */
   body.present{background:#000;overflow:hidden}
   body.present .deck{display:block;padding:0}
@@ -55,11 +59,11 @@
   /* outline */
   .outline h2{font-size:50px}
   .ol{flex:1;display:flex;flex-direction:column;justify-content:center}
-  .ol .rows{width:100%;max-width:960px;display:flex;flex-direction:column}
+  .ol .rows{width:100%;max-width:1150px;display:flex;flex-direction:column}
   .ol .row{display:flex;align-items:baseline;gap:30px;padding:27px 0;border-bottom:1px solid var(--rule-soft)}
   .ol .row:last-child{border-bottom:none}
-  .ol .pn{flex:none;width:132px;font-size:27px;font-weight:700;color:var(--blue)}
-  .ol .nm{font-size:31px;font-weight:500;color:var(--ink)}
+  .ol .pn{flex:none;width:150px;font-size:30px;font-weight:700;color:var(--blue)}
+  .ol .nm{font-size:36px;font-weight:500;color:var(--ink)}
 
   /* content */
   h2{margin:0;font-size:44px;font-weight:700;color:var(--blue);line-height:1.1}
@@ -67,9 +71,9 @@
   .sum strong{color:var(--summary);font-weight:600}
   .body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:30px;min-height:0}
   .bl{display:flex;flex-direction:column;gap:22px}
-  .b{display:flex;gap:16px;font-size:27px;line-height:1.35}
+  .b{display:flex;gap:16px;font-size:30px;line-height:1.35}
   .b .dot{color:#111;flex:none}
-  .bl.sm .b{font-size:25px}
+  .bl.sm .b{font-size:28px}
   strong{color:var(--maroon);font-weight:700}
   .m{font-family:'Noto Serif',serif;font-style:italic}
   .callout{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:34px;flex:none}
@@ -89,8 +93,8 @@
   .cards{display:flex;gap:20px;align-items:stretch;justify-content:center}
   .card{background:var(--card);border:1px solid var(--rule-soft);border-left:4px solid var(--blue);border-radius:10px;padding:26px 28px;box-sizing:border-box}
   .card.hi{background:#f5eae9;border-color:#cf9a9a;border-left-color:var(--maroon)}
-  .card .k{font-size:27px;font-weight:700;color:var(--blue)}
-  .card .s{font-size:21px;color:#555;margin-top:8px;line-height:1.35}
+  .card .k{font-size:30px;font-weight:700;color:var(--blue)}
+  .card .s{font-size:23px;color:#555;margin-top:8px;line-height:1.35}
   .arrow{font-size:40px;color:var(--summary);flex:none;align-self:center}
 
   .ph{border:2px dashed var(--d-line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -102,10 +106,10 @@
   .cap{font-size:16px;font-style:italic;color:#999;text-align:center}
   .eq{display:flex;justify-content:center}
   .eq .katex-display{margin:0}
-  .eq .katex{font-size:34px}
-  .eq.sm .katex{font-size:28px}
+  .eq .katex{font-size:40px}
+  .eq.sm .katex{font-size:33px}
 
-  .chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:10px;font-size:22px;font-weight:600;
+  .chip{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:10px;font-size:24px;font-weight:600;
         background:#eaf1f9;border:1.5px solid #9fbde0;color:var(--blue);box-sizing:border-box}
   .chip.mar{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon)}
 
@@ -140,19 +144,19 @@
   /* bars */
   .bars{display:flex;flex-direction:column;gap:18px}
   .brow{display:flex;align-items:center;gap:18px}
-  .brow .bn{width:230px;font-size:24px;font-weight:600;color:var(--d-ink);flex:none;text-align:right}
+  .brow .bn{width:240px;font-size:27px;font-weight:600;color:var(--d-ink);flex:none;text-align:right}
   .brow .track{flex:1;display:flex;align-items:center;gap:14px}
-  .brow .fill{height:38px;border-radius:6px;background:#9fbde0}
+  .brow .fill{height:44px;border-radius:6px;background:#9fbde0}
   .brow .fill.mar{background:var(--maroon)}
   .brow .fill.blue{background:var(--blue)}
-  .brow .bv{font-size:24px;font-weight:700;color:var(--d-ink);flex:none}
-  .brow .be{font-size:19px;color:var(--d-label);flex:none}
+  .brow .bv{font-size:27px;font-weight:700;color:var(--d-ink);flex:none}
+  .brow .be{font-size:21px;color:var(--d-label);flex:none}
 
   .tbl{border-collapse:collapse;font-size:22px}
   .tbl td{padding:8px 18px;border-bottom:1px solid var(--rule)}
   .tbl td:last-child{text-align:right;font-weight:700;color:var(--d-ink)}
   .tbl tr.bad td:last-child{color:var(--maroon)}
-  .refs{display:flex;flex-direction:column;justify-content:center;gap:17px;font-size:20px;line-height:1.34;color:#333;flex:1}
+  .refs{display:flex;flex-direction:column;justify-content:center;gap:20px;font-size:22px;line-height:1.34;color:#333;flex:1}
   .refs .r{display:flex;gap:12px}
   .refs .rn{color:var(--blue);font-weight:700;flex:none;width:40px}
 </style>
@@ -190,7 +194,7 @@
       <div class="b"><span class="dot">•</span><span>Banana, charger, earphones</span></div>
       <div class="b"><span class="dot">•</span><span>I saw it — but <strong>where</strong>?</span></div>
     </div>
-    <div class="ph" style="width:620px;height:520px;flex:none"><div class="pl">[ Photo 1 ]</div><div class="pd">Banana on a desk (Demo Day)</div></div>
+    <div class="ph" style="width:760px;height:560px;flex:none"><div class="pl">[ Photo 1 ]</div><div class="pd">Banana on a desk (Demo Day)</div></div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">What if a robot remembered for me?</div></div>
 </section>
@@ -200,11 +204,11 @@
   <div><h2>A Robot That Remembers</h2><div class="sum">See → Ask → Go</div></div>
   <div class="body">
     <div class="cards">
-      <div class="card" style="width:360px"><div class="k">1. See</div><div class="s">Patrol, remember<br>what &amp; where</div></div>
+      <div class="card" style="width:420px"><div class="k">1. See</div><div class="s">Patrol, remember<br>what &amp; where</div></div>
       <div class="arrow">→</div>
-      <div class="card" style="width:360px"><div class="k">2. Ask</div><div class="s">“Where is the banana?”</div></div>
+      <div class="card" style="width:420px"><div class="k">2. Ask</div><div class="s">“Where is the banana?”</div></div>
       <div class="arrow">→</div>
-      <div class="card" style="width:360px"><div class="k">3. Go</div><div class="s">Drive there,<br>look again</div></div>
+      <div class="card" style="width:420px"><div class="k">3. Go</div><div class="s">Drive there,<br>look again</div></div>
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Remember with <strong>probability</strong>, not certainty</div></div>
@@ -338,8 +342,8 @@
       <div class="col" style="gap:16px">
         <div class="ct">Mapping</div>
         <div style="display:flex;gap:12px">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_full.png" style="width:290px"><div class="cap" style="font-style:normal">Cartographer map</div></div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_aisle.png" style="width:290px"><div class="cap" style="font-style:normal">Nav map: aisles only</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_full.png" style="width:330px"><div class="cap" style="font-style:normal">Cartographer map</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><img class="frame" src="assets/room_l4_aisle.png" style="width:330px"><div class="cap" style="font-style:normal">Nav map: aisles only</div></div>
         </div>
         <div class="bl sm" style="gap:12px">
           <div class="b"><span class="dot">•</span><span>Graph-based SLAM · loop closure</span></div>
@@ -365,10 +369,10 @@
   <div><h2>33 Problems at a Glance</h2><div class="sum">Grouped by layer</div></div>
   <div class="body">
     <div class="bars">
-      <div class="brow"><div class="bn">Software</div><div class="track"><div class="fill blue" style="width:600px"></div><div class="bv">15</div><div class="be">SLAM · Nav2 · odom · GPU memory</div></div></div>
-      <div class="brow"><div class="bn">Hardware</div><div class="track"><div class="fill" style="width:280px"></div><div class="bv">7</div><div class="be">LiDAR backwards · battery · power</div></div></div>
-      <div class="brow"><div class="bn">Network &amp; tools</div><div class="track"><div class="fill" style="width:240px"></div><div class="bv">6</div><div class="be">lab Wi-Fi · SSH</div></div></div>
-      <div class="brow"><div class="bn">Middleware</div><div class="track"><div class="fill" style="width:200px"></div><div class="bv">5</div><div class="be">DDS discovery · clock</div></div></div>
+      <div class="brow"><div class="bn">Software</div><div class="track"><div class="fill blue" style="width:780px"></div><div class="bv">15</div><div class="be">SLAM · Nav2 · odom · GPU memory</div></div></div>
+      <div class="brow"><div class="bn">Hardware</div><div class="track"><div class="fill" style="width:364px"></div><div class="bv">7</div><div class="be">LiDAR backwards · battery · power</div></div></div>
+      <div class="brow"><div class="bn">Network &amp; tools</div><div class="track"><div class="fill" style="width:312px"></div><div class="bv">6</div><div class="be">lab Wi-Fi · SSH</div></div></div>
+      <div class="brow"><div class="bn">Middleware</div><div class="track"><div class="fill" style="width:260px"></div><div class="bv">5</div><div class="be">DDS discovery · clock</div></div></div>
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Find the layer first, then the bug</div></div>
@@ -400,7 +404,7 @@
 <section class="slide content" data-notes="카메라 기둥의 막대 네 개가 LiDAR 스캔 평면에 들어와서 로봇 자신이 장애물로 보임 → 항상 충돌 상태, 지도에 유령 점. 해결: LiDAR 중심에서 r_min보다 가까운 점은 버림(scan_filter.py --min-range, OFB_SCAN_MIN). r_min은 가장 먼 막대보다 크고 로봇 앞 끝보다 작게. 값은 빈칸에 채우기. ※ 실제 해결 방법·값 확인 필요.">
   <div><h2>Case 2 : Four Posts in the Scan</h2><div class="sum">The camera mast stands inside the LiDAR plane</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:56px">
-    <svg width="520" height="520" viewBox="0 0 520 520" style="font-family:'Noto Serif',serif;flex:none">
+    <svg width="600" height="600" viewBox="0 0 520 520" style="font-family:'Noto Serif',serif;flex:none">
       <rect x="150" y="150" width="220" height="220" rx="18" fill="#fafbfc" stroke="#c9d3de" stroke-width="2"/>
       <text x="260" y="140" font-size="19" fill="#667080" text-anchor="middle">front</text>
       <circle cx="260" cy="260" r="170" fill="none" stroke="#8C2D2D" stroke-width="2.5" stroke-dasharray="9 7"/>
@@ -417,7 +421,7 @@
         <div class="b"><span class="dot">•</span><span>Fix: drop returns closer than <span class="m">r</span><sub>min</sub></span></div>
       </div>
       <div class="eq sm" data-tex="d_{\text{rod}} \;<\; r_{\min} \;<\; d_{\text{front}}"></div>
-      <div class="b" style="font-size:25px"><span class="dot">•</span><span><span class="m">r</span><sub>min</sub> = <span class="blank">[ ___ m ]</span></span></div>
+      <div class="b"><span class="dot">•</span><span><span class="m">r</span><sub>min</sub> = <span class="blank">[ ___ m ]</span></span></div>
     </div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">The robot was seeing itself</div></div>
@@ -428,7 +432,7 @@
   <div><h2>Case 3 : Only 90° Turns</h2><div class="sum">Every turn adds heading error</div></div>
   <div class="body" style="gap:26px">
     <div style="display:flex;align-items:center;gap:40px;justify-content:center">
-      <svg width="560" height="200" viewBox="0 0 560 200" style="font-family:'Noto Serif',serif;flex:none">
+      <svg width="720" height="257" viewBox="0 0 560 200" style="font-family:'Noto Serif',serif;flex:none">
         <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8C2D2D"/></marker></defs>
         <circle cx="40" cy="150" r="9" fill="#24405e"/>
         <line x1="40" y1="150" x2="500" y2="150" stroke="#004094" stroke-width="3.5" stroke-dasharray="11 9"/>
@@ -442,18 +446,18 @@
       </svg>
       <div style="display:flex;flex-direction:column;gap:18px">
         <div class="eq sm" data-tex="e_{\perp} \approx s \cdot \sin \Delta\theta"></div>
-        <div class="b" style="font-size:25px"><span class="dot">•</span><span>5 m: 1° → <strong>9 cm</strong>, 5° → <strong>44 cm</strong></span></div>
+        <div class="b"><span class="dot">•</span><span>5 m: 1° → <strong>9 cm</strong>, 5° → <strong>44 cm</strong></span></div>
       </div>
     </div>
     <div class="cols">
       <div class="col" style="gap:10px">
         <div class="ct">Mapping — teleop4</div>
-        <div class="b" style="font-size:25px"><span class="dot">•</span><span>straight · 90° · stop</span></div>
+        <div class="b"><span class="dot">•</span><span>straight · 90° · stop</span></div>
       </div>
       <div class="col" style="gap:10px">
         <div class="ct">Navigation — gridnav</div>
-        <div class="b" style="font-size:25px"><span class="dot">•</span><span>grid path · pose from AMCL</span></div>
-        <div class="b" style="font-size:25px"><span class="dot">•</span><span>Return error : <span class="blank">[ ___ m ]</span></span></div>
+        <div class="b"><span class="dot">•</span><span>grid path · pose from AMCL</span></div>
+        <div class="b"><span class="dot">•</span><span>Return error : <span class="blank">[ ___ m ]</span></span></div>
       </div>
     </div>
   </div>
@@ -520,9 +524,9 @@
       <div class="stat"><div class="n">4.2 GB</div><div class="l">vision worker memory</div></div>
     </div>
     <div style="display:flex;gap:40px;align-items:center">
-      <div class="ph" style="width:760px;height:420px;flex:none"><div class="pl">[ Video 1 ]</div><div class="pd">“Where is the banana?” → drive → found (Demo Day)</div></div>
+      <div class="ph" style="width:820px;height:470px;flex:none"><div class="pl">[ Video 1 ]</div><div class="pd">“Where is the banana?” → drive → found (Demo Day)</div></div>
       <div class="bl" style="flex:1">
-        <div class="b"><span class="dot">•</span><span>Demo Day success : <span class="blank">[ ___ / ___ ]</span></span></div>
+        <div class="b"><span class="dot">•</span><span style="white-space:nowrap">Success : <span class="blank">[ ___ / ___ ]</span></span></div>
       </div>
     </div>
   </div>

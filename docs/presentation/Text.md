@@ -215,7 +215,7 @@ grid path · pose from AMCL
 [[영상 1]]
 (데모데이: "Where is the banana?" → 이동 → 찾음)
 
-- Demo Day success : [ ___ / ___ ]
+- Success : [ ___ / ___ ]
 
 > 실측 숫자 네 개. 데모데이 영상 재생. 성공률은 데모데이 결과로 채움.
 

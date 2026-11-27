@@ -2,8 +2,11 @@
 # Window "memory": used / total RAM of the Jetson, every 2 s. The GPU shares this RAM.
 # "free for apps" is what matters: below about 1000 MB a restart of the worker may fail.
 while true; do
-  awk -v now="$(date +%H:%M:%S)" '/MemTotal/{t=$2} /MemAvailable/{a=$2} /^MemFree/{f=$2} /^Cached/{c=$2} END{
-    printf "%s  used %5d / total %5d MB   free for apps %5d MB   (really free %5d, cache %5d)
-", now, (t-a)/1024, t/1024, a/1024, f/1024, c/1024}' /proc/meminfo
+  t=$(awk '/^MemTotal/{print int($2/1024)}' /proc/meminfo)
+  a=$(awk '/^MemAvailable/{print int($2/1024)}' /proc/meminfo)
+  f=$(awk '/^MemFree/{print int($2/1024)}' /proc/meminfo)
+  c=$(awk '/^Cached/{print int($2/1024)}' /proc/meminfo)
+  printf "%s  used %5d / total %5d MB   free for apps %5d MB   (really free %5d, cache %5d)\n" \
+    "$(date +%H:%M:%S)" "$((t - a))" "$t" "$a" "$f" "$c"
   sleep 2
 done
