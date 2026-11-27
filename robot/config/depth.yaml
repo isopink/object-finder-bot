@@ -6,6 +6,7 @@ d: 0.8              # P(detect | present)
 f: 0.1              # P(detect | absent)
 tau: 600.0          # time-decay constant (s)
 p_init: 0.7         # confidence of a new memory
+p_update_dist: 0.2  # robot travel between two Bayes updates of one memory's p (m); 0 = every frame  (5 looks per second at 0.08 m/s are 1.6 cm apart)
 
 # Same-object test (proposal 4.2)
 maha_thresh: 4.0    # Mahalanobis distance gate (3.0 split one cup into 3 memories 10-20 cm apart, 2026-11-28)

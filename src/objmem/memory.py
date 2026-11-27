@@ -30,6 +30,13 @@ both positions are known: largest variance at most ``pos_cov_max``. A nodepth
 memory that is still a long ray keeps the plain gate and is not merged (in the
 toy world the looser gate fused two different mugs along one ray).
 
+``p_update_dist`` (off at 0, the default) spaces the Bayes updates of p: a memory
+gets its next positive or negative update only after the robot has moved this far
+from where that memory got its last one. Frames taken a few centimeters apart
+show the same view, so they are one piece of evidence, not several. Position and
+embedding are still fused from every frame; the re-check of the finder
+(``mark_found`` / ``mark_not_found``) always counts.
+
 Time decay ``p <- 0.5 + (p - 0.5) exp(-dt / tau)`` is applied lazily: every
 memory remembers the time its p was last decayed to, so the same interval is
 never decayed twice, whichever method triggers it.
@@ -164,6 +171,7 @@ class ObjectMemory:
         self._t_p = {}  # type: Dict[int, float]  # time each item's p was last decayed to
         self._next_id = 0
         self._merged_into = {}  # type: Dict[int, int]  # id removed by a merge -> id that absorbed it
+        self._p_xy = {}  # type: Dict[int, Tuple[float, float]]  # robot position at each item's last update of p
         self._lock = threading.RLock()
 
     # ------------------------------------------------------------ access
@@ -270,6 +278,16 @@ class ObjectMemory:
         if obs.label is not None:
             item.label = obs.label
 
+    def _p_evidence(self, item: MemoryItem, pose: Pose2D) -> bool:
+        """True when this frame counts as new evidence for the item's p (and notes the robot position)."""
+        here = (float(pose.x), float(pose.y))
+        last = self._p_xy.get(item.id)
+        if (self.params.p_update_dist > 0.0 and last is not None
+                and math.hypot(here[0] - last[0], here[1] - last[1]) < self.params.p_update_dist):
+            return False
+        self._p_xy[item.id] = here
+        return True
+
     def update_frame(self, observations: List[Observation], pose: Pose2D, in_view: InView, t: float) -> None:
         with self._lock:
             pr = self.params
@@ -280,15 +298,16 @@ class ObjectMemory:
             for i, j in matches:
                 item = self._items[j]
                 self._fuse(item, observations[i], t)
-                item.p = bayes_positive(item.p, pr.d, pr.f)
+                if self._p_evidence(item, pose):
+                    item.p = bayes_positive(item.p, pr.d, pr.f)
             for j, item in enumerate(self._items):
                 if j in matched_items:
                     continue
-                if in_view(item.mu, pose):
+                if in_view(item.mu, pose) and self._p_evidence(item, pose):
                     item.p = bayes_negative(item.p, pr.d, pr.f)
             for i, obs in enumerate(observations):
                 if i not in matched_obs:
-                    self.add(obs, t)
+                    self._p_xy[self.add(obs, t).id] = (float(pose.x), float(pose.y))
             if pr.merge_dist > 0.0:
                 self.merge_duplicates(t)
 
@@ -346,6 +365,7 @@ class ObjectMemory:
                 self._t_p[keep.id] = max(self._t_p.get(keep.id, keep.t_last), self._t_p.get(drop.id, drop.t_last))
                 self._items = [it for it in self._items if it.id != drop.id]
                 self._t_p.pop(drop.id, None)
+                self._p_xy.pop(drop.id, None)
                 for old, new in list(self._merged_into.items()):
                     if new == drop.id:
                         self._merged_into[old] = keep.id
@@ -391,6 +411,7 @@ class ObjectMemory:
         with self._lock:
             self._items = [it for it in self._items if it.id != item_id]
             self._t_p.pop(item_id, None)
+            self._p_xy.pop(item_id, None)
 
     # ------------------------------------------------------------ persistence
     def save(self, path: str) -> None:

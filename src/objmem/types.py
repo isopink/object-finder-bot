@@ -102,6 +102,7 @@ class Params:
     f: float = 0.1              # P(detect | absent)
     tau: float = 600.0          # time-decay constant (s)
     p_init: float = 0.7         # confidence of a new memory
+    p_update_dist: float = 0.0  # robot travel between two Bayes updates of one memory's p (m); 0 = every frame
     # Same-object test (proposal 4.2)
     maha_thresh: float = 3.0    # Mahalanobis distance gate
     cos_thresh: float = 0.8     # CLIP image-image cosine gate

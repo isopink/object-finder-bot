@@ -481,3 +481,51 @@ def test_merged_memory_survives_save_and_load(tmp_path):
     back = ObjectMemory.load(path, mem.params)
     assert [it.id for it in back.items] == [0] and back.items[0].n_obs == 2
     assert back.add(obs([5.0, 5.0], SMALL, unit(2))).id == 2   # ids are not reused
+
+
+# ------------------------------------------------- p_update_dist
+def test_p_update_dist_spaces_the_bayes_updates():
+    """Ten looks from one spot count once; a look 0.2 m further counts again.
+    Position and embedding are fused from every look."""
+    e = unit(0)
+    for dist, p_after_ten in ((0.0, None), (0.2, 0.7)):
+        mem = ObjectMemory(Params(p_update_dist=dist, tau=1e12))
+        for k in range(10):
+            mem.update_frame([obs([2.0, 0.0], SMALL, e)], Pose2D(0.0, 0.0, 0.0), always, float(k))
+        (item,) = mem.items
+        assert item.n_obs == 10
+        if dist:
+            assert item.p == pytest.approx(p_after_ten)          # p_init: the first look made the memory
+        else:
+            assert item.p > 0.999
+        mem.update_frame([obs([2.0, 0.0], SMALL, e)], Pose2D(0.19, 0.0, 0.0), always, 10.0)
+        if dist:
+            assert item.p == pytest.approx(0.7)
+        mem.update_frame([obs([2.0, 0.0], SMALL, e)], Pose2D(0.2, 0.0, 0.0), always, 11.0)
+        if dist:
+            assert item.p == pytest.approx(bayes_positive(0.7, 0.8, 0.1))
+
+
+def test_p_update_dist_spaces_the_negative_updates_per_memory():
+    mem = ObjectMemory(Params(p_update_dist=0.2, tau=1e12))
+    mem.update_frame([obs([2.0, 0.0], SMALL, unit(0))], Pose2D(0.0, 0.0, 0.0), always, 0.0)
+    for k in range(5):                                           # gone, seen from the same spot
+        mem.update_frame([], Pose2D(0.05, 0.0, 0.0), always, 1.0 + k)
+    a = mem.get(0)
+    assert a.p == pytest.approx(0.7)
+    mem.update_frame([obs([3.0, 1.0], SMALL, unit(1))], Pose2D(0.3, 0.0, 0.0), always, 6.0)   # a second object appears
+    once = bayes_negative(0.7, 0.8, 0.1)
+    assert a.p == pytest.approx(once)                            # 0.3 m from a's last update: counts
+    mem.update_frame([], Pose2D(0.45, 0.0, 0.0), always, 7.0)    # 0.15 m further: neither counts
+    assert a.p == pytest.approx(once) and mem.get(1).p == pytest.approx(0.7)
+    mem.update_frame([], Pose2D(0.5, 0.0, 0.0), always, 8.0)     # 0.2 m from both
+    assert a.p == pytest.approx(bayes_negative(once, 0.8, 0.1))
+    assert mem.get(1).p == pytest.approx(once)
+
+
+def test_recheck_always_counts_with_p_update_dist():
+    mem = ObjectMemory(Params(p_update_dist=0.2, tau=1e12))
+    mem.update_frame([obs([2.0, 0.0], SMALL, unit(0))], Pose2D(0.0, 0.0, 0.0), always, 0.0)
+    mem.mark_not_found(0, 1.0)
+    mem.mark_not_found(0, 2.0)
+    assert mem.get(0).p == pytest.approx(bayes_negative(bayes_negative(0.7, 0.8, 0.1), 0.8, 0.1))
