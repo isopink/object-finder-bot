@@ -17,7 +17,7 @@ if [ -z "$MAP" ] || [ "$MAP" = "--check" ]; then
   MAP="$(ls -t "$OFB_ROBOT_DIR"/maps/*_nav.yaml 2>/dev/null | head -1)"
 fi
 case "$MAP" in *.yaml) ;; *) MAP="$OFB_ROBOT_DIR/maps/$MAP.yaml" ;; esac
-FULL="${MAP%_nav.yaml}.yaml"                    # <name>_nav.yaml -> <name>.yaml
+case "$MAP" in *_nav.yaml) FULL="${MAP%_nav.yaml}.yaml" ;; *) FULL="$MAP" ;; esac   # <name>_nav.yaml -> <name>.yaml
 if [ ! -f "$FULL" ]; then fail "no map $FULL" "give the SLAM map name, e.g. ./robot/relocalize.sh room_l4"; ofb_summary; exit 1; fi
 info "matching the scan against $(basename "$FULL") (stand still)"
 
