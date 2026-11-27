@@ -32,7 +32,7 @@ depth_max: 4.0
 
 # Camera mount in base_link: RealSense D455 on the mast, 2026-11-27 (same spot as the C920 had;
 # level, looking along +x = the direction `w` drives)
-cam_x: 0.205
+cam_x: 0.055
 cam_y: 0.05
 cam_z: 0.815
 cam_yaw: 0.0
