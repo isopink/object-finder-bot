@@ -27,6 +27,7 @@ setup(
             "mapview = objmem_ros.nodes:main_mapview",
             "ask = objmem_ros.ask:main",
             "fake_nav2 = objmem_ros.fake_nav2:main",
+            "gridnav = objmem_ros.gridnav_node:main",
         ],
     },
 )

@@ -58,6 +58,16 @@ if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; echo "Fix the above, then rerun: $
 
 echo "== ros2 launch objmem_ros objmem.launch.py (memory $MEM, search log $SEARCH_LOG)"
 echo "   map view: http://<jetson-ip>:$OFB_MAPVIEW_PORT    queries: the ask pane"
+# OFB_NAV4=1: drive to remembered objects with four commands only (straight, right 90,
+# left 90, stop) instead of Nav2 curves. Nav2 keeps running for map_server + AMCL.
+NAV_ACTION=navigate_to_pose
+if [ "${OFB_NAV4:-0}" = 1 ]; then
+  NAV_ACTION=navigate_to_pose_4cmd
+  ros2 run objmem_ros gridnav --ros-args -p speed:="${OFB_NAV4_SPEED:-0.08}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
+  GRIDNAV_PID=$!
+  trap 'kill $GRIDNAV_PID 2>/dev/null; pkill -f lib/objmem_ros/gridnav 2>/dev/null' EXIT
+  echo "   four-command navigation: ON (action $NAV_ACTION, log $OFB_LOG_DIR/gridnav.log)"
+fi
 ros2 launch objmem_ros objmem.launch.py \
   config:="$CONFIG" memory_file:="$MEM" image_source:="$OFB_IMAGE_SOURCE" \
-  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG"
+  worker_url:="$OFB_WORKER_URL" map_yaml:="$MAP_YAML" search_log:="$SEARCH_LOG" nav_action:="$NAV_ACTION"

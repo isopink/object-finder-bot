@@ -18,6 +18,7 @@ ARGS = [
     ("worker_url", "http://127.0.0.1:8600", "vision worker URL"),
     ("map_yaml", "", "map_saver .yaml drawn under the objects in mapview"),
     ("search_log", "", "JSON-lines search log for scripts/evaluate.py"),
+    ("nav_action", "navigate_to_pose", "NavigateToPose action the finder sends goals to (navigate_to_pose_4cmd: gridnav)"),
     ("observe_rate", "1.0", "observer steps per second (1 to 2)"),
     ("only_when_stopped", "true", "observe only while the robot stands still"),
     ("color_topic", "/camera/color/image_raw/compressed", "image_source:=ros compressed color topic"),

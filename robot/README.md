@@ -452,6 +452,29 @@ Patrol in the demo (nav.sh / start_all.sh running, initial pose set):
 ./robot/patrol.sh room429 1 3     # 1 round, 3 s per stop
 ```
 
+## Four-command navigation (added 2026-11-27, not yet run on the robot)
+
+Nav2 drives curves and spins in place; in the narrow aisles that failed. `OFB_NAV4=1` makes
+the finder drive to remembered objects with four commands only: straight, turn right 90,
+turn left 90, stop.
+
+```bash
+export OFB_DDS_WIDE=1 OFB_ODOM_IMU=0 OFB_NAV4=1
+./robot/build_ws.sh                      # once: builds the new gridnav node
+./robot/start_all.sh room_l4_nav nodepth
+```
+
+- `objmem.sh` starts `gridnav` (an action server `navigate_to_pose_4cmd`, same type as Nav2's)
+  and points the finder at it. Nav2 keeps running for map_server and AMCL; its planner and
+  controller are not used.
+- It plans on the nav map with 4-connected moves (the map axes are the room axes, because
+  mapping started facing along a wall), turns until the AMCL heading is one of 0/90/180/-90
+  degrees, and drives straight until the position along that axis reaches the corner. The
+  position comes from AMCL, so wheel drift does not add up. It replans when it leaves the line
+  or something stands in the way; it stops 0.3 m before an obstacle ahead.
+- Speeds: `OFB_NAV4_SPEED` (m/s, 0.08), `OFB_NAV4_TURN` (rad/s, 0.25). Log: `gridnav.log`.
+- Logic and a simulated robot are tested on a PC: `ros/objmem_ros/test/test_gridnav.py`.
+
 ## What to bring back after class
 
 | What | Where on the Jetson |
