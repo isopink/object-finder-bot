@@ -14,7 +14,8 @@ the wheels does not add up. The module has no ROS import: `plan()` and `Runner` 
 on a PC with a simulated robot (test_gridnav.py). `gridnav_node.py` wires it to ROS 2.
 
 Commands the runner sends (checked by the tests): (0, 0), (v, 0) and (0, +-w) only,
-never a curve.
+never a curve. At the goal it can look around: turn +15 degrees, stop, turn back, a few
+times (arrive_wiggle), so the camera sees a little more of the place before the re-check.
 """
 import heapq
 import math
@@ -219,7 +220,7 @@ class Runner(object):
 
     def __init__(self, io, grid_fn, speed=0.08, turn_rate=0.25, front_stop=0.30, goal_tol=0.15,
                  lateral_tol=0.30, lead_deg=0.5, blocked_wait_s=6.0, max_replans=8, dt=0.05,
-                 stall_s=3.0):
+                 stall_s=3.0, wiggle_deg=15.0, wiggle_reps=0, wiggle_pause_s=1.0):
         self.io, self.grid_fn = io, grid_fn
         self.speed, self.turn_rate, self.front_stop = speed, turn_rate, front_stop
         self.goal_tol, self.lateral_tol = goal_tol, lateral_tol
@@ -229,6 +230,7 @@ class Runner(object):
         # frozen (seen on 2026-11-27: /odom kept its value while the wheels turned) or the
         # wheels do not turn. Stop instead of driving blind.
         self.stall_s = stall_s
+        self.wiggle_deg, self.wiggle_reps, self.wiggle_pause_s = wiggle_deg, int(wiggle_reps), wiggle_pause_s
 
     # -- the four commands
     def stop(self):
@@ -249,7 +251,10 @@ class Runner(object):
     def turn_to(self, k, timeout_s=25.0):
         """Turn in place (right or left, 90 degrees at a time) until the heading is axis k.
         Returns "ok", "lost" (no pose), "stuck" (the heading does not change) or "cancel"/"timeout"."""
-        target = k * HALF_PI
+        return self.turn_to_yaw(k * HALF_PI, timeout_s)
+
+    def turn_to_yaw(self, target, timeout_s=25.0):
+        """Turn in place until the heading is `target` (radians). Same results as turn_to."""
         t0 = self.io.now()
         ref_yaw, ref_t = None, t0
         while True:
@@ -356,5 +361,32 @@ class Runner(object):
             st = self.turn_to(snap_heading(goal_yaw))
             if st != "ok":
                 return st
+        if self.wiggle_reps > 0:
+            st = self.look_around()
+            if st != "ok":
+                return st
         self.stop()
+        return "ok"
+
+    def look_around(self):
+        """At the goal: (turn +wiggle_deg, stop, turn back to the heading, stop) wiggle_reps times.
+        Ends on the heading it started with. Returns "ok" or the failure of a turn."""
+        p = self._pose_or_wait()
+        if p is None:
+            return "lost"
+        base = p[2]
+        if abs(wrap(base - snap_heading(base) * HALF_PI)) < math.radians(3.0):
+            base = snap_heading(base) * HALF_PI          # end exactly on the axis
+        side = math.radians(self.wiggle_deg)
+        for _ in range(self.wiggle_reps):
+            for target in (base + side, base):
+                st = self.turn_to_yaw(wrap(target))
+                if st != "ok":
+                    return st
+                t_end = self.io.now() + self.wiggle_pause_s
+                while self.io.now() < t_end:
+                    if self.io.cancelled():
+                        self.stop(); return "cancel"
+                    self.io.cmd(0.0, 0.0)
+                    self.io.sleep(self.dt)
         return "ok"

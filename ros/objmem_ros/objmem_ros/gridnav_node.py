@@ -46,6 +46,9 @@ def main(argv=None):
     goal_tol = param("goal_tol", 0.15)
     max_time = param("max_time_s", 220.0)
     map_yaml = param("map_yaml", "")
+    wiggle_reps = param("arrive_wiggle_reps", 3)
+    wiggle_deg = param("arrive_wiggle_deg", 15.0)
+    wiggle_pause = param("arrive_wiggle_pause_s", 1.0)
     log = node.get_logger()
 
     pub = node.create_publisher(Twist, "/cmd_vel", 10)
@@ -141,7 +144,8 @@ def main(argv=None):
             log.info("goal: x {:.2f} y {:.2f} yaw {:.2f}".format(p.position.x, p.position.y, yaw))
             io = RosIO(handle)
             runner = gridnav.Runner(io, lambda: state["grid"], speed=speed, turn_rate=turn_rate,
-                                    front_stop=front_stop, goal_tol=goal_tol)
+                                    front_stop=front_stop, goal_tol=goal_tol, wiggle_deg=wiggle_deg,
+                                    wiggle_reps=wiggle_reps, wiggle_pause_s=wiggle_pause)
             status = runner.go((p.position.x, p.position.y), yaw, max_time_s=max_time)
             runner.stop()
             log.info("goal finished: {}".format(status))

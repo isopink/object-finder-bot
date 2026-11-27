@@ -283,3 +283,31 @@ def test_a_broken_plan_listener_does_not_stop_the_robot(occ):
         raise RuntimeError("viewer gone")
     io.on_plan = broken
     assert runner(io, occ).go((3.0, -2.0)) == "ok"
+
+
+def test_at_the_goal_it_looks_around_three_times_and_ends_on_the_heading(occ):
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+    r = runner(io, occ, wiggle_reps=3, wiggle_deg=15.0, wiggle_pause_s=1.0)
+    t_heads = []
+    real_cmd = io.cmd
+
+    def cmd(v, w):
+        real_cmd(v, w)
+        t_heads.append(io.p[2])
+    io.cmd = cmd
+    assert r.go((3.0, -2.0), goal_yaw=-math.pi / 2) == "ok"
+    assert abs(wrap(io.p[2] + math.pi / 2)) < math.radians(3)          # back on the goal heading
+    tail = t_heads[-400:]                                               # the look-around at the end
+    peak = max(wrap(h + math.pi / 2) for h in tail)
+    assert math.radians(13) < peak < math.radians(19)                   # turned about 15 degrees
+    # three times out and back: the turn direction changes 6 times
+    signs = [1 if w > 0 else -1 for _v, w in io.cmds if w != 0.0]
+    changes = sum(1 for a, b in zip(signs, signs[1:]) if a != b)
+    assert changes >= 5
+    assert only_four_commands(io.cmds, r.speed, r.turn_rate)
+
+
+def test_no_look_around_by_default(occ):
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+    r = runner(io, occ)
+    assert r.wiggle_reps == 0 and r.go((3.0, -2.0), goal_yaw=-math.pi / 2) == "ok"

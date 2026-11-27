@@ -91,7 +91,7 @@ echo "   observing: $([ "$ONLY_STOPPED" = true ] && echo 'only when stopped' || 
 if [ "${OFB_NAV4:-1}" = 1 ]; then
   NAV_ACTION=navigate_to_pose_4cmd
   NAV_TIMEOUT=240      # 9 m of aisle at 0.12 m/s is 75 s plus turns; gridnav itself stops at 220 s
-  ros2 run objmem_ros gridnav --ros-args -p map_yaml:="$NAV_MAP_YAML" -p speed:="${OFB_NAV4_SPEED:-0.12}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
+  ros2 run objmem_ros gridnav --ros-args -p map_yaml:="$NAV_MAP_YAML" -p arrive_wiggle_reps:="${OFB_NAV4_WIGGLE:-3}" -p arrive_wiggle_deg:="${OFB_NAV4_WIGGLE_DEG:-15.0}" -p speed:="${OFB_NAV4_SPEED:-0.12}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
   GRIDNAV_PID=$!
   trap 'kill $GRIDNAV_PID 2>/dev/null; pkill -f lib/objmem_ros/gridnav 2>/dev/null' EXIT
   echo "   four-command navigation: ON (action $NAV_ACTION, log $OFB_LOG_DIR/gridnav.log)"
