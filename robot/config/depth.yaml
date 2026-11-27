@@ -8,8 +8,8 @@ tau: 600.0          # time-decay constant (s)
 p_init: 0.7         # confidence of a new memory
 
 # Same-object test (proposal 4.2)
-maha_thresh: 3.0    # Mahalanobis distance gate
-cos_thresh: 0.8     # CLIP image-image cosine gate
+maha_thresh: 4.0    # Mahalanobis distance gate (3.0 split one cup into 3 memories 10-20 cm apart, 2026-11-28)
+cos_thresh: 0.75    # CLIP image-image cosine gate (0.8; the cup seen from other sides fell below it)
 
 # Search (proposal 4.4)
 T: 0.05             # softmax temperature
@@ -39,9 +39,9 @@ cam_yaw: 0.0
 cam_pitch: 0.0      # rad, positive = tilted down
 
 # Observation noise
-sigma_range_a: 0.02
+sigma_range_a: 0.05  # 0.02 + pose error of AMCL and of the camera mount, measured 2026-11-28
 sigma_range_b: 0.01
-sigma_bearing: 0.03
+sigma_bearing: 0.06  # 0.03 rad; AMCL heading error is 1-2 deg on its own
 nominal_range: 2.0
 sigma_range_nodepth: 1.5
 
