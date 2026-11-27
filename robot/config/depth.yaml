@@ -22,11 +22,11 @@ pos_cov_max: 0.25   # above this position variance (m^2), drive to where the obj
 camera_mode: depth
 img_w: 640
 img_h: 480
-fx: 615.0          # PLACEHOLDER until measured: python scripts/print_intrinsics.py on the Jetson, copy fx fy cx cy hfov
-fy: 615.0
-cx: 320.0
-cy: 240.0
-hfov: 0.96          # horizontal field of view (rad); 2 atan(img_w / 2 fx); print_intrinsics.py prints it
+fx: 386.98          # measured on the D455f 2026-11-27 (vision/print_intrinsics.py, 640x480 color)
+fy: 386.56
+cx: 321.45
+cy: 244.14
+hfov: 1.3819          # rad (79.2 deg); 2 atan(img_w / 2 fx)
 depth_min: 0.3      # usable range (m)
 depth_max: 4.0
 
