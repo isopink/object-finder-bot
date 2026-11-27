@@ -257,14 +257,11 @@ class _Handler(BaseHTTPRequestHandler):
 VIEW_PAGE = b"""<!doctype html><html><head><meta charset="utf-8"><title>Robot camera</title>
 <style>body{margin:0;background:#111;color:#ddd;font:14px sans-serif;text-align:center}
 img{max-width:100vw;max-height:calc(100vh - 30px)}#s{padding:5px}</style></head><body>
-<div id="s">robot camera: green = detection, yellow = re-check</div><img id="i">
+<div id="s">robot camera: green = detection, yellow = re-check</div><img id="i" src="/stream">
 <script>
-var i=document.getElementById("i"),s=document.getElementById("s"),n=0,bad=0;
-function next(){var im=new Image();
- im.onload=function(){i.src=im.src;bad=0;n++;s.textContent="robot camera: green = detection, yellow = re-check  ("+n+")";setTimeout(next,250)};
- im.onerror=function(){bad++;s.textContent="no image from the worker ("+bad+")";setTimeout(next,1500)};
- im.src="/view.jpg?"+Date.now()}
-next();
+// one continuous stream (multipart JPEG); if it breaks, open it again
+var i=document.getElementById("i"),s=document.getElementById("s");
+i.onerror=function(){s.textContent="stream lost, reconnecting...";setTimeout(function(){i.src="/stream?"+Date.now()},1500)};
 </script></body></html>"""
 
 
@@ -279,6 +276,9 @@ class _ViewHandler(BaseHTTPRequestHandler):
                 body, ctype = VIEW_PAGE, "text/html; charset=utf-8"
             elif path == "/view.jpg":
                 body, ctype = self.service.view_jpeg(), "image/jpeg"
+            elif path == "/stream":
+                self._stream()
+                return
             else:
                 self.send_error(404)
                 return
@@ -294,6 +294,35 @@ class _ViewHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
+
+    def _stream(self, max_fps=15.0):
+        """multipart/x-mixed-replace: the browser shows each JPEG as it arrives. Ends when the
+        browser goes away. A stalled camera sends the last picture again, a few per second."""
+        self.send_response(200)
+        self.send_header("Content-Type", "multipart/x-mixed-replace; boundary=frame")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        period = 1.0 / max_fps
+        sent_error = False
+        while True:
+            t0 = time.time()
+            try:
+                jpg = self.service.view_jpeg()
+                sent_error = False
+            except HttpError:
+                if sent_error:
+                    time.sleep(0.5)
+                    continue
+                sent_error = True
+                time.sleep(0.5)
+                continue
+            try:
+                self.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: "
+                                 + str(len(jpg)).encode("ascii") + b"\r\n\r\n" + jpg + b"\r\n")
+                self.wfile.flush()
+            except OSError:         # the browser closed the tab
+                return
+            time.sleep(max(0.0, period - (time.time() - t0)))
 
     def log_message(self, fmt, *args):
         pass
