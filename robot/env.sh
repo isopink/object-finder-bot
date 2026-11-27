@@ -54,6 +54,10 @@ export OFB_MAX_VEL="${OFB_MAX_VEL:-0.15}"         # m/s cap for Nav2 (raised cam
 # Beams per LiDAR scan sent to SLAM/Nav2 (robot/lib/scan_filter.py). The LDS-02 driver
 # sends 242-249 and slam_toolbox drops the scans that differ from the first one. 0 = off.
 export OFB_SCAN_BEAMS="${OFB_SCAN_BEAMS:-240}"
+# Degrees to turn the LiDAR scan. THIS ROBOT'S LiDAR IS MOUNTED BACKWARDS (measured 2026-11-27:
+# an object in front was seen at 185 deg and 10 cm of forward driving brought it 10 cm closer),
+# so the default is 180. Set 0 if the LiDAR is ever turned around on the plate.
+export OFB_SCAN_ROTATE_DEG="${OFB_SCAN_ROTATE_DEG:-180}"
 # LiDAR returns closer than this (m) are the robot itself (camera mast rods):
 # robot/lib/scan_filter.py drops them. 0 = off. Measure the rods (robot/README.md).
 export OFB_SCAN_MIN="${OFB_SCAN_MIN:-0}"

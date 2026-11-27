@@ -36,7 +36,8 @@ def lidar_actions(ld08_dir):
 
     scan_min = _num("OFB_SCAN_MIN", float)
     beams = _num("OFB_SCAN_BEAMS", int)
-    if scan_min <= 0 and beams <= 0:
+    rotate = _num("OFB_SCAN_ROTATE_DEG", float)
+    if scan_min <= 0 and beams <= 0 and rotate == 0:
         return [IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(ld08_dir, "launch", "ld08.launch.py")))]
     here = os.path.dirname(os.path.abspath(__file__))
@@ -45,7 +46,8 @@ def lidar_actions(ld08_dir):
         # Same node as ld08_driver/launch/ld08.launch.py, with its output renamed.
         Node(package="ld08_driver", executable="ld08_driver", name="ld08_driver", output="screen",
              remappings=[("scan", "scan_raw"), ("/scan", "/scan_raw")]),
-        ExecuteProcess(cmd=["python3", filt, "--min-range", str(scan_min), "--beams", str(beams)],
+        ExecuteProcess(cmd=["python3", filt, "--min-range", str(scan_min), "--beams", str(beams),
+                            "--rotate-deg", str(rotate)],
                        output="screen"),
     ]
 

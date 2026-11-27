@@ -9,6 +9,10 @@ Two independent jobs (both off when their value is 0):
                 to scan (242 to 249) and slam_toolbox throws away every scan whose
                 count differs from the first one (about 60 % on 2026-11-25).
                 See robot/lib/scan_resample.py.
+--rotate-deg D  Turn the scan by D degrees. On 2026-11-27 the LiDAR was found mounted
+                turned by 180 degrees (an object in front of the robot was seen at 185
+                degrees, and driving 10 cm forward brought it 10 cm closer); D = 180 fixes
+                it in software. Maps made before that were built with the scan reversed.
 --min-range M   Drop returns closer than M meters (camera mast rods inside the
                 scan plane): they become +inf ("no return") and range_min is raised.
                 On 2026-11-25 the LiDAR did not see the rods at all (nothing
@@ -30,19 +34,20 @@ from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import LaserScan
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from scan_resample import resample_ranges  # noqa: E402
+from scan_resample import resample_ranges, rotate_ranges  # noqa: E402
 
 
 class ScanFilter(Node):
-    def __init__(self, min_range, beams, in_topic, out_topic):
+    def __init__(self, min_range, beams, rotate_deg, in_topic, out_topic):
         super().__init__("ofb_scan_filter")
         self.min_range = float(min_range)
         self.beams = int(beams)
+        self.rotate_deg = float(rotate_deg)
         self.n = 0
         self.pub = self.create_publisher(LaserScan, out_topic, qos_profile_sensor_data)
         self.sub = self.create_subscription(LaserScan, in_topic, self.cb, qos_profile_sensor_data)
-        self.get_logger().info("%s -> %s, beams %s, dropping returns closer than %.2f m"
-                               % (in_topic, out_topic, self.beams or "unchanged", self.min_range))
+        self.get_logger().info("%s -> %s, beams %s, rotated %.0f deg, dropping returns closer than %.2f m"
+                               % (in_topic, out_topic, self.beams or "unchanged", self.rotate_deg, self.min_range))
 
     def cb(self, msg):
         dropped = 0
@@ -51,6 +56,9 @@ class ScanFilter(Node):
             ranges, inc = resample_ranges(ranges, msg.angle_min, msg.angle_increment, self.beams)
             msg.angle_increment = inc
             msg.angle_max = msg.angle_min + (self.beams - 1) * inc
+            msg.intensities = []
+        if self.rotate_deg:
+            ranges = rotate_ranges(ranges, int(round(len(ranges) * self.rotate_deg / 360.0)))
             msg.intensities = []
         if self.min_range > 0:
             inf = float("inf")
@@ -71,11 +79,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--min-range", type=float, default=0.0)
     ap.add_argument("--beams", type=int, default=0)
+    ap.add_argument("--rotate-deg", type=float, default=0.0,
+                    help="turn the scan by this angle (180 for a LiDAR mounted backwards)")
     ap.add_argument("--in", dest="in_topic", default="/scan_raw")
     ap.add_argument("--out", dest="out_topic", default="/scan")
     args, _ = ap.parse_known_args(argv)
     rclpy.init()
-    node = ScanFilter(args.min_range, args.beams, args.in_topic, args.out_topic)
+    node = ScanFilter(args.min_range, args.beams, args.rotate_deg, args.in_topic, args.out_topic)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

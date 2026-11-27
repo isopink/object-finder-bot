@@ -46,3 +46,17 @@ def test_off_or_empty_leaves_the_scan_alone():
     assert resample_ranges([1.0, 2.0], 0.0, INC, 0) == ([1.0, 2.0], INC)
     assert resample_ranges([], 0.0, INC, 240) == ([], INC)
     assert resample_ranges([1.0], 0.0, 0.0, 240) == ([1.0], 0.0)
+
+
+def test_rotate_half_a_turn_moves_the_back_to_the_front():
+    ranges = [float(i) for i in range(240)]
+    out = scan_resample.rotate_ranges(ranges, 120)
+    assert len(out) == 240
+    assert out[0] == 120.0 and out[120] == 0.0 and out[239] == 119.0
+    assert scan_resample.rotate_ranges(out, 120) == ranges        # twice = original
+
+
+def test_rotate_zero_empty_and_wrap():
+    assert scan_resample.rotate_ranges([1.0, 2.0, 3.0], 0) == [1.0, 2.0, 3.0]
+    assert scan_resample.rotate_ranges([], 5) == []
+    assert scan_resample.rotate_ranges([1.0, 2.0, 3.0], 4) == scan_resample.rotate_ranges([1.0, 2.0, 3.0], 1)

@@ -10,6 +10,19 @@ full circle of exactly n beams (nearest beam), which slam_toolbox accepts.
 import math
 
 
+def rotate_ranges(ranges, k):
+    """Move every beam k positions on (new[j] = old[j - k], wrapping around).
+
+    For a LiDAR that is mounted turned by 180 degrees, k = len(ranges) / 2 makes the scan
+    look as if the sensor faced the way the robot does.
+    """
+    n = len(ranges)
+    if n == 0:
+        return list(ranges)
+    k %= n
+    return list(ranges[n - k:]) + list(ranges[:n - k]) if k else list(ranges)
+
+
 def resample_ranges(ranges, angle_min, angle_increment, n):
     """Return (new_ranges, new_increment): n beams over 2*pi starting at angle_min.
 
