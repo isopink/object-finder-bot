@@ -19,7 +19,8 @@ def main(argv=None):
     import rclpy
     from geometry_msgs.msg import Twist
     from nav2_msgs.action import NavigateToPose
-    from nav_msgs.msg import OccupancyGrid
+    from nav_msgs.msg import OccupancyGrid, Path
+    from geometry_msgs.msg import PoseStamped
     from rclpy.action import ActionServer, CancelResponse, GoalResponse
     from rclpy.callback_groups import ReentrantCallbackGroup
     from rclpy.executors import MultiThreadedExecutor
@@ -48,6 +49,9 @@ def main(argv=None):
     log = node.get_logger()
 
     pub = node.create_publisher(Twist, "/cmd_vel", 10)
+    # the current plan, for the map view (latched: a viewer that starts later still gets it)
+    plan_pub = node.create_publisher(Path, "/gridnav/plan", QoSProfile(
+        depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, reliability=ReliabilityPolicy.RELIABLE))
     tf = TfPose(node)
     state = {"grid": None, "front": 9.9, "t_scan": 0.0}
 
@@ -108,6 +112,18 @@ def main(argv=None):
 
         def log(self, text):
             log.info(text)
+
+        def on_plan(self, points, goal):
+            msg = Path()
+            msg.header.frame_id = "map"
+            msg.header.stamp = node.get_clock().now().to_msg()
+            for x, y in list(points) + [tuple(goal)]:
+                ps = PoseStamped()
+                ps.header = msg.header
+                ps.pose.position.x, ps.pose.position.y = float(x), float(y)
+                ps.pose.orientation.w = 1.0
+                msg.poses.append(ps)
+            plan_pub.publish(msg)
 
     def execute(handle):
         result = NavigateToPose.Result()

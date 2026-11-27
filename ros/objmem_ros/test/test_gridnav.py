@@ -264,3 +264,22 @@ def test_map_file_grey_unknown_is_blocked(tmp_path):
     (tmp_path / "m.yaml").write_text("image: m.pgm\nresolution: 0.05\norigin: [0, 0, 0]\nnegate: 0\nfree_thresh: 0.196\n")
     g = gn.grid_from_map_file(str(tmp_path / "m.yaml"), 0.0)
     assert g.free.sum() == 400 and not g.free[0, 0]
+
+
+def test_each_plan_is_reported_for_the_map_view(occ):
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+    plans = []
+    io.on_plan = lambda points, goal: plans.append((list(points), tuple(goal)))
+    assert runner(io, occ).go((6.0, -3.0)) == "ok"
+    pts, goal = plans[0]
+    assert pts[0] == (0.0, 0.0) and len(pts) == 4               # start + three corners/end
+    assert goal == pytest.approx((6.0, -3.0), abs=0.06)
+
+
+def test_a_broken_plan_listener_does_not_stop_the_robot(occ):
+    io = SimIO(occ, (0.0, 0.0, 0.0))
+
+    def broken(points, goal):
+        raise RuntimeError("viewer gone")
+    io.on_plan = broken
+    assert runner(io, occ).go((3.0, -2.0)) == "ok"

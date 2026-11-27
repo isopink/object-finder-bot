@@ -410,6 +410,14 @@ class MapviewNode(Node):
         self.tf = TfPose(self) if self.standalone else None
         self.status = ""
         self.create_subscription(String, "/objmem/status", self._on_status, 10)
+        self.plan, self.plan_version = [], 0
+        try:
+            from nav_msgs.msg import Path
+            from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
+            self.create_subscription(Path, "/gridnav/plan", self._on_plan, QoSProfile(
+                depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, reliability=ReliabilityPolicy.RELIABLE))
+        except Exception as exc:  # noqa: BLE001 - the view works without the plan
+            self.get_logger().warn("no plan drawing: {}".format(exc))
         from visualization_msgs.msg import MarkerArray
         self.markers_pub = self.create_publisher(MarkerArray, "/objmem/markers", 1)
         self.create_timer(1.0, self._on_timer)
@@ -422,6 +430,10 @@ class MapviewNode(Node):
 
     def _on_status(self, msg):
         self.status = msg.data
+
+    def _on_plan(self, msg):
+        self.plan = [(p.pose.position.x, p.pose.position.y) for p in msg.poses]
+        self.plan_version += 1
 
     def _robot_pose(self):
         if self.tf is not None:
@@ -479,6 +491,13 @@ class MapviewNode(Node):
     def _draw(self, items, pose):
         """objmem.viz.draw_map; on failure retry without the grid, then the plain drawing."""
         occ = self._occupancy()
+        if self.plan and occ is not None:
+            try:
+                return self.draw_map(items, robot_pose=pose, occupancy=occ, plan=self.plan)
+            except TypeError:
+                pass        # an older draw_map without `plan`: draw without it
+            except Exception as exc:
+                self._warn_once("plan", "draw_map with the plan failed ({}); drawing without it".format(exc))
         if occ is not None:
             try:
                 return self.draw_map(items, robot_pose=pose, occupancy=occ)
@@ -494,8 +513,8 @@ class MapviewNode(Node):
     def render_png(self):
         items = self.shared.memory.items
         pose = self.shared.robot_pose
-        key = (self.shared.memory.version, None if pose is None else (round(pose.x, 2), round(pose.y, 2),
-                                                                      round(pose.yaw, 2)))
+        key = (self.shared.memory.version, getattr(self, "plan_version", 0),
+               None if pose is None else (round(pose.x, 2), round(pose.y, 2), round(pose.yaw, 2)))
         with self._png_lock:
             if self._png is None or key != self._png_key:
                 self._png = self._draw(items, pose)

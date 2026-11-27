@@ -129,8 +129,12 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
              occupancy: Union[None, str, OccupancyGrid, tuple] = None,
              path: Optional[Sequence] = None, truth: Optional[Dict[str, Sequence[float]]] = None,
              title: Optional[str] = None, size: int = 800, highlight: Optional[int] = None,
-             bounds: Optional[Tuple[float, float, float, float]] = None) -> bytes:
+             bounds: Optional[Tuple[float, float, float, float]] = None,
+             plan: Optional[Sequence] = None) -> bytes:
     """Render the memory as PNG bytes. See the module docstring.
+
+    plan: (x, y) points of the planned route, the last one is the goal: drawn as a thick
+    orange line with a ring at the goal (the four-command navigator's plan).
 
     items: MemoryItems (mu, cov, p, id, label). path: Pose2D or (x, y) points.
     truth: name -> (x, y). highlight: an item id drawn with a thick outline.
@@ -214,6 +218,17 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
     # path
     if len(path_xy) >= 2:
         draw.line([px(*p) for p in path_xy], fill=(120, 160, 230), width=2)
+
+    # planned route (orange) and its goal
+    plan_xy = [(float(q[0]), float(q[1])) for q in (plan or [])]
+    if len(plan_xy) >= 2:
+        draw.line([px(*q) for q in plan_xy], fill=(245, 130, 20), width=4)
+        for q in plan_xy[1:-1]:
+            cx, cy = px(*q)
+            draw.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=(245, 130, 20))
+        gx, gy = px(*plan_xy[-1])
+        draw.ellipse([gx - 8, gy - 8, gx + 8, gy + 8], outline=(220, 90, 0), width=3)
+        label((gx + 10, gy - 6), "goal", fill=(200, 80, 0))
 
     # ground truth
     for name, xy in sorted(truth.items()):

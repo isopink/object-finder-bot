@@ -325,6 +325,12 @@ class Runner(object):
             if segs is None:
                 self.io.log("no axis-aligned path from (%.2f, %.2f) to (%.2f, %.2f)" % (p[0], p[1], goal_xy[0], goal_xy[1]))
                 return "no_path"
+            on_plan = getattr(self.io, "on_plan", None)     # e.g. drawn on the map view
+            if on_plan is not None:
+                try:
+                    on_plan([(p[0], p[1])] + [(ex, ey) for _k, ex, ey in segs], used)
+                except Exception:  # noqa: BLE001 - showing the plan must never stop the robot
+                    pass
             self.io.log("plan #%d: %s" % (attempt + 1, " ".join("%s%.2f" % ("+x +y -x -y".split()[k], math.hypot(ex - p[0], ey - p[1])) for k, ex, ey in segs)))
             status = "ok"
             for k, ex, ey in segs:

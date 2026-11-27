@@ -104,3 +104,17 @@ def test_toy_world_occupancy():
     assert isinstance(og, OccupancyGrid)
     assert (og.grid == 100).sum() > 0 and (og.grid == 0).sum() > 0
     assert _open(draw_map([], occupancy=og))
+
+
+def test_planned_route_is_drawn_in_orange():
+    import io as _io
+    import numpy as _np
+    from PIL import Image
+    from objmem.viz import draw_map
+    plain = draw_map([], bounds=(-1, -1, 5, 5))
+    with_plan = draw_map([], bounds=(-1, -1, 5, 5), plan=[(0, 0), (3, 0), (3, 3)])
+    a = _np.asarray(Image.open(_io.BytesIO(plain)).convert("RGB")).astype(int)
+    b = _np.asarray(Image.open(_io.BytesIO(with_plan)).convert("RGB")).astype(int)
+    orange = (abs(b[..., 0] - 245) < 20) & (abs(b[..., 1] - 130) < 25) & (b[..., 2] < 60)
+    before = ((abs(a[..., 0] - 245) < 20) & (abs(a[..., 1] - 130) < 25) & (a[..., 2] < 60)).sum()  # the p colour legend
+    assert orange.sum() > before + 1000
