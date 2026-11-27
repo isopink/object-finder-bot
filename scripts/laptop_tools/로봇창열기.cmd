@@ -7,7 +7,7 @@ rem The laptop must be on the rcv-robot Wi-Fi and start_all.sh must be running o
 set HOST=device06@192.168.1.206
 set IP=192.168.1.206
 set P=object-finder-bot/robot/panes
-ssh -o BatchMode=yes -o ConnectTimeout=6 %HOST% true 2>nul
+ssh -n -o BatchMode=yes -o ConnectTimeout=6 %HOST% true <nul >nul 2>nul
 if errorlevel 1 (
   echo [FAIL] Jetson %IP% 에 접속이 안 됩니다. 노트북 Wi-Fi가 rcv-robot 인지, Jetson이 켜져 있는지 확인하세요.
   pause
