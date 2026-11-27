@@ -213,12 +213,27 @@ def _box_iou(a: Sequence[int], b: Sequence[int]) -> float:
     return inter / union if union > 0 else 0.0
 
 
-def nms_boxes(boxes: List[RawBox], iou: float = 0.7, max_boxes: int = 0) -> List[RawBox]:
+def _box_inside(a: Sequence[int], b: Sequence[int]) -> float:
+    """Share of the smaller box that lies inside the other one (1.0 = fully inside)."""
+    iw = min(a[2], b[2]) - max(a[0], b[0])
+    ih = min(a[3], b[3]) - max(a[1], b[1])
+    if iw <= 0 or ih <= 0:
+        return 0.0
+    small = min((a[2] - a[0]) * (a[3] - a[1]), (b[2] - b[0]) * (b[3] - b[1]))
+    return float(iw * ih) / small if small > 0 else 0.0
+
+
+def nms_boxes(boxes: List[RawBox], iou: float = 0.7, max_boxes: int = 0,
+              inside: float = 0.0) -> List[RawBox]:
     """Highest conf first; drop a box that overlaps a kept one by more than `iou`
-    whatever its label (OWL often returns one object under two phrases)."""
+    whatever its label (OWL often returns one object under two phrases).
+    inside > 0: also drop a box when that share of the smaller of the two lies inside the
+    other (one cup boxed twice, the body alone and with the straw: IoU only about 0.5,
+    and the memory got two cups 1 cm apart, 2026-11-28)."""
     kept = []  # type: List[RawBox]
     for b in sorted(boxes, key=lambda x: -x.conf):
-        if all(_box_iou(b.box, k.box) <= iou for k in kept):
+        if all(_box_iou(b.box, k.box) <= iou and (inside <= 0 or _box_inside(b.box, k.box) < inside)
+               for k in kept):
             kept.append(b)
             if max_boxes and len(kept) >= max_boxes:
                 break
@@ -240,7 +255,7 @@ class OwlDetector(object):
 
     def __init__(self, prompts: Optional[Sequence[str]] = None, engine: Optional[str] = OWL_DEFAULT_ENGINE,
                  threshold: float = 0.15, model: str = "google/owlvit-base-patch32",
-                 nms_iou: float = 0.7, max_boxes: int = 20,
+                 nms_iou: float = 0.5, max_boxes: int = 20, nms_inside: float = 0.8,
                  ignore: Optional[Sequence[str]] = None, **_unused: Any) -> None:
         import os
         import sys
@@ -260,6 +275,7 @@ class OwlDetector(object):
         self.labels = [_strip_article(p) for p in self.prompts]
         self.threshold = float(threshold)
         self.nms_iou = float(nms_iou)
+        self.nms_inside = float(nms_inside)
         self.max_boxes = int(max_boxes)
         self.ignore = set(s.lower() for s in (ignore or ()))
         eng = os.path.expanduser(engine) if engine else None
@@ -290,7 +306,7 @@ class OwlDetector(object):
             if label.lower() in self.ignore:
                 continue
             boxes.append(RawBox(box=box, label=label, conf=float(s)))
-        boxes = nms_boxes(boxes, self.nms_iou, self.max_boxes)
+        boxes = nms_boxes(boxes, self.nms_iou, self.max_boxes, inside=self.nms_inside)
         self.timing.add(time.time() - t0)
         return boxes
 

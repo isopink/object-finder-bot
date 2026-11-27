@@ -284,3 +284,12 @@ def test_nms_boxes_max():
           RawBox(box=(1, 1, 10, 10), label="c", conf=0.9)]
     assert [b.label for b in detectors.nms_boxes(bs)] == ["c", "b"]
     assert [b.label for b in detectors.nms_boxes(bs, max_boxes=1)] == ["c"]
+
+
+def test_nms_drops_a_box_inside_another_one_of_the_same_object():
+    body = detectors.RawBox(box=(100, 120, 160, 200), label="cup", conf=0.40)
+    with_straw = detectors.RawBox(box=(98, 60, 162, 202), label="cup", conf=0.30)    # IoU about 0.55
+    other = detectors.RawBox(box=(300, 120, 360, 200), label="cup", conf=0.25)
+    assert len(detectors.nms_boxes([body, with_straw, other], iou=0.7)) == 3           # the old rule keeps both
+    kept = detectors.nms_boxes([body, with_straw, other], iou=0.7, inside=0.8)
+    assert [b.conf for b in kept] == [0.40, 0.25]
