@@ -247,7 +247,7 @@ def main():
     here = Path(__file__).resolve().parent.parent
     ap.add_argument("--deck", default=str(here / "deck.html"))
     ap.add_argument("--out", default=str(here / "out"))
-    ap.add_argument("--name", default="where_is_my_banana")
+    ap.add_argument("--name", default="where_is_my_cup")
     ap.add_argument("--preview", action="store_true", help="also save one PNG per slide")
     args = ap.parse_args()
 
