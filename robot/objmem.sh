@@ -20,6 +20,10 @@ MAP_NAME="$(basename "$MAP" .yaml)"
 MAP_YAML="$MAP"
 case "$MAP_YAML" in *.yaml) ;; *) MAP_YAML="$OFB_ROBOT_DIR/maps/$MAP.yaml" ;; esac
 if [ ! -f "$MAP_YAML" ]; then MAP_YAML=""; fi
+# The map view draws the full SLAM map (walls, desks) when the navigation map is the aisle-only
+# copy "<name>_nav" made from it (same size and origin). OFB_VIEW_MAP=<yaml> picks another one.
+VIEW_MAP="${OFB_VIEW_MAP:-${MAP_YAML%_nav.yaml}.yaml}"
+if [ -n "$MAP_YAML" ] && [ -f "$VIEW_MAP" ]; then MAP_YAML="$VIEW_MAP"; fi
 MEM="${OFB_MEMORY_FILE:-$OFB_ROBOT_DIR/memory/${MAP_NAME}_$MODE.npz}"
 SEARCH_LOG="${OFB_SEARCH_LOG:-$OFB_ROBOT_DIR/memory/search_${MAP_NAME}_$MODE.jsonl}"
 mkdir -p "$(dirname "$MEM")"
