@@ -454,12 +454,12 @@ Patrol in the demo (nav.sh / start_all.sh running, initial pose set):
 
 ## Four-command navigation (added 2026-11-27, not yet run on the robot)
 
-Nav2 drives curves and spins in place; in the narrow aisles that failed. `OFB_NAV4=1` makes
-the finder drive to remembered objects with four commands only: straight, turn right 90,
-turn left 90, stop.
+Nav2 drives curves and spins in place; in the narrow aisles that failed. Since 2026-11-27 the
+finder drives to remembered objects with four commands only (straight, turn right 90, turn left
+90, stop) **by default**. `OFB_NAV4=0` goes back to Nav2's own planner and controller.
 
 ```bash
-export OFB_DDS_WIDE=1 OFB_ODOM_IMU=0 OFB_NAV4=1
+export OFB_DDS_WIDE=1 OFB_ODOM_IMU=0
 ./robot/build_ws.sh                      # once: builds the new gridnav node
 ./robot/start_all.sh room_l4_nav nodepth
 ```

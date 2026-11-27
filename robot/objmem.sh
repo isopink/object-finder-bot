@@ -61,7 +61,7 @@ echo "   map view: http://<jetson-ip>:$OFB_MAPVIEW_PORT    queries: the ask pane
 # OFB_NAV4=1: drive to remembered objects with four commands only (straight, right 90,
 # left 90, stop) instead of Nav2 curves. Nav2 keeps running for map_server + AMCL.
 NAV_ACTION=navigate_to_pose
-if [ "${OFB_NAV4:-0}" = 1 ]; then
+if [ "${OFB_NAV4:-1}" = 1 ]; then
   NAV_ACTION=navigate_to_pose_4cmd
   ros2 run objmem_ros gridnav --ros-args -p speed:="${OFB_NAV4_SPEED:-0.08}" -p turn_rate:="${OFB_NAV4_TURN:-0.25}" >> "$OFB_LOG_DIR/gridnav.log" 2>&1 &
   GRIDNAV_PID=$!
