@@ -8,7 +8,7 @@ set HOST=device06@192.168.1.206
 set IP=192.168.1.206
 set P=object-finder-bot/robot/panes
 ssh -n -o BatchMode=yes -o ConnectTimeout=6 %HOST% true <nul >nul 2>nul
-if errorlevel 1 (
+if not "%errorlevel%"=="0" (
   echo [FAIL] Jetson %IP% 에 접속이 안 됩니다. 노트북 Wi-Fi가 rcv-robot 인지, Jetson이 켜져 있는지 확인하세요.
   pause
   exit /b 1

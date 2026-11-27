@@ -1,11 +1,11 @@
 ---
-title: "Where Is My Cup?"
-subtitle: "A Robot That Remembers Where Things Are"
+title: "Where Is My Banana?"
+subtitle: "Now You'll Never Forget Where You Put Things"
 eyebrow: "2026 Fall · Intelligent Robotics"
-speaker: "Speaker : Team 6"
+speaker: "Speaker : S.Lee"
 date: "December 10, 2026"
 footer-left: "Team 6 · Intelligent Robotics, UOS"
-footer-center: "Where Is My Cup?"
+footer-center: "Where Is My Banana?"
 ---
 
 <!-- 원고 규칙: Rules.md. 슬라이드 글자는 키워드만, 설명은 > 노트로. -->
@@ -27,13 +27,13 @@ footer-center: "Where Is My Cup?"
 
 ---
 ## I Always Forget Where I Put Things
-### Where did I leave my **red cup**?
+### Where did I leave my **banana**?
 
-- Cup, charger, earphones
+- Banana, charger, earphones
 - I saw it — but **where**?
 
 [[사진 1]]
-(오른쪽 절반: 책상 위 빨간 컵 사진, 데모데이에 촬영)
+(오른쪽 절반: 책상 위 바나나 사진, 데모데이에 촬영)
 
 >> What if a robot remembered for me?
 
@@ -43,7 +43,7 @@ footer-center: "Where Is My Cup?"
 ## A Robot That Remembers
 ### See → Ask → Go
 
-(그림: 카드 3장 — See: patrol, remember what & where / Ask: "Where is the red cup?" / Go: drive there, look again)
+(그림: 카드 3장 — See: patrol, remember what & where / Ask: "Where is the banana?" / Go: drive there, look again)
 
 >> Remember with **probability**, not certainty
 
@@ -51,9 +51,9 @@ footer-center: "Where Is My Cup?"
 
 ---
 ## System Overview
-### From one question to one cup
+### From one question to one banana
 
-(그림: 6단계 × 3층 표. 단계 Remember(회색, 사전 순찰) / Ask / Rank / Drive / Re-check / Report, 층 Software / Middleware / Hardware. 직접 만든 칸은 마룬: objmem, score, gridnav, re-check)
+(그림: 가운데 가로축 = 진행 단계 0. Remember(점선, 사전 순찰) → 1. Ask → 2. Rank → 3. Drive → 4. Re-check → 5. Report. 각 단계 위에 Software 노드, 아래에 Middleware → Hardware 노드를 세로선으로 연결. 맨 아래 OS 띠. 직접 만든 노드는 마룬: CLIP × belief, gridnav, re-check) / Ask / Rank / Drive / Re-check / Report, 층 Software / Middleware / Hardware. 직접 만든 칸은 마룬: objmem, score, gridnav, re-check)
 
 > 표를 왼쪽에서 오른쪽으로 한 번 훑기. 질문은 노트북 faster-whisper → SSH → /query. CLIP으로 순위, gridnav로 이동, 도착하면 NanoOWL+CLIP으로 재확인. 직접 만든 부분은 마룬.
 
@@ -71,7 +71,7 @@ $$ \mathbf{p}_{map} = A\,B\,\mathbf{p}_{cam}, \qquad T = \begin{bmatrix} R & \ma
 > 첫 식(역투영)은 강의 밖 우리 추가분. 둘째 식은 강의의 Combining Transformations 그대로. A = AMCL 로봇 자세, B = 카메라 장착 위치(실측).
 
 ---
-## Is the Cup Still There?
+## Is the Banana Still There?
 ### Static state binary Bayes filter, in log odds
 
 |||
@@ -79,7 +79,7 @@ $$ \mathbf{p}_{map} = A\,B\,\mathbf{p}_{cam}, \qquad T = \begin{bmatrix} R & \ma
 $$ l_t = l_{t-1} + \log \frac{p(z \mid \text{present})}{p(z \mid \text{absent})} $$
 - Seen: **+2.08**
 - In view, not seen: **−1.50**
-- Cups move → prediction step
+- Objects move → prediction step
 |||
 **Which one?**
 $$ \text{score}_i = \operatorname{softmax}\!\left(\frac{\cos(\text{CLIP}(q),\, e_i)}{T}\right)\cdot p_i $$
@@ -87,11 +87,11 @@ $$ \text{score}_i = \operatorname{softmax}\!\left(\frac{\cos(\text{CLIP}(q),\, e
 
 >> Seen raises the belief, missing lowers it
 
-> 강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8, 못 보면 ln(2/9). 시간 감쇠는 강의 밖 추가분: 컵은 "world is static" 가정을 깨므로 예측 단계를 넣음. 오른쪽: CLIP 유사도 × 존재 확률.
+> 강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8, 못 보면 ln(2/9). 시간 감쇠는 강의 밖 추가분: 물건은 "world is static" 가정을 깨므로 예측 단계를 넣음. 오른쪽: CLIP 유사도 × 존재 확률.
 
 ---
 ## Where Exactly Is It?
-### Kalman filter correction — the cup does not move
+### Kalman filter correction — the banana does not move
 
 $$ K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1} $$
 $$ \mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t) \qquad \Sigma_t = (I - K_t)\,\bar{\Sigma}_t $$
@@ -205,7 +205,7 @@ grid path · pose from AMCL
 
 >> A direction is not a position
 
-> 강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 컵이 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.
+> 강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.
 
 ---
 ## Measured on the Robot
@@ -213,7 +213,7 @@ grid path · pose from AMCL
 (그림: 숫자 4개 — 0.09 m Nav2 1 m goal error / 90.9° odom for a 90° turn / 0.08 s detection + depth per frame / 4.2 GB vision worker)
 
 [[영상 1]]
-(데모데이: "Where is the red cup?" → 이동 → 찾음)
+(데모데이: "Where is the banana?" → 이동 → 찾음)
 
 - Demo Day success : [ ___ / ___ ]
 
@@ -226,7 +226,7 @@ grid path · pose from AMCL
 (그림: 막대 — moved object top-1: probabilistic 100% vs similarity only 50%, visits per query 1.00 vs 1.80)
 
 [[영상 2]]
-(데모데이: 빨간 컵을 옮긴 뒤 같은 질문 → 예전 자리 실패 → 새 자리)
+(데모데이: 바나나를 옮긴 뒤 같은 질문 → 예전 자리 실패 → 새 자리)
 
 >> Lowering the old belief finds the new place
 

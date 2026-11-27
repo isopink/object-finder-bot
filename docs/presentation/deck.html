@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Where Is My Cup? — Team 6</title>
+<title>Where Is My Banana? — Team 6</title>
 <!-- Built from Text.md following DESIGN.md and Rules.md (UOS standard template). -->
 <!-- Everything is local (vendor/): the deck opens offline and on networks that block CDNs. -->
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <script defer src="vendor/katex/katex.min.js"></script>
 <style>
-  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:400;src:url(vendor/fonts/source-sans-3-latin-400-normal.woff2) format('woff2')}
-  @font-face{font-family:'Source Sans 3';font-style:italic;font-weight:400;src:url(vendor/fonts/source-sans-3-latin-400-italic.woff2) format('woff2')}
-  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:500;src:url(vendor/fonts/source-sans-3-latin-500-normal.woff2) format('woff2')}
-  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:600;src:url(vendor/fonts/source-sans-3-latin-600-normal.woff2) format('woff2')}
-  @font-face{font-family:'Source Sans 3';font-style:normal;font-weight:700;src:url(vendor/fonts/source-sans-3-latin-700-normal.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:400;src:url(vendor/fonts/noto-serif-latin-400-normal.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:italic;font-weight:400;src:url(vendor/fonts/noto-serif-latin-400-italic.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:500;src:url(vendor/fonts/noto-serif-latin-500-normal.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:600;src:url(vendor/fonts/noto-serif-latin-600-normal.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:700;src:url(vendor/fonts/noto-serif-latin-700-normal.woff2) format('woff2')}
+  @font-face{font-family:'Noto Serif';font-style:italic;font-weight:700;src:url(vendor/fonts/noto-serif-latin-700-italic.woff2) format('woff2')}
   :root{
     --blue:#004094; --maroon:#8C2D2D; --ink:#222222; --summary:#8a8f96; --footer:#a2a8ae;
     --rule:#e4e7ea; --rule-soft:#eceef1; --card:#fafbfc; --sub:#444444; --callout:#2a2f35;
     --d-ink:#24405e; --d-line:#a8b0b8; --d-flow:#8a9bb0; --d-label:#667080;
   }
   html,body{margin:0;background:#e9ecef}
-  body{font-family:'Source Sans 3','Noto Sans KR',sans-serif;color:var(--ink)}
+  body{font-family:'Noto Serif',serif;color:var(--ink)}
   .deck{display:flex;flex-direction:column;align-items:center;gap:40px;padding:40px 0}
   .slide{width:1920px;height:1080px;box-sizing:border-box;padding:52px 316px 60px;display:flex;flex-direction:column;
     background:#fff;position:relative;overflow:hidden;flex:none}
@@ -70,7 +71,7 @@
   .b .dot{color:#111;flex:none}
   .bl.sm .b{font-size:25px}
   strong{color:var(--maroon);font-weight:700}
-  .m{font-family:Georgia,'Times New Roman',serif;font-style:italic}
+  .m{font-family:'Noto Serif',serif;font-style:italic}
   .callout{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:34px;flex:none}
   .callout .bar{width:56px;height:3px;background:var(--maroon);border-radius:2px}
   .callout .tx{font-size:29px;font-weight:500;color:var(--callout);text-align:center}
@@ -108,17 +109,27 @@
         background:#eaf1f9;border:1.5px solid #9fbde0;color:var(--blue);box-sizing:border-box}
   .chip.mar{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon)}
 
-  /* system overview grid */
-  .grid{display:grid;grid-template-columns:150px repeat(6,1fr);gap:8px}
-  .grid .hd{font-size:20px;font-weight:700;color:var(--blue);text-align:center;padding:6px 0 2px}
-  .grid .hd.pre{color:var(--summary)}
-  .grid .ly{font-size:19px;font-weight:700;color:#5a7396;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center}
-  .grid .cell{background:var(--card);border:1px solid #c9d3de;border-radius:10px;padding:12px 10px;font-size:19px;line-height:1.3;
-             text-align:center;color:var(--d-ink);display:flex;align-items:center;justify-content:center;min-height:86px;box-sizing:border-box}
-  .grid .cell.pre{background:#fff;border-color:#d5dae0;color:var(--d-label)}
-  .grid .cell.own{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon);font-weight:600}
-  .grid .os{grid-column:2 / span 6;background:#eef3f9;border:1px solid #9fbde0;border-radius:10px;font-size:18px;color:var(--blue);
-            text-align:center;padding:8px 0;font-weight:600}
+  /* system overview: steps on a central axis, tech nodes hang off each step */
+  .flow{position:relative;display:grid;grid-template-columns:130px repeat(6,1fr);column-gap:22px;
+        grid-template-rows:72px 22px 92px 22px 64px 14px 64px 26px 40px}
+  .flow .axis{position:absolute;left:130px;right:-6px;top:139px;height:4px;background:var(--blue);border-radius:2px}
+  .flow .axhead{position:absolute;right:-30px;top:121px;font-size:30px;line-height:40px;color:var(--blue)}
+  .flow .ly{font-size:18px;font-weight:700;color:#5a7396;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center}
+  .flow .ly.ax{color:var(--blue)}
+  .flow .n{position:relative;background:var(--card);border:1px solid #c9d3de;border-radius:10px;padding:6px 8px;font-size:18px;line-height:1.25;
+           text-align:center;color:var(--d-ink);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+  .flow .n.pre{background:#fff;border:1px dashed #c9d3de;color:var(--d-label)}
+  .flow .n.own{background:#f5eae9;border-color:#cf9a9a;color:var(--maroon);font-weight:600}
+  .flow .st{position:relative;background:var(--blue);border-radius:12px;color:#fff;display:flex;flex-direction:column;align-items:center;
+            justify-content:center;text-align:center;box-sizing:border-box}
+  .flow .st .k{font-size:22px;font-weight:700;color:#fff;white-space:nowrap}
+  .flow .st .s{font-size:16px;color:#cdd9ee;margin-top:2px}
+  .flow .st.pre{background:#fff;border:2px dashed #9fbde0}
+  .flow .st.pre .k{color:#5a7396}
+  .flow .st.pre .s{color:var(--summary)}
+  .flow .cn{justify-self:center;width:2px;background:#9fbde0}
+  .flow .os{grid-column:2 / span 6;background:#eef3f9;border:1px solid #9fbde0;border-radius:10px;font-size:17px;color:var(--blue);
+            text-align:center;font-weight:600;display:flex;align-items:center;justify-content:center}
 
   /* stats */
   .stats{display:flex;justify-content:space-between;gap:24px}
@@ -153,10 +164,10 @@
 <section class="slide title" data-notes="인사, 팀 소개. &quot;오늘은 물건을 기억하고 찾아가는 로봇 이야기입니다.&quot;">
   <img class="emb" src="assets/emblem.png" alt="University of Seoul emblem">
   <div class="eyebrow">2026 Fall · Intelligent Robotics</div>
-  <h1>Where Is My Cup?</h1>
-  <div class="subt">A Robot That Remembers Where Things Are</div>
+  <h1>Where Is My Banana?</h1>
+  <div class="subt">Now You'll Never Forget Where You Put Things</div>
   <div class="rl"></div>
-  <div class="spk">Speaker : Team 6</div>
+  <div class="spk">Speaker : S.Lee</div>
   <div class="date">December 10, 2026</div>
 </section>
 
@@ -173,13 +184,13 @@
 
 <!-- 3 Motivation -->
 <section class="slide content" data-notes="실제 경험으로 시작. 분명 봤는데 어디였는지 기억이 안 난다.">
-  <div><h2>I Always Forget Where I Put Things</h2><div class="sum">Where did I leave my <strong>red cup</strong>?</div></div>
+  <div><h2>I Always Forget Where I Put Things</h2><div class="sum">Where did I leave my <strong>banana</strong>?</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:56px">
     <div class="bl" style="flex:1">
-      <div class="b"><span class="dot">•</span><span>Cup, charger, earphones</span></div>
+      <div class="b"><span class="dot">•</span><span>Banana, charger, earphones</span></div>
       <div class="b"><span class="dot">•</span><span>I saw it — but <strong>where</strong>?</span></div>
     </div>
-    <div class="ph" style="width:620px;height:520px;flex:none"><div class="pl">[ Photo 1 ]</div><div class="pd">Red cup on a desk (Demo Day)</div></div>
+    <div class="ph" style="width:620px;height:520px;flex:none"><div class="pl">[ Photo 1 ]</div><div class="pd">Banana on a desk (Demo Day)</div></div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">What if a robot remembered for me?</div></div>
 </section>
@@ -191,7 +202,7 @@
     <div class="cards">
       <div class="card" style="width:360px"><div class="k">1. See</div><div class="s">Patrol, remember<br>what &amp; where</div></div>
       <div class="arrow">→</div>
-      <div class="card" style="width:360px"><div class="k">2. Ask</div><div class="s">“Where is the red cup?”</div></div>
+      <div class="card" style="width:360px"><div class="k">2. Ask</div><div class="s">“Where is the banana?”</div></div>
       <div class="arrow">→</div>
       <div class="card" style="width:360px"><div class="k">3. Go</div><div class="s">Drive there,<br>look again</div></div>
     </div>
@@ -200,37 +211,55 @@
 </section>
 
 <!-- 5 System Overview -->
-<section class="slide content dense" data-notes="표를 왼쪽에서 오른쪽으로 한 번 훑기. 질문은 노트북 faster-whisper → SSH → /query. CLIP으로 순위, gridnav로 이동, 도착하면 NanoOWL+CLIP으로 재확인. 직접 만든 부분은 마룬.">
-  <div><h2>System Overview</h2><div class="sum">From one question to one cup</div></div>
+<section class="slide content dense" data-notes="가운데 파란 축이 진행 단계. 왼쪽에서 오른쪽으로 따라가면서, 위는 그 단계의 소프트웨어, 아래는 미들웨어와 하드웨어. 0단계(점선)는 질문 전에 미리 순찰하며 기억해 두는 단계. 질문은 노트북 faster-whisper → SSH → /query. CLIP × 믿음으로 순위, gridnav로 이동, 도착하면 NanoOWL+CLIP으로 재확인. 마룬이 직접 만든 부분.">
+  <div><h2>System Overview</h2><div class="sum">From one question to one banana</div></div>
   <div class="body" style="gap:0">
-    <div class="grid">
-      <div></div>
-      <div class="hd pre">0. Remember</div><div class="hd">1. Ask</div><div class="hd">2. Rank</div>
-      <div class="hd">3. Drive</div><div class="hd">4. Re-check</div><div class="hd">5. Report</div>
+    <div class="flow">
+      <div class="axis"></div>
+      <div class="axhead">▶</div>
 
       <div class="ly">Software</div>
-      <div class="cell pre">NanoOWL · CLIP<br>Kalman · Bayes</div>
-      <div class="cell">faster-whisper</div>
-      <div class="cell own">CLIP text<br>× belief</div>
-      <div class="cell own">gridnav<br>AMCL</div>
-      <div class="cell own">NanoOWL<br>+ CLIP ≥ 0.5</div>
-      <div class="cell">mapview</div>
+      <div class="n pre">NanoOWL · CLIP<br>objmem</div>
+      <div class="n">faster-whisper</div>
+      <div class="n own">CLIP text<br>× belief</div>
+      <div class="n own">gridnav<br>AMCL</div>
+      <div class="n own">NanoOWL<br>+ CLIP ≥ 0.5</div>
+      <div class="n">mapview</div>
+
+      <div></div>
+      <div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div>
+
+      <div class="ly ax">Steps</div>
+      <div class="st pre"><div class="k">0. Remember</div><div class="s">patrol, beforehand</div></div>
+      <div class="st"><div class="k">1. Ask</div><div class="s">voice → text</div></div>
+      <div class="st"><div class="k">2. Rank</div><div class="s">which one?</div></div>
+      <div class="st"><div class="k">3. Drive</div><div class="s">go there</div></div>
+      <div class="st"><div class="k">4. Re-check</div><div class="s">is it really?</div></div>
+      <div class="st"><div class="k">5. Report</div><div class="s">found / not</div></div>
+
+      <div></div>
+      <div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div>
 
       <div class="ly">Middleware</div>
-      <div class="cell pre">ROS 2 · TF2</div>
-      <div class="cell">SSH → /query</div>
-      <div class="cell">HTTP :8600</div>
-      <div class="cell">ROS 2 action<br>Fast DDS</div>
-      <div class="cell">HTTP :8600</div>
-      <div class="cell">/objmem/status</div>
+      <div class="n pre">ROS 2 · TF2</div>
+      <div class="n">SSH → /query</div>
+      <div class="n">HTTP :8600</div>
+      <div class="n">ROS 2 action<br>Fast DDS</div>
+      <div class="n">HTTP :8600</div>
+      <div class="n">/objmem/status</div>
+
+      <div></div>
+      <div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div>
 
       <div class="ly">Hardware</div>
-      <div class="cell pre">D455f<br>Jetson GPU</div>
-      <div class="cell">Laptop mic</div>
-      <div class="cell">Jetson Xavier NX</div>
-      <div class="cell">LDS-02 · OpenCR</div>
-      <div class="cell">D455f</div>
-      <div class="cell">Laptop</div>
+      <div class="n pre">D455f<br>Jetson GPU</div>
+      <div class="n">Laptop mic</div>
+      <div class="n">Jetson Xavier NX</div>
+      <div class="n">LDS-02 · OpenCR</div>
+      <div class="n">D455f</div>
+      <div class="n">Laptop</div>
+
+      <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
 
       <div></div>
       <div class="os">Ubuntu 20.04 · JetPack 5.1.5 · ROS 2 Foxy · Jetson on a power bank</div>
@@ -259,8 +288,8 @@
 </section>
 
 <!-- 7 Bayes -->
-<section class="slide content" data-notes="강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8, 못 보면 ln(2/9). 시간 감쇠는 강의 밖 추가분: 컵은 &quot;world is static&quot; 가정을 깨므로 예측 단계를 넣음. 오른쪽: CLIP 유사도 × 존재 확률.">
-  <div><h2>Is the Cup Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds</div></div>
+<section class="slide content" data-notes="강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8, 못 보면 ln(2/9). 시간 감쇠는 강의 밖 추가분: 물건은 &quot;world is static&quot; 가정을 깨므로 예측 단계를 넣음. 오른쪽: CLIP 유사도 × 존재 확률.">
+  <div><h2>Is the Banana Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds</div></div>
   <div class="body">
     <div class="cols">
       <div class="col">
@@ -269,7 +298,7 @@
         <div class="bl sm">
           <div class="b"><span class="dot">•</span><span>Seen: <strong>+2.08</strong></span></div>
           <div class="b"><span class="dot">•</span><span>In view, not seen: <strong>−1.50</strong></span></div>
-          <div class="b"><span class="dot">•</span><span>Cups move → prediction step</span></div>
+          <div class="b"><span class="dot">•</span><span>Objects move → prediction step</span></div>
         </div>
       </div>
       <div class="col">
@@ -286,7 +315,7 @@
 
 <!-- 8 Kalman -->
 <section class="slide content" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 노이즈는 강의 표기대로 Q_t, 멀수록 커짐. 그림은 강의 1D 예제 숫자: N(8,4)와 N(6,1)을 합치면 N(6.4,0.8).">
-  <div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction — the cup does not move</div></div>
+  <div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction — the banana does not move</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:40px">
     <div style="flex:1;display:flex;flex-direction:column;gap:30px">
       <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
@@ -294,7 +323,7 @@
       <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
     </div>
     <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:8px">
-      <svg id="gauss" width="600" height="340" style="font-family:'Source Sans 3',sans-serif"></svg>
+      <svg id="gauss" width="600" height="340" style="font-family:'Noto Serif',serif"></svg>
       <div class="cap" style="font-style:normal;color:var(--d-label);font-size:19px">It's a weighted mean</div>
     </div>
   </div>
@@ -371,11 +400,11 @@
 <section class="slide content" data-notes="카메라 기둥의 막대 네 개가 LiDAR 스캔 평면에 들어와서 로봇 자신이 장애물로 보임 → 항상 충돌 상태, 지도에 유령 점. 해결: LiDAR 중심에서 r_min보다 가까운 점은 버림(scan_filter.py --min-range, OFB_SCAN_MIN). r_min은 가장 먼 막대보다 크고 로봇 앞 끝보다 작게. 값은 빈칸에 채우기. ※ 실제 해결 방법·값 확인 필요.">
   <div><h2>Case 2 : Four Posts in the Scan</h2><div class="sum">The camera mast stands inside the LiDAR plane</div></div>
   <div class="body" style="flex-direction:row;align-items:center;gap:56px">
-    <svg width="520" height="520" viewBox="0 0 520 520" style="font-family:'Source Sans 3',sans-serif;flex:none">
+    <svg width="520" height="520" viewBox="0 0 520 520" style="font-family:'Noto Serif',serif;flex:none">
       <rect x="150" y="150" width="220" height="220" rx="18" fill="#fafbfc" stroke="#c9d3de" stroke-width="2"/>
       <text x="260" y="140" font-size="19" fill="#667080" text-anchor="middle">front</text>
       <circle cx="260" cy="260" r="170" fill="none" stroke="#8C2D2D" stroke-width="2.5" stroke-dasharray="9 7"/>
-      <text x="260" y="78" font-size="22" fill="#8C2D2D" text-anchor="middle" font-family="Georgia,serif" font-style="italic">r<tspan font-size="15" dy="5">min</tspan></text>
+      <text x="260" y="78" font-size="22" fill="#8C2D2D" text-anchor="middle" font-family="Noto Serif,serif" font-style="italic">r<tspan font-size="15" dy="5">min</tspan></text>
       <circle cx="260" cy="260" r="22" fill="#24405e"/>
       <text x="260" y="300" font-size="18" fill="#24405e" text-anchor="middle">LiDAR</text>
       <circle cx="205" cy="205" r="11" fill="#8C2D2D"/><circle cx="315" cy="205" r="11" fill="#8C2D2D"/>
@@ -399,16 +428,16 @@
   <div><h2>Case 3 : Only 90° Turns</h2><div class="sum">Every turn adds heading error</div></div>
   <div class="body" style="gap:26px">
     <div style="display:flex;align-items:center;gap:40px;justify-content:center">
-      <svg width="560" height="200" viewBox="0 0 560 200" style="font-family:'Source Sans 3',sans-serif;flex:none">
+      <svg width="560" height="200" viewBox="0 0 560 200" style="font-family:'Noto Serif',serif;flex:none">
         <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8C2D2D"/></marker></defs>
         <circle cx="40" cy="150" r="9" fill="#24405e"/>
         <line x1="40" y1="150" x2="500" y2="150" stroke="#004094" stroke-width="3.5" stroke-dasharray="11 9"/>
         <line x1="40" y1="150" x2="496" y2="78" stroke="#8C2D2D" stroke-width="3.5" marker-end="url(#ah)"/>
         <line x1="500" y1="150" x2="500" y2="80" stroke="#667080" stroke-width="2"/>
-        <text x="512" y="122" font-size="24" fill="#24405e" font-family="Georgia,serif" font-style="italic">e⊥</text>
+        <text x="512" y="122" font-size="24" fill="#24405e" font-family="Noto Serif,serif" font-style="italic">e⊥</text>
         <path d="M 190 150 A 150 150 0 0 0 188.2 126.6" fill="none" stroke="#24405e" stroke-width="2"/>
-        <text x="200" y="146" font-size="22" fill="#24405e" font-family="Georgia,serif" font-style="italic">Δθ</text>
-        <text x="270" y="184" font-size="22" fill="#24405e" font-family="Georgia,serif" font-style="italic" text-anchor="middle">s</text>
+        <text x="200" y="146" font-size="22" fill="#24405e" font-family="Noto Serif,serif" font-style="italic">Δθ</text>
+        <text x="270" y="184" font-size="22" fill="#24405e" font-family="Noto Serif,serif" font-style="italic" text-anchor="middle">s</text>
         <text x="300" y="40" font-size="19" fill="#667080" text-anchor="middle">planned (dashed) vs driven</text>
       </svg>
       <div style="display:flex;flex-direction:column;gap:18px">
@@ -435,7 +464,7 @@
 <section class="slide content" data-notes="프로그램을 많이 켤수록 나중에 켠 노드가 /odom, /map을 못 찾음. Fast DDS가 루프백에서 앞번호 포트 몇 개만 두드리기 때문. 모든 프로세스에 같은 설정(40개 포트) → /odom 10초에 184개, 지도 저장 즉시 성공.">
   <div><h2>Case 4 : Nodes That Couldn't Hear</h2><div class="sum">More processes → late nodes find nobody</div></div>
   <div class="body" style="gap:40px">
-    <svg width="1288" height="250" viewBox="0 0 1288 250" style="font-family:'Source Sans 3',sans-serif">
+    <svg width="1288" height="250" viewBox="0 0 1288 250" style="font-family:'Noto Serif',serif">
       <text x="0" y="62" font-size="22" font-weight="600" fill="#24405e">Default</text>
       <text x="0" y="192" font-size="22" font-weight="600" fill="#24405e">Fix</text>
       <g id="ports"></g>
@@ -449,10 +478,10 @@
 </section>
 
 <!-- 14 Case 4 -->
-<section class="slide content dense" data-notes="강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 컵이 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.">
+<section class="slide content dense" data-notes="강의 Range-Bearing Model: 방향 측정은 시선에 수직인 방향만 잡아 줌. 통로에서는 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차. D455f는 한 번에 위치. (같은 시기에 카메라 장착 방향도 바로잡음.) 메모리 한계로 음성인식은 노트북으로.">
   <div><h2>Case 5 : Design Changed by Constraints</h2><div class="sum">C920 → D455f : bearing-only → range-bearing</div></div>
   <div class="body" style="gap:28px">
-    <svg width="1288" height="330" viewBox="0 0 1288 330" style="font-family:'Source Sans 3',sans-serif">
+    <svg width="1288" height="330" viewBox="0 0 1288 330" style="font-family:'Noto Serif',serif">
       <!-- left panel: bearing-only -->
       <text x="300" y="28" font-size="24" font-weight="700" fill="#004094" text-anchor="middle">C920 : bearing-only</text>
       <line x1="20" y1="290" x2="600" y2="290" stroke="#a8b0b8" stroke-width="3"/>
@@ -469,7 +498,7 @@
       <line x1="800" y1="272" x2="1150" y2="90" stroke="#004094" stroke-width="3"/>
       <ellipse cx="1150" cy="90" rx="20" ry="13" fill="#eef3f9" stroke="#004094" stroke-width="2.5"/>
       <circle cx="1150" cy="90" r="7" fill="#004094"/>
-      <text x="955" y="166" font-size="24" fill="#24405e" font-family="Georgia,serif" font-style="italic">r, φ</text>
+      <text x="955" y="166" font-size="24" fill="#24405e" font-family="Noto Serif,serif" font-style="italic">r, φ</text>
       <text x="980" y="320" font-size="19" fill="#667080" text-anchor="middle">one look → position</text>
     </svg>
     <div class="cards" style="gap:24px">
@@ -491,7 +520,7 @@
       <div class="stat"><div class="n">4.2 GB</div><div class="l">vision worker memory</div></div>
     </div>
     <div style="display:flex;gap:40px;align-items:center">
-      <div class="ph" style="width:760px;height:420px;flex:none"><div class="pl">[ Video 1 ]</div><div class="pd">“Where is the red cup?” → drive → found (Demo Day)</div></div>
+      <div class="ph" style="width:760px;height:420px;flex:none"><div class="pl">[ Video 1 ]</div><div class="pd">“Where is the banana?” → drive → found (Demo Day)</div></div>
       <div class="bl" style="flex:1">
         <div class="b"><span class="dot">•</span><span>Demo Day success : <span class="blank">[ ___ / ___ ]</span></span></div>
       </div>
@@ -515,7 +544,7 @@
         <div class="brow"><div class="bn" style="width:170px">Similarity only</div><div class="track"><div class="fill" style="width:340px"></div><div class="bv">1.80</div></div></div>
       </div>
     </div>
-    <div class="ph" style="width:560px;height:440px;flex:none"><div class="pl">[ Video 2 ]</div><div class="pd">Move the red cup, ask again<br>old place → new place (Demo Day)</div></div>
+    <div class="ph" style="width:560px;height:440px;flex:none"><div class="pl">[ Video 2 ]</div><div class="pd">Move the banana, ask again<br>old place → new place (Demo Day)</div></div>
   </div>
   <div class="callout" style="margin-bottom:26px"><div class="bar"></div><div class="tx">Lowering the old belief finds the new place</div></div>
 </section>
@@ -569,7 +598,7 @@
   slides.forEach(function(s, i){
     if(!s.classList.contains('content')) return;
     var f = document.createElement('div'); f.className = 'foot';
-    f.innerHTML = '<span>Team 6 · Intelligent Robotics, UOS</span><span class="c">Where Is My Cup?</span><span class="r">' + (i+1) + ' / ' + N + '</span>';
+    f.innerHTML = '<span>Team 6 · Intelligent Robotics, UOS</span><span class="c">Where Is My Banana?</span><span class="r">' + (i+1) + ' / ' + N + '</span>';
     s.appendChild(f);
   });
   // gaussians (slide 8): prior N(8,4), measurement N(6,1), fused N(6.4,0.8)
