@@ -4,14 +4,21 @@ robot/objmem.sh writes <log dir>/evidence.jsonl: one line per frame with every r
 place the camera looked at, its distance, and whether the object was found there.
 
   python scripts/fit_detection_range.py robot/logs/<run>/evidence.jsonl --label cup
-  python scripts/fit_detection_range.py <log> --label cup --label laptop --config robot/config/depth.yaml --compare
+  python scripts/fit_detection_range.py <log> [<log> ...] --label cup --label laptop \
+      --config robot/config/depth.yaml --compare [--write-config robot/config/depth.yaml]
+
+On the robot, ./robot/fit_detection.sh does this for the newest run.
 
 Prints the share of looks that found the object, per distance bin, and the d_by_range
 line for robot/config/<mode>.yaml. Count only objects that stayed in place for the whole
 run (--label or --ids): a look at a place the object has left is not a miss of the detector.
 The looks of one drive are a few centimeters apart, so the 95 % intervals are too narrow.
 
---compare replays the log twice, with the one number d of the config and with the table
+--write-config puts the table into that YAML file (the d_by_range line). It refuses when
+fewer than two bins have enough looks, or when no bin finds the object in at least half
+of its looks: then the object was probably not where the memory has it.
+
+--compare replays every log twice, with the one number d of the config and with the table
 (the fitted one, or d_by_range of the config when it has one), and prints how p of every
 memory would have moved. The replay knows the looks only: no re-check, no merging.
 """
@@ -19,7 +26,9 @@ import argparse
 import json
 import math
 import os
+import re
 import sys
+import time
 from typing import Dict, List, Optional, Sequence, Tuple
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -84,6 +93,33 @@ def table_rows(counts: Sequence[Tuple[float, int, int]], min_looks: int) -> List
     return [[upper, round(min(0.98, max(0.02, k / float(n))), 2)] for upper, n, k in counts if n >= min_looks]
 
 
+def table_problem(rows: Sequence[Sequence[float]]) -> Optional[str]:
+    """Why this table should not go into the config, or None."""
+    if len(rows) < 2:
+        return "fewer than two distance bins have enough looks"
+    if max(v for _, v in rows) < 0.5:
+        return "no bin finds the object in half of its looks: was it where the memory has it?"
+    return None
+
+
+def write_config(path: str, rows: Sequence[Sequence[float]], note: str) -> None:
+    """Replace (or add after the `d:` line) the d_by_range line of a flat YAML config."""
+    line = "d_by_range: [{}]  # rows [up to this distance (m), P(detect | present)]; {}; [] = d everywhere".format(
+        ", ".join("[{}, {}]".format(u, v) for u, v in rows), note)
+    with open(path, "r", encoding="utf-8") as fh:
+        text = fh.read()
+    if re.search(r"^d_by_range:.*$", text, flags=re.M):
+        text = re.sub(r"^d_by_range:.*$", lambda _m: line, text, count=1, flags=re.M)
+    elif re.search(r"^d:.*$", text, flags=re.M):
+        text = re.sub(r"^(d:.*)$", lambda m: m.group(1) + "\n" + line, text, count=1, flags=re.M)
+    else:
+        text = line + "\n" + text
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
+
+
 def replay(frames: Sequence[dict], params: Params) -> Dict[int, dict]:
     """p of every memory if the looks of the log had been counted with `params`
     (d or d_by_range, f, tau, p_init, p_update_dist)."""
@@ -112,7 +148,7 @@ def replay(frames: Sequence[dict], params: Params) -> Dict[int, dict]:
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("log", help="evidence.jsonl of one run")
+    ap.add_argument("log", nargs="+", help="evidence.jsonl of one run (several: counted together)")
     ap.add_argument("--label", action="append", default=[], help="count memories with this label (repeatable)")
     ap.add_argument("--ids", default="", help="count these memory ids, comma separated")
     ap.add_argument("--edges", default=",".join(str(e) for e in DEFAULT_EDGES),
@@ -120,12 +156,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--min-looks", type=int, default=30, help="bins with fewer looks stay out of the table")
     ap.add_argument("--config", default=None, help="YAML with the objmem values (for --compare)")
     ap.add_argument("--compare", action="store_true", help="replay the log with d and with the table")
+    ap.add_argument("--write-config", default=None, help="write the table into this YAML config")
     args = ap.parse_args(argv)
 
     labels = [s.lower() for s in args.label]
     ids = [int(s) for s in args.ids.split(",") if s.strip()]
     edges = [float(s) for s in args.edges.split(",") if s.strip()]
-    frames = read_log(args.log)
+    runs = [(path, read_log(path)) for path in args.log]
+    frames = [fr for _, run in runs for fr in run]
     counts = count(frames, edges, labels, ids)
     total = sum(n for _, n, _ in counts)
     print("{} frames, {} looks counted ({})".format(
@@ -149,7 +187,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     if args.compare:
         base = Params.load(args.config)
-        table = base.d_by_range or rows
+        table = rows or base.d_by_range
         if not table:
             print("\n--compare needs a table: none fitted and none in the config")
             return 1
@@ -157,16 +195,28 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         flat.d_by_range = []
         ranged = Params.load(args.config)
         ranged.d_by_range = table
-        a, b = replay(frames, flat), replay(frames, ranged)
         print("\nreplay (p_update_dist {} m, f {}, tau {} s): d = {} everywhere / the table".format(
             base.p_update_dist, base.f, base.tau, base.d))
-        print("  id label        looks found counted | lowest p   final p  | lowest p   final p")
-        for i in sorted(a):
-            if not wanted({"id": i, "label": a[i]["label"]}, labels, ids):
-                continue
-            print("  #{:<3d} {:<12s} {:5d} {:5d} {:7d} |   {:.2f}      {:.2f}    |   {:.2f}      {:.2f}".format(
-                i, a[i]["label"] or "-", a[i]["looks"], a[i]["hits"], a[i]["counted"],
-                a[i]["min"], a[i]["p"], b[i]["min"], b[i]["p"]))
+        for path, run in runs:
+            a, b = replay(run, flat), replay(run, ranged)
+            print("  {}".format(path))
+            print("  id label        looks found counted | lowest p   final p  | lowest p   final p")
+            for i in sorted(a):
+                if not wanted({"id": i, "label": a[i]["label"]}, labels, ids):
+                    continue
+                print("  #{:<3d} {:<12s} {:5d} {:5d} {:7d} |   {:.2f}      {:.2f}    |   {:.2f}      {:.2f}".format(
+                    i, a[i]["label"] or "-", a[i]["looks"], a[i]["hits"], a[i]["counted"],
+                    a[i]["min"], a[i]["p"], b[i]["min"], b[i]["p"]))
+
+    if args.write_config:
+        problem = table_problem(rows)
+        if problem:
+            print("\nNOT written to {}: {}".format(args.write_config, problem))
+            return 2
+        note = "measured {} from {} looks ({})".format(
+            time.strftime("%Y-%m-%d"), total, ", ".join(labels + ["#%d" % i for i in ids]) or "every memory")
+        write_config(args.write_config, rows, note)
+        print("\nwritten to {}: used from the next start of the observer".format(args.write_config))
     return 0
 
 

@@ -90,3 +90,37 @@ def test_a_log_that_cannot_be_written_does_not_stop_the_memory(tmp_path, capsys)
     look(mem, 3.5, True, 0.0)
     look(mem, 3.5, True, 1.0)
     assert len(mem.items) == 1 and capsys.readouterr().out.count("cannot write the evidence log") == 1
+
+
+def test_write_config_replaces_the_line_and_refuses_a_bad_table(tmp_path, capsys):
+    cfg = tmp_path / "depth.yaml"
+    cfg.write_text("d: 0.8              # P(detect | present)\nd_by_range: []      # old note\nf: 0.1\n", encoding="utf-8")
+    fit.write_config(str(cfg), [[2.0, 0.9], [4.0, 0.3]], "measured today")
+    text = cfg.read_text(encoding="utf-8")
+    assert text.count("d_by_range:") == 1 and "old note" not in text and text.endswith("f: 0.1\n")
+    assert Params.load(str(cfg)).d_by_range == [[2.0, 0.9], [4.0, 0.3]]
+    bare = tmp_path / "bare.yaml"
+    bare.write_text("d: 0.7\nf: 0.1\n", encoding="utf-8")
+    fit.write_config(str(bare), [[2.0, 0.9], [4.0, 0.3]], "measured today")
+    assert Params.load(str(bare)).d_by_range == [[2.0, 0.9], [4.0, 0.3]] and Params.load(str(bare)).d == 0.7
+
+    assert fit.table_problem([[2.0, 0.9]]) and fit.table_problem([[2.0, 0.2], [4.0, 0.1]])
+    assert fit.table_problem([[2.0, 0.9], [4.0, 0.3]]) is None
+
+    # end to end: two runs counted together; a log where the object is never found is refused
+    def run(path, found_far):
+        mem = ObjectMemory(Params(evidence_log=str(path), cam_x=0.0, tau=1e12))
+        look(mem, 3.5, True, 0.0)
+        for k in range(8):
+            look(mem, 2.5, True, 1.0 + k)                    # 1.5 m: always
+            look(mem, 0.5, found_far and k % 2 == 0, 20.0 + k)   # 3.5 m: half of the looks
+    a, b = tmp_path / "a.jsonl", tmp_path / "b.jsonl"
+    run(a, True)
+    run(b, True)
+    before = cfg.read_text(encoding="utf-8")
+    assert fit.main([str(a), str(b), "--label", "cup", "--edges", "2,4", "--min-looks", "10",
+                     "--config", str(cfg), "--compare", "--write-config", str(cfg)]) == 0
+    assert Params.load(str(cfg)).d_by_range == [[2.0, 0.98], [4.0, 0.5]]
+    assert "measured" in cfg.read_text(encoding="utf-8") and cfg.read_text(encoding="utf-8") != before
+    assert fit.main([str(a), "--label", "cup", "--edges", "2,4", "--min-looks", "10", "--write-config", str(bare)]) == 2
+    assert "NOT written" in capsys.readouterr().out
