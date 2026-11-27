@@ -25,13 +25,26 @@ SEARCH_LOG="${OFB_SEARCH_LOG:-$OFB_ROBOT_DIR/memory/search_${MAP_NAME}_$MODE.jso
 mkdir -p "$(dirname "$MEM")"
 CONFIG="$(ofb_make_config "$MODE")"
 
-echo "== Waiting for Nav2 (/navigate_to_pose, up to 120 s)"
-for _ in $(seq 60); do
-  if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then break; fi
-  sleep 2
-done
-if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 is up"; else
-  fail "Nav2 did not come up" "read the nav pane / nav.log in $OFB_LOG_DIR"
+if [ "${OFB_NAV4:-1}" = 1 ] && [ "${OFB_NAV_FULL:-0}" != 1 ]; then
+  # nav.sh started the map server and AMCL only (no /navigate_to_pose action of Nav2)
+  echo "== Waiting for AMCL (/amcl node, up to 120 s)"
+  for _ in $(seq 60); do
+    if ros2 node list 2>/dev/null | grep -x /amcl >/dev/null; then break; fi
+    sleep 2
+  done
+  if ros2 node list 2>/dev/null | grep -x /amcl >/dev/null; then ok "AMCL is up"; else
+    fail "AMCL did not come up" "read the nav pane / nav.log in $OFB_LOG_DIR"
+  fi
+  sleep 5   # the lifecycle manager activates the map server and AMCL
+else
+  echo "== Waiting for Nav2 (/navigate_to_pose, up to 120 s)"
+  for _ in $(seq 60); do
+    if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then break; fi
+    sleep 2
+  done
+  if ros2 action list 2>/dev/null | grep -x /navigate_to_pose >/dev/null; then ok "Nav2 is up"; else
+    fail "Nav2 did not come up" "read the nav pane / nav.log in $OFB_LOG_DIR"
+  fi
 fi
 
 INIT="${OFB_INIT_POSE:-0 0 0}"

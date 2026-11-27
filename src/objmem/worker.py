@@ -79,6 +79,9 @@ class VisionService:
         self.camera_mode = camera_mode or self.params.camera_mode
         self.tiles = bool(tiles)   # False: an empty detector result stays empty (no tile crops)
         self.lock = threading.Lock()
+        # Camera reads only. The live view takes this lock and never self.lock, so it does not
+        # wait for a detection (0.3 s and more), only for one camera read.
+        self.cam_lock = threading.Lock()
         # For the live view (view_jpeg): what the last detection / re-check saw.
         self.last_color = None      # RGB frame of the last camera read
         self.last_boxes = (0.0, [])  # (time, [(box, text)]) of the last /detect_embed on the camera
@@ -97,7 +100,8 @@ class VisionService:
             return color, None, time.time(), False
         if self.camera is None:
             raise HttpError(503, "no camera attached and no image_jpeg_b64 sent")
-        frame = self.camera.read()
+        with self.cam_lock:
+            frame = self.camera.read()
         if frame is None:
             raise HttpError(503, "no frame from the camera")
         self.last_color = frame.color
@@ -144,16 +148,17 @@ class VisionService:
             text, "FOUND" if found else "not found", prob), list(box) if (found and box is not None) else None)
         return {"found": bool(found), "prob": float(prob), "box": list(box) if box is not None else None}
 
-    def view_jpeg(self, quality: int = 70) -> bytes:
+    def view_jpeg(self, quality: int = 65) -> bytes:
         """The camera image as JPEG with the boxes of the last detection (kept 2 s) and the last
         re-check (kept 8 s). Reads a fresh frame; falls back to the last one. For people only:
         the live view server calls it, nothing in the robot depends on it."""
         from PIL import Image, ImageDraw
 
-        with self.lock:
+        with self.cam_lock:
             color = None
             if self.camera is not None and time.time() >= self._view_skip_until:
-                frame = self.camera.read()
+                # colour only when the camera can (a RealSense then skips the depth alignment)
+                frame = getattr(self.camera, "read_color", self.camera.read)()
                 if frame is not None:
                     color = self.last_color = frame.color
                 else:       # a stalled camera blocks for seconds: leave it to the robot's own requests
@@ -295,7 +300,7 @@ class _ViewHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _stream(self, max_fps=15.0):
+    def _stream(self, max_fps=12.0):
         """multipart/x-mixed-replace: the browser shows each JPEG as it arrives. Ends when the
         browser goes away. A stalled camera sends the last picture again, a few per second."""
         self.send_response(200)

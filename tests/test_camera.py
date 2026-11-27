@@ -162,6 +162,17 @@ def test_realsense_does_not_restart_more_often_than_the_gap(monkeypatch):
     assert state["starts"] == 2                                 # the first restart only
 
 
+def test_realsense_read_color_skips_depth(monkeypatch):
+    color = np.zeros((480, 640, 3), np.uint8)
+    color[..., 0] = 200
+    state = install_realsense(monkeypatch, [(color, np.full((480, 640), 1500, np.uint16)), "timeout"])
+    cam = make_camera("realsense", width=640, height=480)
+    fr = cam.read_color()
+    assert fr is not None and fr.depth is None and fr.color[0, 0, 0] == 200
+    assert cam.read_color() is None                         # a missed frame counts like in read()
+    assert cam._fails == 1
+
+
 def test_realsense_waits_longer_for_the_first_frame(monkeypatch):
     fs = (np.zeros((4, 6, 3), np.uint8), np.zeros((4, 6), np.uint16))
     state = install_realsense(monkeypatch, ["timeout", fs, fs])

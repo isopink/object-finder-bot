@@ -64,7 +64,17 @@ fi
 if [ "$OFB_N_FAIL" -gt 0 ]; then ofb_summary; exit 1; fi
 cp "$MAP" "$OFB_LOG_DIR/" 2>/dev/null || true
 
-echo "== Starting AMCL + Nav2 on $(basename "$MAP"). Next, in another pane:"
-echo "     ./robot/set_initial_pose.sh 0 0 0    (if the robot stands where mapping started)"
-ros2 launch nav2_bringup bringup_launch.py \
-  map:="$MAP" params_file:="$PARAMS" use_sim_time:=False autostart:=True
+# With the four-command navigator (OFB_NAV4=1, the default) only the map server and AMCL are
+# needed. Nav2's planner and controller were never asked for anything and still used 96 % and
+# 68 % of a core for their costmaps (measured 2026-11-27, 6 cores, load average 7 to 9).
+# OFB_NAV_FULL=1 starts all of Nav2 again (needed for goto.sh, patrol.sh, OFB_NAV4=0).
+if [ "${OFB_NAV4:-1}" = 1 ] && [ "${OFB_NAV_FULL:-0}" != 1 ]; then
+  echo "== Starting the map server and AMCL only on $(basename "$MAP") (four-command navigation)."
+  ros2 launch nav2_bringup localization_launch.py \
+    map:="$MAP" params_file:="$PARAMS" use_sim_time:=False autostart:=True
+else
+  echo "== Starting AMCL + Nav2 on $(basename "$MAP"). Next, in another pane:"
+  echo "     ./robot/set_initial_pose.sh 0 0 0    (if the robot stands where mapping started)"
+  ros2 launch nav2_bringup bringup_launch.py \
+    map:="$MAP" params_file:="$PARAMS" use_sim_time:=False autostart:=True
+fi

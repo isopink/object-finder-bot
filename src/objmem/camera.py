@@ -144,6 +144,25 @@ class RealSenseCamera(object):
         depth = raw.astype(np.float32) * np.float32(self.depth_scale)
         return Frame(color=color, depth=depth, t=time.time())
 
+    def read_color(self) -> Optional[Frame]:
+        """Color only, no depth alignment: much cheaper than read(). For the live view, which
+        needs no depth. Same stall handling as read()."""
+        timeout = self.timeout_ms if self._got_frame else self.first_timeout_ms
+        try:
+            frames = self.pipeline.wait_for_frames(timeout)
+        except RuntimeError:
+            return self._no_frame()
+        if not frames:
+            return self._no_frame()
+        self._got_frame = True
+        color_frame = frames.get_color_frame()
+        if not color_frame:
+            return self._no_frame()
+        self._fails = 0
+        self._restarts = 0
+        color = to_rgb(np.asanyarray(color_frame.get_data()), self._color_order)
+        return Frame(color=color, depth=None, t=time.time())
+
     def _no_frame(self) -> None:
         """Count a read without a frame; restart the stream when it has stopped. Returns None."""
         self._fails += 1
