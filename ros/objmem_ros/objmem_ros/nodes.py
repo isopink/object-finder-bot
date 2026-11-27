@@ -420,6 +420,7 @@ class MapviewNode(Node):
         self.status = ""
         self.create_subscription(String, "/objmem/status", self._on_status, 10)
         self.plan, self.plan_version = [], 0
+        self.trail = core.Trail()   # where the robot has been since this node started (blue line)
         try:
             from nav_msgs.msg import Path
             from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
@@ -455,7 +456,9 @@ class MapviewNode(Node):
         if self.watch is not None and self.watch.changed():
             mem, _ = core.load_or_create_memory(self.shared.memory_file, self.shared.params)
             self.shared.memory.replace(mem)
-        self._robot_pose()
+        pose = self._robot_pose()
+        if pose is not None:
+            self.trail.add(pose.x, pose.y)
         self.markers_pub.publish(self._markers())
 
     def _markers(self):
@@ -501,30 +504,31 @@ class MapviewNode(Node):
         """objmem.viz.draw_map; on failure retry without the grid, then the plain drawing."""
         occ = self._occupancy()
         mark = getattr(self, "start_mark", None)
+        trail = self.trail.points()         # blue line: where the robot has been
         if mark is not None and occ is not None:
             kw = {"truth": {"start": mark}}
             if self.plan:
                 kw["plan"] = self.plan
             try:
-                return self.draw_map(items, robot_pose=pose, occupancy=occ, **kw)
+                return self.draw_map(items, robot_pose=pose, occupancy=occ, path=trail, **kw)
             except TypeError:
                 pass
             except Exception as exc:
                 self._warn_once("mark", "draw_map with the start mark failed ({}); drawing without it".format(exc))
         if self.plan and occ is not None:
             try:
-                return self.draw_map(items, robot_pose=pose, occupancy=occ, plan=self.plan)
+                return self.draw_map(items, robot_pose=pose, occupancy=occ, path=trail, plan=self.plan)
             except TypeError:
                 pass        # an older draw_map without `plan`: draw without it
             except Exception as exc:
                 self._warn_once("plan", "draw_map with the plan failed ({}); drawing without it".format(exc))
         if occ is not None:
             try:
-                return self.draw_map(items, robot_pose=pose, occupancy=occ)
+                return self.draw_map(items, robot_pose=pose, occupancy=occ, path=trail)
             except Exception as exc:
                 self._warn_once("occ", "draw_map with map_yaml={} failed ({}); drawing without it".format(occ, exc))
         try:
-            return self.draw_map(items, robot_pose=pose)
+            return self.draw_map(items, robot_pose=pose, path=trail)
         except Exception as exc:
             self._warn_once("draw", "draw_map failed ({}: {}); using the plain drawing".format(
                 type(exc).__name__, exc))
@@ -533,7 +537,7 @@ class MapviewNode(Node):
     def render_png(self):
         items = self.shared.memory.items
         pose = self.shared.robot_pose
-        key = (self.shared.memory.version, getattr(self, "plan_version", 0),
+        key = (self.shared.memory.version, getattr(self, "plan_version", 0), self.trail.version,
                None if pose is None else (round(pose.x, 2), round(pose.y, 2), round(pose.yaw, 2)))
         with self._png_lock:
             if self._png is None or key != self._png_key:

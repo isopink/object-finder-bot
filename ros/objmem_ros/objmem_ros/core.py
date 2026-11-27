@@ -447,6 +447,44 @@ def items_json(items):
     return out
 
 
+class Trail(object):
+    """Where the robot has been since the map view started: the blue line on the map.
+
+    add(x, y) keeps a point when the robot is `min_step` m from the last kept one. A step
+    longer than `jump` m is a pose correction (relocalised, initial pose set), not driving:
+    the line is broken there (a None in points()) instead of drawn across the map. Only the
+    newest `max_points` are kept.
+    """
+
+    def __init__(self, min_step=0.05, jump=1.0, max_points=5000):
+        self.min_step, self.jump, self.max_points = float(min_step), float(jump), int(max_points)
+        self._pts = []
+        self._last = None
+        self.version = 0
+
+    def add(self, x, y):
+        x, y = float(x), float(y)
+        if not (math.isfinite(x) and math.isfinite(y)):
+            return False
+        if self._last is not None:
+            d = math.hypot(x - self._last[0], y - self._last[1])
+            if d < self.min_step:
+                return False
+            if d > self.jump:
+                self._pts.append(None)
+        self._pts.append((x, y))
+        self._last = (x, y)
+        if len(self._pts) > self.max_points:
+            del self._pts[:len(self._pts) - self.max_points]
+            while self._pts and self._pts[0] is None:
+                del self._pts[0]
+        self.version += 1
+        return True
+
+    def points(self):
+        return list(self._pts)
+
+
 MAP_PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>objmem map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">

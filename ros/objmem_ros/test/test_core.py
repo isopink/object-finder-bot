@@ -428,3 +428,18 @@ def test_motion_gate_turning_and_stopped():
     assert g.turning(0.15) and not g.stopped(0.15)
     g.update(Pose2D(0, 0, 0.05), 0.7)
     assert not g.turning(0.7) and g.stopped(0.7)
+
+
+def test_trail_keeps_steps_and_breaks_at_a_jump():
+    tr = core.Trail(min_step=0.05, jump=1.0, max_points=6)
+    assert tr.add(0.0, 0.0) and not tr.add(0.02, 0.0)      # too close to the last point
+    assert tr.add(0.06, 0.0) and tr.add(0.5, 0.0)
+    assert not tr.add(float("nan"), 0.0)
+    assert tr.add(3.0, 2.0)                                # relocalised: the line is broken here
+    assert tr.points() == [(0.0, 0.0), (0.06, 0.0), (0.5, 0.0), None, (3.0, 2.0)]
+    v = tr.version
+    for k in range(1, 5):
+        tr.add(3.0 + 0.1 * k, 2.0)
+    # only the newest 6 entries stay; the break that would lead the list is dropped with them
+    assert tr.version == v + 4
+    assert tr.points() == [(3.0, 2.0)] + [(pytest.approx(3.0 + 0.1 * k), 2.0) for k in range(1, 5)]

@@ -136,7 +136,8 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
     plan: (x, y) points of the planned route, the last one is the goal: drawn as a thick
     orange line with a ring at the goal (the four-command navigator's plan).
 
-    items: MemoryItems (mu, cov, p, id, label). path: Pose2D or (x, y) points.
+    items: MemoryItems (mu, cov, p, id, label). path: Pose2D or (x, y) points where the
+    robot has been, drawn as a blue line; a None between two points breaks the line.
     truth: name -> (x, y). highlight: an item id drawn with a thick outline.
     bounds: (x0, y0, x1, y1) in meters; default = the known map area, else
     everything drawn plus a 1 m margin. size: pixels of the longer side.
@@ -145,7 +146,17 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
 
     og = _as_grid(occupancy)
     items = list(items or [])
-    path_xy = [_xy(p) for p in (path or [])]
+    path_segs, seg = [], []  # type: ignore
+    for p in (path or []):
+        if p is None:
+            if seg:
+                path_segs.append(seg)
+            seg = []
+        else:
+            seg.append(_xy(p))
+    if seg:
+        path_segs.append(seg)
+    path_xy = [q for sg in path_segs for q in sg]
     truth = dict(truth or {})
 
     if bounds is None:
@@ -215,9 +226,10 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
         draw.line([a, b], fill=(225, 225, 235) if og is None else (180, 180, 200), width=1)
         draw.text((a[0] + 2, a[1] - 12), str(gy), fill=(120, 120, 140), font=font)
 
-    # path
-    if len(path_xy) >= 2:
-        draw.line([px(*p) for p in path_xy], fill=(120, 160, 230), width=2)
+    # path driven so far
+    for sg in path_segs:
+        if len(sg) >= 2:
+            draw.line([px(*p) for p in sg], fill=(30, 110, 235), width=3)
 
     # planned route (orange) and its goal
     plan_xy = [(float(q[0]), float(q[1])) for q in (plan or [])]
@@ -272,7 +284,8 @@ def draw_map(items: Sequence[MemoryItem], robot_pose: Optional[Pose2D] = None,
     draw.text((lx, ly), "p", fill=(20, 20, 20), font=font)
     for i in range(100):
         draw.line([(lx + 12 + i, ly), (lx + 12 + i, ly + 10)], fill=p_color(i / 99.0))
-    draw.text((lx + 116, ly), "0 .. 1     x (magenta) = ground truth     ellipse = 2 sigma", fill=(80, 80, 80), font=font)
+    draw.text((lx + 116, ly), "0 .. 1     x (magenta) = ground truth     ellipse = 2 sigma"
+              + ("     blue line = path driven" if path_xy else ""), fill=(80, 80, 80), font=font)
 
     import io
     buf = io.BytesIO()
