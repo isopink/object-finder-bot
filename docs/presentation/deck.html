@@ -198,14 +198,14 @@
 <div class="deck" id="deck">
 
 <!-- 1 Title -->
-<section class="slide title cover" data-notes="인사, 팀 소개. &quot;오늘은 논문 한 편을 리뷰하듯, 우리 로봇을 문제 정의 → 방법 → 실험 → 실패 분석 순서로 발표하겠습니다.&quot;">
+<section class="slide title cover" data-notes="표지 오른쪽은 프로젝트 대표 이미지(11/28 실제 주행 직후 지도 화면, 로봇 사진이 생기면 cover-image만 바꿈). 인사, 팀 소개. &quot;오늘은 논문 한 편을 리뷰하듯, 우리 로봇을 문제 정의 → 방법 → 실험 → 실패 분석 순서로 발표하겠습니다.&quot;">
   <div class="cv-text">
-    <div class="eyebrow">2026 Fall · Intelligent Robotics</div>
+    <div class="eyebrow">2026 Fall, Intelligent Robotics</div>
     <h1>Where Is My Cup?</h1>
     <div class="subt">Probabilistic Object Memory on a Real Robot</div>
     <div class="rl"></div>
     <div class="spk">Speaker : S.Lee</div>
-    <div class="date">December 10, 2026 · Team 6, University of Seoul</div>
+    <div class="date">December 10, 2026, Team 6, University of Seoul</div>
   </div>
   <div class="cv-img">
     <img class="frame" src="assets/mapview_final.png" alt="Map view after the 11/28 run">
@@ -214,33 +214,35 @@
 </section>
 
 <!-- 2 Teaser -->
-<section class="slide content dense" data-notes="설명 없이 영상부터. 11/28 새벽 01:35, &quot;Where is the cup?&quot; 한 문장 → 100초 이동 → 도착 후 좌우 둘러보기 → found(확신도 0.87). 오른쪽은 그 직후 지도 화면: 점이 기억(색 = 존재 확률), 주황 선이 이동 경로. &quot;로봇은 컵이 어디 있는지 어떻게 알았을까요? 오늘은 그 답과, 그 답이 실제 로봇에서 어떻게 틀렸는지를 이야기합니다.&quot;">
-  <div><div class="sec">Overview</div><h2>Where Is the Cup?</h2><div class="sum">One question → drive → re-check → found (real robot, 11/28)</div></div>
+<section class="slide content dense" data-notes="설명 없이 데모 영상부터(배속). &quot;Where is the cup?&quot; 한 문장 → 이동 → 도착 후 좌우 둘러보기 → found. 배속 배율은 영상에 맞춰 [ ___ ×]. 오른쪽은 11/28 01:35 실제 주행 직후 지도 화면: 점이 기억(색 = 존재 확률), 주황 선이 이동 경로(그때 100초, 확신도 0.87). &quot;로봇은 컵이 어디 있는지 어떻게 알았을까요? 오늘은 그 답과, 그 답이 실제 로봇에서 어떻게 틀렸는지를 이야기합니다.&quot;">
+  <div><div class="sec">The Idea</div><h2>Where Is the Cup?</h2><div class="sum">One question → drive → re-check → found</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
-      <div class="panel"><div class="plab">(a) <span>Run</span></div>
-        <div class="ph" style="width:620px;height:352px"><div class="pl">[ Video 3 ]</div><div class="pd">Real robot, 11/28 01:35 : “Where is the cup?” → drive → look around → found</div></div></div>
-      <div class="panel"><div class="plab">(b) <span>Map view after the run</span></div>
+      <div class="panel"><div class="plab">(a) <span>Demo, sped up</span></div>
+        <div class="ph" style="width:620px;height:352px"><div class="pl">[ Video 1 ]</div><div class="pd">Demo video, sped up :<br>“Where is the cup?” → drive → look around → found</div></div></div>
+      <div class="panel"><div class="plab">(b) <span>Map view after a run (11/28)</span></div>
         <img class="frame" src="assets/mapview_final.png" style="width:558px"></div>
     </div>
-    <div class="figcap"><b>Fig. 1.</b> (a) The robot answers a spoken query. (b) Memories (dots, color = belief), planned path (orange) and goal.</div>
+    <div class="figcap">(a) The demo, sped up. (b) After a real run on 11/28: memories (dots, color = belief), planned path (orange) and goal.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">How did it know where the cup was?</div></div>
 </section>
 
 <!-- 3 Problem and contributions -->
 <section class="slide content" data-notes="문제: 돌아다니며 본 물건을 기억했다가, 말로 물으면 그 자리로 가서 확인. 입력은 질문 q, 지도 m, 주행 중 쌓은 기억 M. 출력은 그 물건 앞까지 이동하고 found / not found 보고. 제약은 좁은 통로, 2D LiDAR, Jetson 8 GB(워커 약 4.2 GB / 전체 6.8 GB). 기여 세 가지: (1) &quot;있나?&quot;는 베이즈 필터, &quot;어디?&quot;는 칼만 필터로 기억, (2) 좁은 통로용 네 가지 명령 이동, (3) 실제 로봇에서 만난 문제 40건의 분석.">
-  <div><div class="sec">§1 Introduction</div><h2>Problem and Contributions</h2><div class="sum">Find a remembered object from one spoken query</div></div>
+  <div><div class="sec">The Idea</div><h2>What We Wanted</h2><div class="sum">Ask once, and the robot goes there and checks</div></div>
   <div class="body" style="gap:40px">
     <div class="cards">
       <div class="card" style="width:400px"><div class="k">Input</div><div class="s">Spoken query <span class="m">q</span>, map <span class="m">m</span>,<br>memory <span class="m">M</span> built while driving</div></div>
       <div class="arrow">→</div>
       <div class="card hi" style="width:400px"><div class="k">Output</div><div class="s">Drive to the object,<br>report found / not found</div></div>
-      <div class="card" style="width:400px;border-left-color:#b3b3b3"><div class="k" style="color:var(--d-ink)">Constraints</div><div class="s">Narrow aisles · 2D LiDAR<br>Jetson 8 GB</div></div>
+      <div class="card" style="width:400px;border-left-color:#b3b3b3"><div class="k" style="color:var(--d-ink)">Constraints</div><div class="s">Narrow aisles, 2D LiDAR<br>Jetson 8 GB</div>
+        <div style="margin-top:12px;height:12px;background:#e5e5e5;border-radius:6px;overflow:hidden"><div style="width:62%;height:12px;background:#6b6b6b;border-radius:6px"></div></div>
+        <div style="font-size:17px;color:var(--d-label);margin-top:6px">vision worker 4.2 of 6.8 GB</div></div>
     </div>
     <div style="display:flex;align-items:center;gap:40px;padding-left:40px">
     <div style="display:flex;flex-direction:column;gap:14px;flex:1">
-      <div class="ct">Contributions</div>
+      <div class="ct">What we built</div>
       <div class="bl">
         <div class="b"><span class="dot">1.</span><span><strong>Probabilistic object memory</strong> : Bayes + Kalman <span class="cite">[1]</span></span></div>
         <div class="b"><span class="dot">2.</span><span><strong>4-command navigation</strong> for narrow aisles</span></div>
@@ -255,7 +257,7 @@
 
 <!-- 4 Formulation -->
 <section class="slide content dense" data-notes="기억 하나 = 무엇(CLIP 이미지 임베딩 e_i), 어디(위치 μ_i와 공분산 Σ_i, 칼만 필터), 얼마나 확실(로그 오즈 l_i, 베이즈 필터). 질문 q가 오면 CLIP 텍스트 임베딩과의 코사인 유사도를 softmax로 바꾸고 존재 확률 p_i를 곱해 순위 → 상위 3개를 차례로 방문. 이후 §3에서 e_i, μ_i/Σ_i, l_i를 각각 어떻게 갱신하는지.">
-  <div><div class="sec">§2 Formulation</div><h2>Each Memory : What, Where, How Sure</h2><div class="sum">A query is ranked by meaning × belief</div></div>
+  <div><div class="sec">How It Works</div><h2>Each Memory : What, Where, How Sure</h2><div class="sum">A query is ranked by meaning × belief</div></div>
   <div class="body" style="gap:16px">
     <div style="display:flex;align-items:center;justify-content:center;gap:44px">
       <svg width="600" height="300" viewBox="0 0 600 300" style="font-family:'Noto Serif',serif;flex:none">
@@ -265,48 +267,48 @@
         <!-- memory 1: high belief -->
         <ellipse cx="150" cy="90" rx="52" ry="26" transform="rotate(-15 150 90)" fill="#f1f1f1" stroke="#1a1a1a" stroke-width="2.5"/>
         <circle cx="150" cy="90" r="9" fill="#1a1a1a"/>
-        <text x="150" y="56" font-size="19" fill="#1a1a1a" text-anchor="middle" font-style="italic">μ₁, Σ₁ · e₁</text>
+        <text x="150" y="56" font-size="19" fill="#1a1a1a" text-anchor="middle" font-style="italic">μ₁, Σ₁, e₁</text>
         <text x="216" y="104" font-size="20" fill="#2b2b2b" font-weight="700">#1</text>
         <!-- memory 2: medium belief -->
         <ellipse cx="420" cy="215" rx="70" ry="30" transform="rotate(10 420 215)" fill="#ffffff" stroke="#a6a6a6" stroke-width="2.5"/>
         <circle cx="420" cy="215" r="9" fill="#a6a6a6"/>
-        <text x="420" y="270" font-size="19" fill="#6b6b6b" text-anchor="middle" font-style="italic">μ₂, Σ₂ · e₂</text>
+        <text x="420" y="270" font-size="19" fill="#6b6b6b" text-anchor="middle" font-style="italic">μ₂, Σ₂, e₂</text>
         <text x="500" y="208" font-size="20" fill="#2b2b2b" font-weight="700">#2</text>
         <!-- memory 3: low belief -->
         <ellipse cx="470" cy="75" rx="40" ry="22" fill="#ffffff" stroke="#d6d6d6" stroke-width="2.5" stroke-dasharray="6 5"/>
         <circle cx="470" cy="75" r="9" fill="#d6d6d6"/>
-        <text x="470" y="122" font-size="19" fill="#6b6b6b" text-anchor="middle" font-style="italic">μ₃, Σ₃ · e₃</text>
+        <text x="470" y="122" font-size="19" fill="#6b6b6b" text-anchor="middle" font-style="italic">μ₃, Σ₃, e₃</text>
         <text x="520" y="70" font-size="20" fill="#2b2b2b" font-weight="700">#3</text>
         <!-- query -->
         <rect x="40" y="200" width="210" height="52" rx="10" fill="#ffffff" stroke="#9a9a9a" stroke-width="2"/>
         <text x="145" y="233" font-size="19" fill="#2b2b2b" text-anchor="middle"><tspan font-style="italic">q</tspan> = “Where is the cup?”</text>
       </svg>
       <div style="display:flex;flex-direction:column;gap:18px;font-size:23px;line-height:1.3">
-        <div><span class="m" style="color:var(--blue);font-weight:700">e<sub>i</sub></span>&nbsp; CLIP image embedding <span style="color:var(--d-label)">— what</span></div>
-        <div><span class="m" style="color:var(--blue);font-weight:700">μ<sub>i</sub>, Σ<sub>i</sub></span>&nbsp; position, Kalman <span style="color:var(--d-label)">— where</span></div>
-        <div><span class="m" style="color:var(--blue);font-weight:700">l<sub>i</sub></span>&nbsp; log-odds belief <span style="color:var(--d-label)">— how sure</span></div>
-        <div style="font-size:19px;color:var(--d-label)">dot color = <span class="m">p<sub>i</sub></span> (dark = sure) · #n = visit order</div>
+        <div><span class="m" style="color:var(--blue);font-weight:700">e<sub>i</sub></span>&nbsp; CLIP image embedding <span style="color:var(--d-label)">(what)</span></div>
+        <div><span class="m" style="color:var(--blue);font-weight:700">μ<sub>i</sub>, Σ<sub>i</sub></span>&nbsp; position, Kalman <span style="color:var(--d-label)">(where)</span></div>
+        <div><span class="m" style="color:var(--blue);font-weight:700">l<sub>i</sub></span>&nbsp; log-odds belief <span style="color:var(--d-label)">(how sure)</span></div>
+        <div style="font-size:19px;color:var(--d-label)">dot color = <span class="m">p<sub>i</sub></span> (dark = sure), #n = visit order</div>
       </div>
     </div>
-    <div class="eq sm" data-n="1" data-tex="\text{score}_i = \operatorname{softmax}_i\!\left(\frac{\cos(\text{CLIP}(q),\, e_i)}{T}\right)\cdot p_i, \qquad p_i = 1 - \frac{1}{1 + e^{\,l_i}}"></div>
-    <div class="figcap"><b>Fig. 2.</b> A memory item. A query is ranked by text-image similarity <span class="cite">[2]</span> times belief; the top 3 are visited in order.</div>
+    <div class="eq sm" data-tex="\text{score}_i = \operatorname{softmax}_i\!\left(\frac{\cos(\text{CLIP}(q),\, e_i)}{T}\right)\cdot p_i, \qquad p_i = 1 - \frac{1}{1 + e^{\,l_i}}"></div>
+    <div class="figcap">A memory item. A query is ranked by text-image similarity <span class="cite">[2]</span> times belief; the top 3 are visited in order.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Rank by meaning × belief</div></div>
 </section>
 
 <!-- 5 System Overview -->
 <section class="slide content dense" data-notes="가운데 파란 축이 진행 단계. 0단계(점선)는 질문 전에 돌아다니며 기억해 두는 단계: D455f depth로 물체 위치를 재고, 직진 중에도 기억(회전 중만 건너뜀). 질문은 노트북 faster-whisper → SSH → /query. CLIP × 믿음으로 순위(식 1). 이동은 Cartographer 지도 위에서 AMCL로 위치를 잡고 gridnav(직진·좌90°·우90°·정지 네 가지 명령)로. 도착하면 좌우 15°씩 3번 둘러보고 NanoOWL+CLIP으로 재확인. 마룬이 직접 만든 부분.">
-  <div><div class="sec">§3 Method</div><h2>System Overview</h2><div class="sum">From one question to one cup</div></div>
+  <div><div class="sec">How It Works</div><h2>System Overview</h2><div class="sum">From one question to one cup</div></div>
   <div class="body" style="gap:0">
     <div class="flow">
       <div class="axis"></div>
       <div class="axhead">▶</div>
 
       <div class="ly">Software</div>
-      <div class="n pre">NanoOWL · CLIP<br>objmem<br>while driving</div>
+      <div class="n pre">NanoOWL, CLIP<br>objmem<br>while driving</div>
       <div class="n">faster-whisper</div>
       <div class="n own">CLIP text<br>× belief</div>
-      <div class="n own">gridnav · 4 cmds<br>AMCL on<br>Cartographer</div>
+      <div class="n own">gridnav, 4 cmds<br>AMCL on<br>Cartographer</div>
       <div class="n own">look ±15° × 3<br>NanoOWL<br>+ CLIP ≥ 0.5</div>
       <div class="n">map view<br>(orange path)<br>live video</div>
 
@@ -325,7 +327,7 @@
       <div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div><div class="cn"></div>
 
       <div class="ly">Middleware</div>
-      <div class="n pre">ROS 2 · TF2</div>
+      <div class="n pre">ROS 2, TF2</div>
       <div class="n">SSH → /query</div>
       <div class="n">HTTP :8600</div>
       <div class="n">ROS 2 action<br>Fast DDS</div>
@@ -339,23 +341,23 @@
       <div class="n pre">D455f depth<br>Jetson GPU</div>
       <div class="n">Laptop mic</div>
       <div class="n">Jetson Xavier NX</div>
-      <div class="n">LDS-02 · OpenCR</div>
+      <div class="n">LDS-02, OpenCR</div>
       <div class="n">D455f</div>
       <div class="n">Laptop</div>
 
       <div></div><div></div><div></div><div></div><div></div><div></div><div></div>
 
       <div></div>
-      <div class="os">Ubuntu 20.04 · JetPack 5.1.5 · ROS 2 Foxy · Jetson on a power bank</div>
+      <div class="os">Ubuntu 20.04, JetPack 5.1.5, ROS 2 Foxy, Jetson on a power bank</div>
     </div>
-    <div class="figcap" style="margin-top:18px"><b>Fig. 3.</b> Pipeline. Maroon (the only accent color) = what we built; the rest is off-the-shelf <span class="cite">[3]</span>, <span class="cite">[4]</span>, <span class="cite">[6]</span>.</div>
+    <div class="figcap" style="margin-top:18px">Pipeline. Maroon (the only accent color) = what we built; the rest is off-the-shelf <span class="cite">[3]</span>, <span class="cite">[4]</span>, <span class="cite">[6]</span>.</div>
   </div>
   <div class="callout"><div class="bar"></div><div class="tx">Off-the-shelf perception, our own memory and motion</div></div>
 </section>
 
 <!-- 6 Camera to Map -->
-<section class="slide content dense" data-notes="(a) 11/24 실측 화면: NanoOWL 상자 + D455f 거리. 검출+거리 한 장 약 0.08초. (b) 식 (2) 역투영은 강의 밖 우리 추가분. 식 (3)은 강의의 Combining Transformations 그대로. A = AMCL 로봇 자세, B = 카메라 장착 위치(실측), K = 카메라 내부 값. B와 K를 재지 않으면 어떻게 되는지는 §5 Case 1.">
-  <div><div class="sec">§3.1 Method</div><h2>From Camera to Map</h2><div class="sum">Pixel + depth → one point on the map</div></div>
+<section class="slide content dense" data-notes="(a) 11/24 실측 화면: NanoOWL 상자 + D455f 거리. 검출+거리 한 장 약 0.08초. (b) 식 (2) 역투영은 강의 밖 우리 추가분. 식 (3)은 강의의 Combining Transformations 그대로. A = AMCL 로봇 자세, B = 카메라 장착 위치(실측), K = 카메라 내부 값. K의 함정(트러블슈팅 33): 설정 파일의 fx 615는 D435 기준 임시값, D455F 640×480 실측은 386.98(시야각 79.2°). 임시값이었으면 좌우 방향이 약 60% 어긋남. B(장착 위치)는 Case 1에서.">
+  <div><div class="sec">How It Works</div><h2>From Camera to Map</h2><div class="sum">Pixel + depth → one point on the map</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="flex:none"><div class="plab">(a) <span>Detection + depth</span></div>
@@ -370,22 +372,23 @@
           <div class="arrow" style="font-size:28px"><span class="m" style="font-size:22px">A</span>→</div>
           <div class="card hi" style="width:150px;text-align:center;padding:14px 10px"><div class="k" style="font-size:24px">Map</div><div class="s">AMCL pose</div></div>
         </div>
-        <div class="eq sm" data-n="2" style="align-self:stretch" data-tex="\mathbf{p}_{cam} = Z\,K^{-1}\,[\,u,\ v,\ 1\,]^{\top}"></div>
-        <div class="eq sm" data-n="3" style="align-self:stretch" data-tex="\mathbf{p}_{map} = A\,B\,\mathbf{p}_{cam}, \qquad T = \begin{bmatrix} R & \mathbf{t} \\ \mathbf{0}^{\top} & 1 \end{bmatrix}"></div>
+        <div class="eq sm" style="align-self:stretch" data-tex="\mathbf{p}_{cam} = Z\,K^{-1}\,[\,u,\ v,\ 1\,]^{\top}"></div>
+        <div class="eq sm" style="align-self:stretch" data-tex="\mathbf{p}_{map} = A\,B\,\mathbf{p}_{cam}, \qquad T = \begin{bmatrix} R & \mathbf{t} \\ \mathbf{0}^{\top} & 1 \end{bmatrix}"></div>
+        <div class="chip" style="align-self:center"><span><span class="m">K</span> : <span class="m">f</span><sub>x</sub> 615 → 387, we almost used the wrong one</span></div>
       </div>
     </div>
-    <div class="figcap"><b>Fig. 4.</b> (a) NanoOWL <span class="cite">[3]</span> box with D455f depth (11/24). (b) Back-projection, then homogeneous transforms <span class="cite">[7]</span>.</div>
+    <div class="figcap">(a) NanoOWL <span class="cite">[3]</span> box with D455f depth (11/24). (b) Back-projection, then homogeneous transforms <span class="cite">[7]</span>.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Homogeneous coordinates: one matrix per hop</div></div>
 </section>
 
 <!-- 7 Bayes -->
 <section class="slide content dense" data-notes="강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8 = +2.08, 시야 안인데 못 보면 ln(2/9) = −1.50. 그림은 이 두 값으로 계산한 예시(l: 0 → 2.08 → 4.16 → 2.66 → 1.16 → −0.34). 시간 감쇠는 강의 밖 추가분: 물건은 &quot;world is static&quot; 가정을 깨므로 예측 단계를 넣음.">
-  <div><div class="sec">§3.2 Method</div><h2>Is the Cup Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds <span class="cite">[1]</span></div></div>
+  <div><div class="sec">How It Works</div><h2>Is the Cup Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds <span class="cite">[1]</span></div></div>
   <div class="body" style="gap:14px">
     <div style="display:flex;align-items:center;gap:40px;justify-content:center">
       <div style="display:flex;flex-direction:column;gap:22px;flex:1">
-        <div class="eq sm" data-n="4" data-tex="l_t = l_{t-1} + \log \frac{p(z \mid \text{present})}{p(z \mid \text{absent})}"></div>
+        <div class="eq sm" data-tex="l_t = l_{t-1} + \log \frac{p(z \mid \text{present})}{p(z \mid \text{absent})}"></div>
         <div class="bl sm" style="gap:14px;padding-left:20px">
           <div class="b"><span class="dot">•</span><span>Seen : <strong>+2.08</strong></span></div>
           <div class="b"><span class="dot">•</span><span>In view, not seen : <strong>−1.50</strong></span></div>
@@ -418,31 +421,31 @@
         <text x="318" y="326" font-size="17" fill="#6b6b6b" text-anchor="middle">observations</text>
       </svg>
     </div>
-    <div class="figcap"><b>Fig. 5.</b> Example sequence from Eq. (4): two looks, then the cup is moved — three misses bring <span class="m">p</span> below 0.5.</div>
+    <div class="figcap">Example: two looks, then the cup is moved, and three misses bring <span class="m">p</span> below 0.5.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Seen raises the belief, missing lowers it</div></div>
 </section>
 
 <!-- 8 Kalman -->
 <section class="slide content dense" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 §5 Case 4.">
-  <div><div class="sec">§3.3 Method</div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction — the cup does not move <span class="cite">[1]</span></div></div>
+  <div><div class="sec">How It Works</div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction: the cup does not move <span class="cite">[1]</span></div></div>
   <div class="body" style="gap:14px">
     <div style="display:flex;align-items:center;gap:40px">
       <div style="flex:1;display:flex;flex-direction:column;gap:26px">
-        <div class="eq sm" data-n="5" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
-        <div class="eq sm" data-n="6" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
-        <div class="eq sm" data-n="7" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
+        <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
+        <div class="eq sm" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
+        <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
       </div>
       <svg id="gauss" width="600" height="340" style="font-family:'Noto Serif',serif;flex:none"></svg>
     </div>
-    <div class="figcap"><b>Fig. 6.</b> 1D example from the lecture <span class="cite">[7]</span>: memory N(8, 4) and a new look N(6, 1) fuse to N(6.4, 0.8) — a weighted mean.</div>
+    <div class="figcap">1D example from the lecture <span class="cite">[7]</span>: memory N(8, 4) and a new look N(6, 1) fuse to N(6.4, 0.8), a weighted mean.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span></div></div>
 </section>
 
 <!-- 9 Localization and navigation -->
 <section class="slide content dense" data-notes="Cartographer = 강의 Three Traditional Paradigms 중 graph-based. 2D LiDAR는 책상 윗판을 못 보고, 회색(unknown)을 빈 곳으로 읽으면 안 됨 → 실제 지나간 통로만 남긴 지도를 따로 만듦. 단, 통로 지도는 경로 계획에만 쓰고 AMCL에는 원본 지도를 줌(이유는 Case 3). AMCL은 강의의 MCL 그대로. 식 (8)은 강의 odometry motion model: 회전할 때마다 방향 오차, 이동 거리가 그걸 옆 오차로 키움(5 m: 1° → 9 cm, 5° → 44 cm). Nav2는 좁은 통로에서 경로를 못 만들거나 목표 0.31 m 앞에서 포기 → gridnav: A*로 직진과 90° 꺾임만 있는 경로, AMCL 자세를 보며 &quot;축 방향으로 회전 → 모서리까지 직진&quot; 반복. 보내는 명령은 네 가지뿐.">
-  <div><div class="sec">§3.4 Method</div><h2>Localization and Navigation</h2><div class="sum">Two maps, two jobs : full map → AMCL, aisle map → planning</div></div>
+  <div><div class="sec">How It Works</div><h2>Localization and Navigation</h2><div class="sum">Two maps, two jobs : full map → AMCL, aisle map → planning</div></div>
   <div class="body" style="gap:10px">
     <svg width="1300" height="318" viewBox="0 0 1300 318" style="font-family:'Noto Serif',serif">
       <defs><marker id="fa" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9a9a9a"/></marker></defs>
@@ -457,7 +460,7 @@
       <line x1="448" y1="65" x2="480" y2="65" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#fa)"/>
       <rect x="488" y="20" width="250" height="90" rx="10" fill="#f1f1f1" stroke="#a6a6a6" stroke-width="2"/>
       <text x="613" y="58" font-size="22" font-weight="700" fill="#1a1a1a" text-anchor="middle">AMCL = MCL</text>
-      <text x="613" y="86" font-size="18" fill="#2b2b2b" text-anchor="middle">predict · weight · resample</text>
+      <text x="613" y="86" font-size="18" fill="#2b2b2b" text-anchor="middle">predict, weight, resample</text>
       <!-- full map -> aisle map -->
       <line x1="344" y1="148" x2="344" y2="180" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#fa)"/>
       <text x="356" y="170" font-size="16" fill="#6b6b6b">make_nav_map</text>
@@ -468,14 +471,14 @@
       <line x1="448" y1="242" x2="480" y2="242" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#fa)"/>
       <rect x="488" y="197" width="250" height="90" rx="10" fill="#f5eae9" stroke="#cf9a9a" stroke-width="2"/>
       <text x="613" y="235" font-size="22" font-weight="700" fill="#8C2D2D" text-anchor="middle">gridnav</text>
-      <text x="613" y="263" font-size="18" fill="#8C2D2D" text-anchor="middle">A* · 90° corners only</text>
+      <text x="613" y="263" font-size="18" fill="#8C2D2D" text-anchor="middle">A*, 90° corners only</text>
       <!-- AMCL pose -> gridnav -->
       <line x1="613" y1="114" x2="613" y2="190" stroke="#1a1a1a" stroke-width="3" marker-end="url(#fa)"/>
       <text x="625" y="158" font-size="17" fill="#1a1a1a">pose (closed loop)</text>
       <line x1="742" y1="242" x2="774" y2="242" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#fa)"/>
       <rect x="782" y="197" width="230" height="90" rx="10" fill="#fafafa" stroke="#cccccc" stroke-width="2"/>
       <text x="897" y="235" font-size="21" font-weight="700" fill="#2b2b2b" text-anchor="middle">4 commands</text>
-      <text x="897" y="263" font-size="17" fill="#2b2b2b" text-anchor="middle">forward · ⟲90° · ⟳90° · stop</text>
+      <text x="897" y="263" font-size="17" fill="#2b2b2b" text-anchor="middle">forward, ⟲90°, ⟳90°, stop</text>
       <line x1="1016" y1="242" x2="1048" y2="242" stroke="#9a9a9a" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#fa)"/>
       <rect x="1056" y="197" width="242" height="90" rx="10" fill="#f5eae9" stroke="#cf9a9a" stroke-width="2"/>
       <text x="1177" y="235" font-size="21" font-weight="700" fill="#8C2D2D" text-anchor="middle">look ±15° × 3</text>
@@ -489,30 +492,29 @@
       <text x="930" y="104" font-size="18" fill="#2b2b2b" font-style="italic">Δθ</text>
       <text x="1035" y="44" font-size="17" fill="#6b6b6b" text-anchor="middle">every turn adds heading error</text>
     </svg>
-    <div class="eq sm" data-n="8" data-tex="e_{\perp} \approx s \cdot \sin \Delta\theta \qquad (5\text{ m}: 1^\circ \to 9\text{ cm},\ 5^\circ \to 44\text{ cm})"></div>
-    <div class="figcap"><b>Fig. 7.</b> Localization uses the full map; planning uses only the aisles. Eq. (8), the odometry motion model <span class="cite">[1]</span>: every turn adds error, so every turn is exactly 90°.</div>
+    <div class="eq sm" data-tex="e_{\perp} \approx s \cdot \sin \Delta\theta \qquad (5\text{ m}: 1^\circ \to 9\text{ cm},\ 5^\circ \to 44\text{ cm})"></div>
+    <div class="figcap">Localization uses the full map; planning uses only the aisles. Odometry motion model <span class="cite">[1]</span>: every turn adds error, so every turn is exactly 90°.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Known map → errors stop piling up</div></div>
 </section>
 
 <!-- 10 Experiments -->
 <section class="slide content dense" data-notes="11/28 새벽 실제 로봇에서 처음으로 전체 흐름 성공. 질문 3개 모두 found: 00:43 컵 93초 확신도 0.84(경로 +x → −y → +x, 꺾임 2번), 01:31 노트북 112초 + 42초 확신도 0.67(꺾임 3번), 01:35 컵 100초 확신도 0.87(꺾임 3번). 실시간 영상 초당 10장. 데모데이(12/03) 결과로 마지막 줄을 채움.">
-  <div><div class="sec">§4 Experiments</div><h2>Real-Robot Run (11/28)</h2><div class="sum">First full run : see → remember → ask → drive → re-check</div></div>
+  <div><div class="sec">Does It Work?</div><h2>Did It Work? (11/28)</h2><div class="sum">First full run : see → remember → ask → drive → re-check</div></div>
   <div class="body" style="flex-direction:row;align-items:center;justify-content:center;gap:56px">
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div class="ph" style="width:520px;height:230px;flex:none"><div class="pl">[ Photo 3 ]</div><div class="pd">The robot used : TurtleBot3 + 0.815 m mast<br>+ D455f + LDS-02</div></div>
-      <div class="tcap"><b>Table 1.</b> Setup.</div>
+    <div>
+      <div class="tcap">Setup.</div>
       <table class="bt" style="font-size:21px">
         <tr><th>Item</th><th>Value</th></tr>
         <tr><td>Robot</td><td>TurtleBot3 Waffle Pi</td></tr>
-        <tr><td>Compute</td><td>Jetson Xavier NX · ROS 2 Foxy</td></tr>
+        <tr><td>Compute</td><td>Jetson Xavier NX, ROS 2 Foxy</td></tr>
         <tr><td>Camera</td><td>RealSense D455f, 640×480, 0.815 m</td></tr>
-        <tr><td>LiDAR / map</td><td>LDS-02 · room_l4, 13.9 × 7.8 m</td></tr>
+        <tr><td>LiDAR / map</td><td>LDS-02, room_l4 13.9 × 7.8 m</td></tr>
         <tr><td>Objects</td><td>cup, laptop</td></tr>
       </table>
     </div>
     <div>
-      <div class="tcap"><b>Table 2.</b> Queries : planned turns, drive time, belief <span class="m">p</span> at the found object.</div>
+      <div class="tcap">Queries : planned turns, drive time, belief <span class="m">p</span> at the found object.</div>
       <table class="bt" style="font-size:21px">
         <tr><th>Query</th><th class="num">Turns</th><th class="num">Time</th><th class="num"><span class="m">p</span></th><th>Result</th></tr>
         <tr><td>“Where is the cup?”</td><td class="num">2</td><td class="num">93 s</td><td class="num">0.84</td><td><strong>found</strong></td></tr>
@@ -527,7 +529,7 @@
 
 <!-- 11 Ablation -->
 <section class="slide content dense" data-notes="장난감 세계 시뮬레이션(depth 카메라 설정): 위치가 완벽하고 가림이 없어서 절대값보다 비교가 의미. (a) 검색: CLIP 95.0% vs 라벨 일치 43.0%(top-1). CLIP이 틀린 5%는 &quot;phone charger&quot;를 물으면 phone이 1등. (b) 물체 4개를 옮기고 다시 순찰한 뒤: 확률 메모리는 옮긴 물체를 첫 방문에 100% 찾고(질문당 방문 1.00), 유사도만 쓰면 50%(1.80). 데모데이 영상으로 실제 확인.">
-  <div><div class="sec">§4 Experiments</div><h2>Ablation in Simulation</h2><div class="sum">Toy world, 5 seeds × 20 queries — compare, do not read absolute values</div></div>
+  <div><div class="sec">Does It Work?</div><h2>Is Probability Worth It?</h2><div class="sum">Toy world, 5 seeds × 20 queries. Compare, don't trust absolute numbers</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="justify-content:center;gap:14px"><div class="plab">(a) <span>Search : which memory? (top-1)</span></div>
@@ -540,36 +542,38 @@
           <div class="brow"><div class="bn" style="width:150px;font-size:21px">Probabilistic</div><div class="track"><div class="fill mar" style="width:240px;height:34px"></div><div class="bv" style="font-size:22px">100%</div></div></div>
           <div class="brow"><div class="bn" style="width:150px;font-size:21px">Similarity only</div><div class="track"><div class="fill" style="width:120px;height:34px"></div><div class="bv" style="font-size:22px">50%</div></div></div>
         </div>
-        <div style="font-size:19px;color:var(--d-label)">moved object top-1 · visits per query 1.00 vs 1.80</div></div>
+        <div style="font-size:19px;color:var(--d-label)">moved object top-1, visits per query 1.00 vs 1.80</div></div>
       <div class="panel" style="flex:none"><div class="plab">(c) <span>On the robot</span></div>
         <div class="ph" style="width:330px;height:250px"><div class="pl">[ Video 2 ]</div><div class="pd">Move the cup, ask again<br>old place → new place<br>(Demo Day)</div></div></div>
     </div>
-    <div class="figcap"><b>Fig. 8.</b> (a) Text-image similarity <span class="cite">[2]</span> beats label matching. (b) Lowering the old belief finds the moved object on the first visit. (c) The same test on the robot.</div>
+    <div class="figcap">(a) Text-image similarity <span class="cite">[2]</span> beats label matching. (b) Lowering the old belief finds the moved object on the first visit. (c) The same test on the robot.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Lowering the old belief finds the new place</div></div>
 </section>
 
 <!-- 12 Failure analysis overview -->
-<section class="slide content dense" data-notes="트러블슈팅 기록 40건을 층별로 분류. Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network &amp; tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 이론의 가정을 깬 네 사례를 다음 네 장에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.">
-  <div><div class="sec">§5 Failure Analysis</div><h2>40 Problems, 4 Broken Assumptions</h2><div class="sum">Most real-robot bugs broke an assumption of the theory</div></div>
-  <div class="body" style="gap:26px">
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div class="stack">
-        <div class="seg" style="flex:21;background:var(--blue)">Software 21</div>
-        <div class="seg" style="flex:7;background:#6b6b6b">Hardware 7</div>
-        <div class="seg" style="flex:7;background:#9a9a9a">Network 7</div>
-        <div class="seg" style="flex:5;background:#b3b3b3">Mid. 5</div>
+<section class="slide content dense" data-notes="트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network &amp; tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 이론의 가정을 깬 네 사례를 다음 네 장에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.">
+  <div><div class="sec">What Broke</div><h2>40 Things That Broke</h2><div class="sum">Most of them broke an assumption the theory makes</div></div>
+  <div class="body" style="gap:22px">
+    <div style="display:flex;gap:44px;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:none">
+        <div class="tcap" style="margin:0">Problems per lab day</div>
+        <svg width="560" height="214" viewBox="0 0 560 214" style="font-family:'Noto Serif',serif"><line x1="20" y1="180" x2="560" y2="180" stroke="#b3b3b3" stroke-width="2"/><rect x="40" y="68" width="64" height="112" rx="4" fill="#a6a6a6"/><rect x="40" y="176" width="64" height="4" fill="#a6a6a6"/><text x="72" y="60" font-size="19" font-weight="700" fill="#222" text-anchor="middle">8</text><text x="72" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/20</text><rect x="144" y="124" width="64" height="56" rx="4" fill="#a6a6a6"/><rect x="144" y="176" width="64" height="4" fill="#a6a6a6"/><text x="176" y="116" font-size="19" font-weight="700" fill="#222" text-anchor="middle">4</text><text x="176" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/24</text><rect x="248" y="40" width="64" height="140" rx="4" fill="#a6a6a6"/><rect x="248" y="176" width="64" height="4" fill="#a6a6a6"/><text x="280" y="32" font-size="19" font-weight="700" fill="#222" text-anchor="middle">10</text><text x="280" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/25</text><rect x="352" y="26" width="64" height="154" rx="4" fill="#a6a6a6"/><rect x="352" y="176" width="64" height="4" fill="#a6a6a6"/><text x="384" y="18" font-size="19" font-weight="700" fill="#222" text-anchor="middle">11</text><text x="384" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/27</text><rect x="456" y="82" width="64" height="98" rx="4" fill="#8C2D2D"/><rect x="456" y="176" width="64" height="4" fill="#8C2D2D"/><text x="488" y="74" font-size="19" font-weight="700" fill="#222" text-anchor="middle">7</text><text x="488" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/28</text><text x="488" y="52" font-size="16" fill="#8C2D2D" text-anchor="middle">first full run</text></svg>
       </div>
-      <div style="font-size:18px;color:var(--d-label)">Troubleshooting log 11/20 – 11/28, by layer (Network = network &amp; tools, Mid. = middleware)</div>
+      <div style="display:flex;flex-direction:column;gap:10px;flex:1;padding-bottom:30px">
+        <div class="tcap" style="margin:0">By layer</div>
+        <div class="stack" style="gap:2px;background:#fff"><div class="seg" style="flex:21;background:#1a1a1a">21</div><div class="seg" style="flex:7;background:#6b6b6b">7</div><div class="seg" style="flex:7;background:#9a9a9a">7</div><div class="seg" style="flex:5;background:#b3b3b3">5</div></div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:17px;color:#444"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#1a1a1a;display:inline-block"></span>Software</span><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#6b6b6b;display:inline-block"></span>Hardware</span><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#9a9a9a;display:inline-block"></span>Network &amp; tools</span><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:#b3b3b3;display:inline-block"></span>Middleware</span></div>
+      </div>
     </div>
     <div>
-      <div class="tcap"><b>Table 3.</b> Four cases and the assumption each one broke.</div>
+      <div class="tcap">Four cases and the assumption each one broke.</div>
       <table class="bt" style="width:100%">
         <tr><th>Case</th><th>Symptom</th><th>Broken assumption</th><th>Theory</th></tr>
-        <tr><td><strong>1</strong> Sensing</td><td>camera can't see desk tops</td><td><span class="m">B, K</span> are known</td><td>camera model, Eq. (2)–(3)</td></tr>
-        <tr><td><strong>2</strong> Odometry</td><td>L-shaped drive → straight map</td><td>odom follows the wheels</td><td>motion model, Eq. (8)</td></tr>
-        <tr><td><strong>3</strong> Localization</td><td>pose 1.8 m off</td><td>the map is informative</td><td>MCL weights, Eq. (9)</td></tr>
-        <tr><td><strong>4</strong> Association</td><td>one cup → 3 memories</td><td><span class="m">Q<sub>t</sub></span> matches real noise</td><td>Kalman, Eq. (10)</td></tr>
+        <tr><td><strong>1</strong> Hardware</td><td>robot too low for desk tops</td><td>sensors see what we need</td><td>sensor mounting (<span class="m">B</span>)</td></tr>
+        <tr><td><strong>2</strong> Odometry</td><td>L-shaped drive → straight map</td><td>odom follows the wheels</td><td>odometry motion model</td></tr>
+        <tr><td><strong>3</strong> Localization</td><td>pose 1.8 m off</td><td>the map is informative</td><td>MCL weights</td></tr>
+        <tr><td><strong>4</strong> Association</td><td>one cup → 3 memories</td><td><span class="m">Q<sub>t</sub></span> matches real noise</td><td>Kalman filter</td></tr>
       </table>
     </div>
   </div>
@@ -577,13 +581,18 @@
 </section>
 
 <!-- 13 Case 1 -->
-<section class="slide content dense" data-notes="가정: 식 (2)–(3)의 K와 B를 안다. (a) 기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임 → 기둥 위로 올림, 높이 실측 0.815 m(수평). 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). (b) 강의 Range-Bearing Model: 방향만 재는 C920은 통로에서 두 시선이 거의 평행 → 3 m 앞 물체가 약 0.5 m 오차 → D455f로 거리까지. (c) 설정 파일의 fx 615는 D435 기준 임시값, D455F 640×480 실측 386.98(시야각 79.2°). 임시값이면 좌우 방향이 약 60% 어긋남(33번). 55°는 fx 615와 폭 640에서 계산한 시야각.">
-  <div><div class="sec">§5 Failure Analysis</div><h2>Case 1 : Sensing — <span class="m">B</span> and <span class="m">K</span></h2><div class="sum">Stock camera too low, bearing-only camera, placeholder intrinsics</div></div>
+<section class="slide content dense" data-notes="기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 팀 설명: 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤[실습 기록에는 없는 설명 — 발표 전 확인]. 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.">
+  <div><div class="sec">What Broke</div><h2>Case 1 : Raising the Robot</h2><div class="sum">Too low to see desk tops → add a mast</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
-      <div class="panel"><div class="plab">(a) <span>Camera too low → mast</span></div>
-        <div class="ph" style="width:330px;height:104px;flex:none"><div class="pl">[ Photo 4 ]</div><div class="pd">Robot side view : the mast</div></div>
-        <svg width="250" height="218" viewBox="0 0 620 540" style="font-family:'Noto Serif',serif">
+      <div class="panel"><div class="plab">(a) <span>Before : stock height</span></div>
+        <div class="ph" style="width:400px;height:300px;flex:none"><div class="pl">[ Photo 2 ]</div><div class="pd">Before : no mast, stock height<br>(side view)</div></div></div>
+      <div class="parrow">→</div>
+      <div class="panel"><div class="plab">(b) <span>After : mast added</span></div>
+        <div class="ph" style="width:400px;height:300px;flex:none"><div class="pl">[ Photo 3 ]</div><div class="pd">After : mast up, sensor heights matched<br>(same angle as Photo 2)</div></div></div>
+      <div class="parrow">→</div>
+      <div class="panel" style="flex:none"><div class="plab">(c) <span>Why</span></div>
+        <svg width="330" height="287" viewBox="0 0 620 540" style="font-family:'Noto Serif',serif">
           <line x1="10" y1="500" x2="610" y2="500" stroke="#b3b3b3" stroke-width="3"/>
           <rect x="380" y="250" width="220" height="16" rx="3" fill="#fafafa" stroke="#b3b3b3" stroke-width="3"/>
           <line x1="395" y1="266" x2="395" y2="500" stroke="#b3b3b3" stroke-width="3"/>
@@ -605,55 +614,26 @@
           <text x="58" y="312" font-size="30" fill="#1a1a1a" font-weight="700" transform="rotate(-90 58 312)" text-anchor="middle">0.815 m</text>
           <text x="310" y="535" font-size="24" fill="#6b6b6b" text-anchor="middle">stock height : [ ___ m ]</text>
         </svg></div>
-      <div class="parrow">→</div>
-      <div class="panel"><div class="plab">(b) <span>Bearing-only → range-bearing</span></div>
-        <svg width="370" height="320" viewBox="0 0 400 346" style="font-family:'Noto Serif',serif">
-          <text x="10" y="26" font-size="20" font-weight="700" fill="#8C2D2D">C920 : bearing-only</text>
-          <line x1="10" y1="150" x2="390" y2="150" stroke="#b3b3b3" stroke-width="3"/>
-          <circle cx="40" cy="136" r="8" fill="#2b2b2b"/><circle cx="100" cy="136" r="8" fill="#2b2b2b"/>
-          <line x1="40" y1="136" x2="320" y2="56" stroke="#9a9a9a" stroke-width="2.5" stroke-dasharray="8 6"/>
-          <line x1="100" y1="136" x2="320" y2="56" stroke="#9a9a9a" stroke-width="2.5" stroke-dasharray="8 6"/>
-          <ellipse cx="320" cy="56" rx="78" ry="11" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(-20 320 56)"/>
-          <circle cx="320" cy="56" r="5" fill="#8C2D2D"/>
-          <text x="10" y="200" font-size="20" font-weight="700" fill="#1a1a1a">D455f : range-bearing</text>
-          <line x1="10" y1="324" x2="390" y2="324" stroke="#b3b3b3" stroke-width="3"/>
-          <circle cx="40" cy="310" r="8" fill="#2b2b2b"/>
-          <line x1="40" y1="310" x2="320" y2="230" stroke="#1a1a1a" stroke-width="3"/>
-          <ellipse cx="320" cy="230" rx="14" ry="10" fill="#f3f3f3" stroke="#1a1a1a" stroke-width="2.5"/>
-          <circle cx="320" cy="230" r="5" fill="#1a1a1a"/>
-          <text x="170" y="258" font-size="20" fill="#2b2b2b" font-style="italic">r, φ</text>
-        </svg></div>
-      <div class="parrow">→</div>
-      <div class="panel"><div class="plab">(c) <span>Placeholder <span class="m">K</span></span></div>
-        <svg width="370" height="320" viewBox="0 0 380 330" style="font-family:'Noto Serif',serif">
-          <g transform="translate(0,-40)"><path d="M 190 290 L 43.4 112.8 A 230 230 0 0 1 336.6 112.8 Z" fill="#f1f1f1" stroke="#1a1a1a" stroke-width="2.5"/>
-          <path d="M 190 290 L 83.8 86 A 230 230 0 0 1 296.2 86 Z" fill="none" stroke="#8C2D2D" stroke-width="3" stroke-dasharray="9 7"/>
-          <rect x="172" y="282" width="36" height="22" rx="4" fill="#2b2b2b"/></g>
-          <line x1="40" y1="282" x2="78" y2="282" stroke="#1a1a1a" stroke-width="3"/>
-          <text x="88" y="288" font-size="19" fill="#1a1a1a"><tspan font-style="italic">f</tspan><tspan font-size="13" dy="4">x</tspan><tspan dy="-4"> 386.98 → 79.2° (measured)</tspan></text>
-          <line x1="40" y1="310" x2="78" y2="310" stroke="#8C2D2D" stroke-width="3" stroke-dasharray="9 7"/>
-          <text x="88" y="316" font-size="19" fill="#8C2D2D"><tspan font-style="italic">f</tspan><tspan font-size="13" dy="4">x</tspan><tspan dy="-4"> 615 → 55° (placeholder)</tspan></text>
-        </svg></div>
     </div>
-    <div class="figcap"><b>Fig. 9.</b> (a) A 0.815 m mast enters <span class="m">B</span>. (b) Two near-parallel sight lines leave ≈ 0.5 m error along the line. (c) A placeholder <span class="m">f<sub>x</sub></span> skews every bearing <span class="cite">[7]</span>.</div>
+    <div class="figcap">Low, the robot can't see desk tops, and a desk's lower panel can look like a wall. With the mast, the camera sits at 0.815 m.</div>
   </div>
-  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Measure <span class="m">B</span> and <span class="m">K</span> — never assume them</div></div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Fix the body before the code</div></div>
 </section>
 
 <!-- 14 Case 2 -->
-<section class="slide content dense" data-notes="가정: 식 (8)의 motion model은 odom이 바퀴를 따라간다고 봄. (a) ㄱ자로 운전했는데 지도는 일자(11/25). (b) 원인 1: 로봇 드라이버의 odom 방향이 멈춤. 11/25(바퀴 +97.7°, IMU +91.7°, odom 0°), 11/27, 11/28 세 번 반복. 11/28: 바퀴 29° 회전에 odom +0.0°, 바퀴 각도(/joint_states)는 항상 맞음. 원인 2(11/27): LiDAR가 180° 반대로 달림. 앞 0.44 m 물체가 185°에 보였고, 10.7 cm 전진하자 10.5 cm 가까워짐 → 0°가 로봇 뒤. (c) 바퀴 각도로 odom을 직접 계산(differential drive) → +28.4°(바퀴 계산 29°), 스캔은 소프트웨어로 180° 돌림. 결과 room_l4: 13.9 × 7.8 m, 벽 직선, 출발점 복귀 오차 0.14 m.">
-  <div><div class="sec">§5 Failure Analysis</div><h2>Case 2 : Odometry — The Map That Wouldn't Turn</h2><div class="sum">The wheels turned, odometry did not</div></div>
+<section class="slide content dense" data-notes="(a) 보정 전 실패한 SLAM: ㄱ자로 운전했는데 지도는 일자(11/25), 벽이 겹치기도 함(assets/map_straight.png, map_doubled.png가 후보). (b) 원인 1: 로봇 드라이버의 odom 방향이 멈춤. 11/25(바퀴 +97.7°, IMU +91.7°, odom 0°), 11/27, 11/28 세 번 반복. 11/28: 바퀴 29° 회전에 odom +0.0°, 바퀴 각도(/joint_states)는 항상 맞음. 원인 2(11/27): LiDAR가 180° 반대로 달림. 앞 0.44 m 물체가 185°에 보였고, 10.7 cm 전진하자 10.5 cm 가까워짐 → 0°가 로봇 뒤. (c) 보정 후 성공한 SLAM: 바퀴 각도로 odom을 직접 계산(+28.4°, 바퀴 계산 29°), 스캔은 소프트웨어로 180° 돌림 → room_l4 13.9 × 7.8 m, 벽 직선, 출발점 복귀 오차 0.14 m(assets/room_l4_full.png가 후보). 다음 장에서 그 지도가 만들어지는 과정을 배속으로.">
+  <div><div class="sec">What Broke</div><h2>Case 2 : The Map That Wouldn't Turn</h2><div class="sum">The wheels turned, odometry did not</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
-      <div class="panel" style="flex:none"><div class="plab">(a) <span>Symptom</span></div>
-        <img class="frame" src="assets/map_straight.png" style="height:330px"></div>
+      <div class="panel" style="flex:none"><div class="plab">(a) <span>Before : failed SLAM</span></div>
+        <div class="ph" style="width:330px;height:330px;flex:none"><div class="pl">[ Photo 4 ]</div><div class="pd">Failed SLAM<br>(before the fix)</div></div></div>
       <div class="parrow">→</div>
       <div class="panel" style="gap:12px"><div class="plab">(b) <span>Diagnosis</span></div>
-        <table class="bt" style="align-self:stretch">
-          <tr><th>Turn in place</th><th class="num">heading</th></tr>
-          <tr><td>Wheels</td><td class="num">+29°</td></tr>
-          <tr><td>odom (driver)</td><td class="num"><strong class="acc">+0.0°</strong></td></tr>
-        </table>
+        <div class="tcap" style="align-self:flex-start;margin:0">Turn in place, heading</div>
+        <div class="bars" style="gap:10px;align-self:stretch">
+          <div class="brow"><div class="bn" style="width:150px;font-size:19px">wheels</div><div class="track"><div class="fill" style="width:174px;height:30px;background:#6b6b6b"></div><div class="bv" style="font-size:21px">+29°</div></div></div>
+          <div class="brow"><div class="bn" style="width:150px;font-size:19px;white-space:nowrap">odom (driver)</div><div class="track"><div class="fill mar" style="width:3px;height:30px"></div><div class="bv acc" style="font-size:21px">+0.0°</div></div></div>
+        </div>
         <svg width="330" height="190" viewBox="0 0 330 190" style="font-family:'Noto Serif',serif">
           <rect x="105" y="60" width="90" height="80" rx="10" fill="#fafafa" stroke="#cccccc" stroke-width="2"/>
           <line x1="150" y1="100" x2="290" y2="100" stroke="#1a1a1a" stroke-width="3" marker-end="url(#fa2)"/>
@@ -666,21 +646,30 @@
           <text x="165" y="170" font-size="18" fill="#8C2D2D" text-anchor="middle">object ahead seen at 185°</text>
         </svg></div>
       <div class="parrow">→</div>
-      <div class="panel" style="gap:10px"><div class="plab">(c) <span>Fix</span></div>
-        <img class="frame" src="assets/room_l4_full.png" style="width:360px">
+      <div class="panel" style="gap:10px"><div class="plab">(c) <span>After : working SLAM</span></div>
+        <div class="ph" style="width:380px;height:230px;flex:none"><div class="pl">[ Photo 5 ]</div><div class="pd">Working SLAM<br>(after the fix)</div></div>
         <div class="bl sm" style="gap:6px;align-self:stretch">
           <div class="b" style="font-size:21px"><span class="dot">•</span><span>heading from wheels : <strong>+28.4°</strong></span></div>
           <div class="b" style="font-size:21px"><span class="dot">•</span><span>rotate the scan 180°</span></div>
         </div></div>
     </div>
-    <div class="figcap"><b>Fig. 10.</b> (a) L-shaped drive, straight map (11/25). (b) Odometry froze; the LiDAR was mounted backwards. (c) After both fixes: straight walls, 0.14 m loop error.</div>
+    <div class="figcap">(a) L-shaped drive, straight map (11/25). (b) Odometry froze; the LiDAR was mounted backwards. (c) After both fixes: straight walls, 0.14 m loop error.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Check odometry before blaming SLAM</div></div>
 </section>
 
-<!-- 15 Case 3 -->
+<!-- 15 Time-lapse -->
+<section class="slide content dense" data-notes="보정이 끝난 뒤 Cartographer로 room_l4를 만드는 과정을 배속으로. 네 가지 명령 조종기(직진, 좌우 90°, 정지)로만 운전해서 회전이 넘치지 않음. 지도가 자라면서 벽이 곧게 이어지고, 출발점으로 돌아오면 고리가 닫힘(복귀 오차 0.14 m). 배속 배율은 영상에 맞춰 [ ___ ×]로 말하기. 영상이 도는 동안은 짧게: &quot;이번엔 벽이 곧습니다.&quot;">
+  <div><div class="sec">What Broke</div><h2>Building the Map, Fast-Forward</h2><div class="sum">After the fixes : room_l4, 13.9 × 7.8 m, loop closes within 0.14 m</div></div>
+  <div class="body">
+    <div class="ph" style="width:1240px;height:560px;flex:none;align-self:center"><div class="pl">[ Video 3 ]</div><div class="pd">SLAM time-lapse : Cartographer builds room_l4 as the robot drives (sped up)</div></div>
+  </div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Straight walls, and the loop closes</div></div>
+</section>
+
+<!-- 16 Case 3 -->
 <section class="slide content dense" data-notes="가정: 식 (9)의 likelihood field가 파티클을 구별해 준다. (a) 몇 m 주행 뒤 지도 화면의 로봇이 실제와 다른 책상 줄(1.8 m 차이), 그 위치로 기억한 컵도 엉뚱한 곳. AMCL에 통로만 남긴 지도를 줬음. (b) 통로 밖이 전부 벽이라 어느 파티클이든 스캔이 잘 맞아 보임 → 가중치가 고만고만 → 사실상 바퀴 기록만 따라감. 확인: 현재 스캔을 원본 지도 전체에 맞춰 봄. AMCL이 믿는 위치는 스캔의 38%만 벽에 닿고, 다시 찾은 위치는 86%. (c) 위치 추정은 원본 지도, 경로 계획만 통로 지도. 주행 후 AMCL과 스캔 맞춤 차이 3 cm, 2°. 위치 보정 도구 relocalize.sh: 처음 위치를 몰라도 스캔을 지도 전체에 맞춰 AMCL에 알려 줌(9초). (트러블슈팅 34)">
-  <div><div class="sec">§5 Failure Analysis</div><h2>Case 3 : Localization — Right Map, Wrong Place</h2><div class="sum">AMCL on the aisle-only map → <strong class="acc">1.8 m</strong> off</div></div>
+  <div><div class="sec">What Broke</div><h2>Case 3 : Right Map, Wrong Place</h2><div class="sum">AMCL on the aisle-only map → <strong class="acc">1.8 m</strong> off</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="gap:10px"><div class="plab">(a) <span>Symptom</span></div>
@@ -688,7 +677,7 @@
         <div style="font-size:19px;color:var(--maroon)">aisle map → AMCL : pose 1.8 m off</div></div>
       <div class="parrow">→</div>
       <div class="panel" style="gap:14px;justify-content:center"><div class="plab">(b) <span>Diagnosis</span></div>
-        <div class="eq xs" data-n="9" style="align-self:stretch" data-tex="w_t^{[m]} = p\big(z_t \mid x_t^{[m]},\, m\big)"></div>
+        <div class="eq xs" style="align-self:stretch" data-tex="w_t^{[m]} = p\big(z_t \mid x_t^{[m]},\, m\big)"></div>
         <div class="bars" style="gap:10px;align-self:stretch">
           <div class="brow"><div class="bn" style="width:130px;font-size:19px">AMCL pose</div><div class="track"><div class="fill mar" style="width:84px;height:30px"></div><div class="bv" style="font-size:21px">38%</div></div></div>
           <div class="brow"><div class="bn" style="width:130px;font-size:19px">re-localized</div><div class="track"><div class="fill blue" style="width:189px;height:30px"></div><div class="bv" style="font-size:21px">86%</div></div></div>
@@ -696,21 +685,21 @@
         <div style="font-size:18px;color:var(--d-label)">scan beams on walls of the full map</div></div>
       <div class="parrow">→</div>
       <div class="panel" style="gap:10px"><div class="plab">(c) <span>Fix</span></div>
-        <div class="ph" style="width:370px;height:208px;flex:none"><div class="pl">[ Photo 2 ]</div><div class="pd">RViz : AMCL particles converge<br>on the full map</div></div>
-        <div style="font-size:19px;color:var(--blue)">full map → AMCL · residual 3 cm, 2°</div></div>
+        <div class="ph" style="width:370px;height:208px;flex:none"><div class="pl">[ Photo 6 ]</div><div class="pd">RViz : AMCL particles converge<br>on the full map</div></div>
+        <div style="font-size:19px;color:var(--blue)">full map → AMCL, residual 3 cm, 2°</div></div>
     </div>
-    <div class="figcap"><b>Fig. 11.</b> (a) Outside the aisles everything is wall. (b) Every particle fits, so the weights (9) carry no information. (c) Full map → AMCL, aisle map → planning only.</div>
+    <div class="figcap">(a) Outside the aisles everything is wall. (b) Every particle fits, so the weights carry no information. (c) Full map → AMCL, aisle map → planning only.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">A map that fits everywhere tells nothing</div></div>
 </section>
 
-<!-- 16 Case 4 -->
+<!-- 17 Case 4 -->
 <section class="slide content dense" data-notes="가정: 식 (5)의 Q_t가 실제 잡음과 같다. (a) 11/28: 같은 컵이 10~20 cm 간격으로 기억 2~3개. (b) 원인 1: NanoOWL이 컵 몸통과 빨대까지 포함한 컵을 각각 상자로 냄, 두 상자 IoU 약 0.5라 기존 기준 0.7로는 둘 다 남음. 원인 2: 새 관측을 같은 물체로 볼지는 식 (10)의 마할라노비스 거리. Q_t(방향 1.7°, 거리 2 cm)가 실제 오차(AMCL 방향만 1~2°, 여기에 장착 오차)보다 작아서 다른 위치에서 본 같은 컵을 &quot;다른 물체&quot;로 판단. (c) 표 4: IoU 0.5(작은 상자가 80% 이상 큰 상자 안이면 제거), σ_bearing 0.03→0.06 rad, σ_range 0.02→0.05 m, γ 3.0→4.0, CLIP 유사도 기준 0.80→0.75. 효과는 한 번의 주행에서만 확인(한계).">
-  <div><div class="sec">§5 Failure Analysis</div><h2>Case 4 : Association — One Cup, Many Memories</h2><div class="sum"><span class="m">Q<sub>t</sub></span> smaller than reality → one cup splits</div></div>
+  <div><div class="sec">What Broke</div><h2>Case 4 : One Cup, Many Memories</h2><div class="sum"><span class="m">Q<sub>t</sub></span> smaller than reality → one cup splits</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="flex:none;width:300px"><div class="plab">(a) <span>Symptom</span></div>
-        <div class="ph" style="width:270px;height:120px;flex:none"><div class="pl">[ Photo 5 ]</div><div class="pd">Live view : one cup,<br>two boxes</div></div>
+        <div class="ph" style="width:270px;height:120px;flex:none"><div class="pl">[ Photo 7 ]</div><div class="pd">Live view : one cup,<br>two boxes</div></div>
         <svg width="216" height="200" viewBox="0 0 270 250" style="font-family:'Noto Serif',serif">
           <ellipse cx="85" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(-20 85 110)"/>
           <ellipse cx="185" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(20 185 110)"/>
@@ -722,14 +711,14 @@
         </svg></div>
       <div class="parrow">→</div>
       <div class="panel" style="gap:16px;justify-content:center;flex:1.3"><div class="plab">(b) <span>Diagnosis</span></div>
-        <div class="eq xs" data-n="10" style="align-self:stretch" data-tex="d = \sqrt{(z_t - \mu)^{\top} (\Sigma + Q_t)^{-1} (z_t - \mu)} \;\le\; \gamma"></div>
+        <div class="eq xs" style="align-self:stretch" data-tex="d = \sqrt{(z_t - \mu)^{\top} (\Sigma + Q_t)^{-1} (z_t - \mu)} \;\le\; \gamma"></div>
         <div class="bl sm" style="gap:10px;align-self:stretch">
           <div class="b" style="font-size:21px"><span class="dot">•</span><span><span class="m">Q<sub>t</sub></span> : 1.7°, 2 cm &nbsp;&lt;&nbsp; real : AMCL alone 1–2°</span></div>
           <div class="b" style="font-size:21px"><span class="dot">•</span><span>Two boxes per cup (IoU ≈ 0.5)</span></div>
         </div></div>
       <div class="parrow">→</div>
       <div class="panel" style="flex:none;gap:8px"><div class="plab">(c) <span>Fix</span></div>
-        <div class="tcap" style="align-self:flex-start"><b>Table 4.</b> Before → after.</div>
+        <div class="tcap" style="align-self:flex-start">Before → after.</div>
         <table class="bt">
           <tr><th></th><th class="num">before</th><th class="num">after</th></tr>
           <tr><td>box IoU</td><td class="num">0.7</td><td class="num"><strong>0.5</strong></td></tr>
@@ -738,14 +727,14 @@
           <tr><td>gate <span class="m">γ</span></td><td class="num">3.0</td><td class="num"><strong>4.0</strong></td></tr>
         </table></div>
     </div>
-    <div class="figcap"><b>Fig. 12.</b> (a) One cup became several memories. (b) With <span class="m">Q<sub>t</sub></span> too small, the gate (10) rejects the same cup seen from elsewhere. (c) <span class="m">Q<sub>t</sub></span> raised to the real error.</div>
+    <div class="figcap">(a) One cup became several memories. (b) With <span class="m">Q<sub>t</sub></span> too small, the gate rejects the same cup seen from elsewhere. (c) <span class="m">Q<sub>t</sub></span> raised to the real error.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">An overconfident <span class="m">Q<sub>t</sub></span> splits one object</div></div>
 </section>
 
-<!-- 17 Limitations and conclusion -->
+<!-- 18 Limitations and conclusion -->
 <section class="slide content" data-notes="한계: (1) 실습실 모니터가 &quot;a laptop&quot;으로 잡혀 노트북 기억이 여러 개(11/28 노트북 기억 19개 중 대부분) → 질문 때 모니터로 갈 수 있음. (2) 같은 물체가 기억 여러 개로 나뉘던 문제의 수정 효과는 한 번의 주행으로만 확인. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.">
-  <div><div class="sec">§6 Conclusion</div><h2>Limitations and Conclusion</h2></div>
+  <div><div class="sec">Wrap-up</div><h2>What's Left &amp; Takeaways</h2></div>
   <div class="body" style="gap:40px">
     <div class="cols">
       <div class="col">
@@ -757,11 +746,11 @@
         </div>
       </div>
       <div class="col">
-        <div class="ct">Conclusion</div>
+        <div class="ct">Takeaways</div>
         <div class="bl">
-          <div class="b"><span class="dot">•</span><span>Probabilistic memory works on a real robot : <strong>3 / 3</strong></span></div>
-          <div class="b"><span class="dot">•</span><span>Most bugs broke an <strong>assumption</strong> of the theory</span></div>
-          <div class="b"><span class="dot">•</span><span>Keep uncertainty explicit — and <strong>honest</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>Works on a real robot : <strong>3 / 3</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>Bugs broke the theory's <strong>assumptions</strong></span></div>
+          <div class="b"><span class="dot">•</span><span>Keep uncertainty explicit, and <strong>honest</strong></span></div>
         </div>
       </div>
     </div>
@@ -770,7 +759,7 @@
   <div class="callout"><div class="bar"></div><div class="tx">Thank you</div></div>
 </section>
 
-<!-- 18 References -->
+<!-- 19 References -->
 <section class="slide content" data-notes="참고 문헌.">
   <h2 style="margin-bottom:24px">References</h2>
   <div class="refs">
@@ -793,7 +782,7 @@
   slides.forEach(function(s, i){
     if(!s.classList.contains('content')) return;
     var f = document.createElement('div'); f.className = 'foot';
-    f.innerHTML = '<span>Team 6 · Intelligent Robotics, UOS</span><span class="c">Where Is My Cup?</span><span class="r">' + (i+1) + ' / ' + N + '</span>';
+    f.innerHTML = '<span>Team 6, Intelligent Robotics, UOS</span><span class="c">Where Is My Cup?</span><span class="r">' + (i+1) + ' / ' + N + '</span>';
     s.appendChild(f);
   });
   // gaussians (slide 8): prior N(8,4), measurement N(6,1), fused N(6.4,0.8)

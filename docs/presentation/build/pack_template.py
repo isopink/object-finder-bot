@@ -29,23 +29,23 @@ def version():
     return m.group(1) if m else "?"
 
 
-def readme(ver, today):
+def readme(ver, today, slides):
     return f"""# UOS 발표 디자인 템플릿 v{ver}
 
 만든 날: {today}. 원본은 저장소 `docs/presentation/` 이고, 템플릿을 고칠 때마다
 `python build/pack_template.py` 로 이 zip을 다시 만든다.
 
 ## 들어 있는 것
-- `DESIGN.md` : 디자인 규칙. 흑백 톤 + 강조색 하나(10장), 논문 리뷰 형식(9장), 표지 대표 이미지(11장)
+- `DESIGN.md` : 디자인 규칙. 정갈한 겉모습과 가벼운 분위기(9장), 흑백 톤과 강조색 하나(10장), 표지 대표 이미지(11장), 사진과 영상 칸(12장)
 - `Rules.md` : 원고(Text.md) 기호 → 슬라이드 요소
 - `build/export.py` : deck.html → PDF + 편집 가능한 PPTX (`pip install python-pptx playwright`, 설치된 Chrome 사용)
-- `vendor/` : KaTeX, Noto Serif (오프라인에서도 같은 모양)
-- `example/` : 실제로 쓴 덱 한 벌 (Where Is My Cup?, 18장). 새 덱은 이 폴더를 복사해서 시작
+- `vendor/` : KaTeX와 Noto Serif (오프라인에서도 같은 모양)
+- `example/` : 실제로 쓴 덱 한 벌 (Where Is My Cup?, {slides}장). 새 덱은 이 폴더를 복사해서 시작
 
 ## 새 덱 만드는 순서
 1. `example/` 를 새 폴더로 복사하고 `Text.md` 부터 고친다 (`Rules.md` 기호).
 2. 표지 대표 이미지를 `assets/` 에 넣고 `Text.md` 머리말 `cover-image` 를 바꾼다.
-3. `deck.html` 을 원고에 맞게 고친다. 색·글꼴·여백은 `DESIGN.md` 값만 쓴다.
+3. `deck.html` 을 원고에 맞게 고친다. 색, 글꼴, 여백은 `DESIGN.md` 값만 쓴다.
 4. 그 폴더에서 `python ../build/export.py --deck deck.html --out out --name 덱이름 --preview`
 """
 
@@ -61,7 +61,7 @@ def main():
     vendor = [p for p in sorted((HERE / "vendor").rglob("*")) if p.is_file()]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(OUT, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr(ROOT + "README.md", readme(ver, today))
+        z.writestr(ROOT + "README.md", readme(ver, today, deck.count('<section class="slide')))
         for name in ("DESIGN.md", "Rules.md", "build/export.py"):
             z.write(HERE / name, ROOT + name)
         for p in vendor:
