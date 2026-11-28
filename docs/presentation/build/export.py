@@ -132,8 +132,8 @@ def E(px):
 def font_name(family):
     first = family.split(",")[0].strip().strip("'\"")
     if first.lower() in ("katex_main", "katex_math"):
-        return "Noto Serif"
-    return first or "Noto Serif"
+        return "Pretendard"
+    return first or "Pretendard"
 
 
 def add_shape(slide, it):
@@ -237,7 +237,7 @@ def add_text(slide, it):
         if ea is None:
             ea = rpr.makeelement(qn("a:ea"), {})
             rpr.append(ea)
-        ea.set("typeface", "Noto Sans KR")
+        ea.set("typeface", "Pretendard")
         if r["ls"]:
             rpr.set("spc", str(int(round(r["ls"] * 0.5 * 100))))
 
@@ -247,7 +247,7 @@ def main():
     here = Path(__file__).resolve().parent.parent
     ap.add_argument("--deck", default=str(here / "deck.html"))
     ap.add_argument("--out", default=str(here / "out"))
-    ap.add_argument("--name", default="where_is_my_banana")
+    ap.add_argument("--name", default="where_is_my_cup")
     ap.add_argument("--preview", action="store_true", help="also save one PNG per slide")
     args = ap.parse_args()
 
