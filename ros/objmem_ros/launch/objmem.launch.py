@@ -18,6 +18,7 @@ ARGS = [
     ("worker_url", "http://127.0.0.1:8600", "vision worker URL"),
     ("map_yaml", "", "map_saver .yaml drawn under the objects in mapview"),
     ("search_log", "", "JSON-lines search log for scripts/evaluate.py"),
+    ("evidence_log", "", "JSON-lines log of every look at a remembered place (scripts/fit_detection_range.py)"),
     ("start_mark", "", "map view: 'x y' of the start point, drawn as an X (empty = none)"),
     ("nav_action", "navigate_to_pose", "NavigateToPose action the finder sends goals to (navigate_to_pose_4cmd: gridnav)"),
     ("nav_timeout_s", "120.0", "the finder gives up on one goal after this many seconds"),

@@ -201,6 +201,10 @@ OWL_DEFAULT_PROMPTS = (
     "a keyboard", "a computer mouse", "a scissors", "a teddy bear", "a shoe", "a ball",
 )
 OWL_DEFAULT_ENGINE = "~/nanoowl/data/owl_image_encoder_patch32.engine"
+# Look-alikes: OWL gives every box the best of the phrases it was asked for. Asked only for
+# "a cup, a laptop", the monitors of the classroom came back as "laptop" (most of the laptop
+# memories of 2026-11-28). Asked for these too, a monitor gets its own name and is dropped.
+OWL_DEFAULT_DISTRACTORS = ("a computer monitor",)
 
 
 def _box_iou(a: Sequence[int], b: Sequence[int]) -> float:
@@ -251,12 +255,23 @@ class OwlDetector(object):
     nanoowl runs the encoder in PyTorch (slower). Labels are the prompts without the
     leading article ("water bottle"). `threshold` is OWL's score, which is lower than
     detectNet's: 0.1-0.2 keeps real objects, 0.3+ keeps only clear ones.
+
+    `distractors` are phrases for look-alikes of the wanted objects (default: a computer
+    monitor, which was taken for a laptop). They are asked for together with the prompts,
+    and their boxes are not returned. A returned box is also dropped when a stronger
+    look-alike box overlaps it by more than `nms_iou` (IoU only: the screen of a real
+    laptop lies inside the laptop box and must not remove it). A phrase that is also in
+    `prompts` is wanted, not a look-alike. `last_ignored` holds the look-alike boxes of
+    the last frame (for the live view); every `report_every` frames one line says how
+    often they appeared.
     """
 
     def __init__(self, prompts: Optional[Sequence[str]] = None, engine: Optional[str] = OWL_DEFAULT_ENGINE,
                  threshold: float = 0.15, model: str = "google/owlvit-base-patch32",
                  nms_iou: float = 0.5, max_boxes: int = 20, nms_inside: float = 0.8,
-                 ignore: Optional[Sequence[str]] = None, **_unused: Any) -> None:
+                 ignore: Optional[Sequence[str]] = None,
+                 distractors: Optional[Sequence[str]] = OWL_DEFAULT_DISTRACTORS,
+                 report_every: int = 200, **_unused: Any) -> None:
         import os
         import sys
         try:
@@ -269,10 +284,21 @@ class OwlDetector(object):
             from nanoowl.owl_predictor import OwlPredictor
         from PIL import Image
         self._Image = Image
-        self.prompts = [p.strip() for p in (prompts or OWL_DEFAULT_PROMPTS) if p and p.strip()]
-        if not self.prompts:
+        wanted = [p.strip() for p in (prompts or OWL_DEFAULT_PROMPTS) if p and p.strip()]
+        if not wanted:
             raise ValueError("OwlDetector needs at least one prompt")
+        wanted_labels = set(_strip_article(p).lower() for p in wanted)
+        self.distractors = []  # type: List[str]
+        for d in (distractors or ()):
+            d = d.strip() if d else ""
+            if d and _strip_article(d).lower() not in wanted_labels and d not in self.distractors:
+                self.distractors.append(d)
+        self.distractor_labels = set(_strip_article(d).lower() for d in self.distractors)
+        self.prompts = wanted + self.distractors          # everything OWL is asked for
         self.labels = [_strip_article(p) for p in self.prompts]
+        self.last_ignored = []  # type: List[RawBox]
+        self.report_every = int(report_every)
+        self._n_frames = self._n_lookalike_frames = self._n_removed = 0
         self.threshold = float(threshold)
         self.nms_iou = float(nms_iou)
         self.nms_inside = float(nms_inside)
@@ -295,6 +321,7 @@ class OwlDetector(object):
         out = self.predictor.predict(image=image, text=self.prompts,
                                      text_encodings=self.text_encodings, threshold=self.threshold)
         boxes = []  # type: List[RawBox]
+        lookalikes = []  # type: List[RawBox]
         xyxy = _to_numpy(out.boxes).reshape(-1, 4)
         scores = _to_numpy(out.scores).reshape(-1)
         labels = _to_numpy(out.labels).reshape(-1)
@@ -305,10 +332,29 @@ class OwlDetector(object):
             label = self.labels[int(k)] if 0 <= int(k) < len(self.labels) else str(int(k))
             if label.lower() in self.ignore:
                 continue
-            boxes.append(RawBox(box=box, label=label, conf=float(s)))
-        boxes = nms_boxes(boxes, self.nms_iou, self.max_boxes, inside=self.nms_inside)
+            if label.lower() in self.distractor_labels:
+                lookalikes.append(RawBox(box=box, label=label, conf=float(s)))
+            else:
+                boxes.append(RawBox(box=box, label=label, conf=float(s)))
+        boxes = nms_boxes(boxes, self.nms_iou, 0, inside=self.nms_inside)
+        kept = [b for b in boxes
+                if not any(d.conf > b.conf and _box_iou(b.box, d.box) > self.nms_iou for d in lookalikes)]
+        self._report(len(lookalikes), len(boxes) - len(kept))
+        self.last_ignored = lookalikes
+        if self.max_boxes:
+            kept = kept[:self.max_boxes]
         self.timing.add(time.time() - t0)
-        return boxes
+        return kept
+
+    def _report(self, n_lookalikes: int, n_removed: int) -> None:
+        self._n_frames += 1
+        self._n_lookalike_frames += int(n_lookalikes > 0)
+        self._n_removed += n_removed
+        if self.distractors and self.report_every > 0 and self._n_frames >= self.report_every:
+            print("OwlDetector: last {} frames: a look-alike ({}) in {} of them, {} boxes removed by one".format(
+                self._n_frames, ", ".join(sorted(self.distractor_labels)), self._n_lookalike_frames,
+                self._n_removed), flush=True)
+            self._n_frames = self._n_lookalike_frames = self._n_removed = 0
 
     def fps(self) -> float:
         return self.timing.fps()

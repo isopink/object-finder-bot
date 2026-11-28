@@ -99,6 +99,7 @@ class Params:
     """All tunable values. config/default.yaml holds the same keys (flat)."""
     # Existence confidence (proposal 4.3)
     d: float = 0.8              # P(detect | present)
+    d_by_range: List[List[float]] = field(default_factory=list)  # rows [up to this distance (m), P(detect | present)]; [] = d everywhere
     f: float = 0.1              # P(detect | absent)
     tau: float = 600.0          # time-decay constant (s)
     p_init: float = 0.7         # confidence of a new memory
@@ -146,6 +147,7 @@ class Params:
     worker_url: str = "http://127.0.0.1:8600"
     mapview_port: int = 8555
     search_log: str = ""        # JSON-lines log of every query (scripts/evaluate.py reads it); "" = no log
+    evidence_log: str = ""      # JSON-lines log of every look at a remembered place (scripts/fit_detection_range.py); "" = no log
     # Speech queries (extension)
     whisper_model: str = "base.en"
     mic_device: str = ""        # ALSA device for arecord, e.g. plughw:2,0; "" = default

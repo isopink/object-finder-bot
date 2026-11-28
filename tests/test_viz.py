@@ -118,3 +118,17 @@ def test_planned_route_is_drawn_in_orange():
     orange = (abs(b[..., 0] - 245) < 20) & (abs(b[..., 1] - 130) < 25) & (b[..., 2] < 60)
     before = ((abs(a[..., 0] - 245) < 20) & (abs(a[..., 1] - 130) < 25) & (a[..., 2] < 60)).sum()  # the p colour legend
     assert orange.sum() > before + 1000
+
+
+def test_path_is_a_blue_line_broken_at_none():
+    from PIL import Image
+    import io
+    bounds = (0.0, 0.0, 4.0, 4.0)
+    png = draw_map([], path=[(0.5, 2.0), (1.5, 2.0), None, (2.5, 2.0), (3.5, 2.0)], bounds=bounds, size=440)
+    px = np.asarray(Image.open(io.BytesIO(png)).convert("RGB")).astype(int)
+
+    def is_blue(x_m):          # y = 2 m, on the 100 px per meter canvas (left 20, top 28)
+        r, g, b = px[28 + 200, 20 + int(x_m * 100)]
+        return b > 200 and r < 90
+    assert is_blue(0.75) and is_blue(3.25)
+    assert not is_blue(2.25)                               # the gap between the two pieces

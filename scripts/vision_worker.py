@@ -61,6 +61,9 @@ def build_parser():
                          "frame, which puts tile00..tile22 into the memory)")
     ap.add_argument("--owl-prompts", default=None,
                     help="comma separated phrases for the owl detector, e.g. 'a banana,a water bottle' (default: built-in list)")
+    ap.add_argument("--owl-distractors", default=None,
+                    help="comma separated look-alike phrases the owl detector asks for and drops "
+                         "(default: 'a computer monitor'; 'none' = no look-alikes)")
     ap.add_argument("--clip-model", default="ViT-B-32")
     ap.add_argument("--clip-pretrained", default="laion2b_s34b_b79k")
     ap.add_argument("--no-fp16", action="store_true")
@@ -106,6 +109,9 @@ def build_parts(args, params):
             det_kw["engine"] = args.owl_engine
         if args.owl_prompts:
             det_kw["prompts"] = [s for s in args.owl_prompts.split(",") if s.strip()]
+        if args.owl_distractors is not None:
+            det_kw["distractors"] = ([] if args.owl_distractors.strip().lower() == "none"
+                                     else [s for s in args.owl_distractors.split(",") if s.strip()])
     detector = make_detector(args.detector, **det_kw)
     camera = None
     if kind != "none":

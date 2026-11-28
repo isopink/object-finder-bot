@@ -261,7 +261,7 @@ def test_owl_labels_clip_nms_and_ignore(monkeypatch):
     det = make_detector("owl", prompts=["a water bottle", "a bottle", "an apple", "a person"],
                         engine=None, threshold=0.12, ignore=["person"])
     out = det.detect(rgb_image())
-    assert calls["texts"] == ["a water bottle", "a bottle", "an apple", "a person"]
+    assert calls["texts"] == ["a water bottle", "a bottle", "an apple", "a person", "a computer monitor"]
     assert calls["engine"] is None and calls["threshold"] == 0.12 and calls["enc"] == "enc"
     assert calls["image"].size == (640, 480)
     # "bottle" overlaps "water bottle" (IoU > 0.7) and is dropped, the person is
@@ -293,3 +293,47 @@ def test_nms_drops_a_box_inside_another_one_of_the_same_object():
     assert len(detectors.nms_boxes([body, with_straw, other], iou=0.7)) == 3           # the old rule keeps both
     kept = detectors.nms_boxes([body, with_straw, other], iou=0.7, inside=0.8)
     assert [b.conf for b in kept] == [0.40, 0.25]
+
+
+def test_owl_lookalikes_are_asked_for_and_dropped(monkeypatch):
+    """Prompts 0 cup, 1 laptop; 2 is the look-alike "computer monitor"."""
+    pytest.importorskip("PIL")
+    calls = install_owl(monkeypatch,
+                        [[100, 100, 300, 250],     # monitor A under its own name
+                         [105, 102, 298, 255],     # monitor A again as a weaker "laptop": removed
+                         [400, 100, 600, 300],     # a real laptop
+                         [420, 110, 580, 200],     # its screen as a stronger "monitor": inside, IoU 0.36
+                         [20, 300, 60, 360]],      # a cup
+                        [0.45, 0.22, 0.30, 0.40, 0.50],
+                        [2, 1, 1, 2, 0])
+    det = make_detector("owl", prompts=["a cup", "a laptop"], engine=None, report_every=1)
+    out = det.detect(rgb_image())
+    assert calls["texts"] == ["a cup", "a laptop", "a computer monitor"]
+    assert [(b.label, b.box) for b in out] == [("cup", (20, 300, 60, 360)), ("laptop", (400, 100, 600, 300))]
+    assert [b.label for b in det.last_ignored] == ["computer monitor", "computer monitor"]
+
+
+def test_owl_lookalike_weaker_than_the_object_removes_nothing(monkeypatch):
+    pytest.importorskip("PIL")
+    install_owl(monkeypatch, [[100, 100, 300, 250], [105, 102, 298, 255]], [0.20, 0.35], [2, 1])
+    det = make_detector("owl", prompts=["a cup", "a laptop"], engine=None)
+    assert [b.label for b in det.detect(rgb_image())] == ["laptop"]
+
+
+def test_owl_lookalikes_off_or_wanted(monkeypatch):
+    pytest.importorskip("PIL")
+    calls = install_owl(monkeypatch, [[100, 100, 300, 250]], [0.45], [1])
+    det = make_detector("owl", prompts=["a cup", "a laptop"], engine=None, distractors=[])
+    assert calls["texts"] == ["a cup", "a laptop"] and det.detect(rgb_image())[0].label == "laptop"
+    # asked for by name: a monitor is then an object like any other
+    calls = install_owl(monkeypatch, [[100, 100, 300, 250]], [0.45], [1])
+    det = make_detector("owl", prompts=["a cup", "a computer monitor"], engine=None)
+    assert calls["texts"] == ["a cup", "a computer monitor"]
+    assert [b.label for b in det.detect(rgb_image())] == ["computer monitor"] and det.last_ignored == []
+
+
+def test_owl_max_boxes_counts_only_returned_boxes(monkeypatch):
+    pytest.importorskip("PIL")
+    install_owl(monkeypatch, [[0, 0, 50, 50], [100, 100, 150, 150], [200, 200, 250, 250]], [0.9, 0.5, 0.4], [2, 0, 1])
+    det = make_detector("owl", prompts=["a cup", "a laptop"], engine=None, max_boxes=2)
+    assert [b.label for b in det.detect(rgb_image())] == ["cup", "laptop"]
