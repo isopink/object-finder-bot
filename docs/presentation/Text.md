@@ -134,14 +134,17 @@ Example: two looks, then the cup is moved, and three misses bring p below 0.5.
 
 
 ---
+
 § How It Works
 ## When the Filter Is Too Sure
 ### Five looks per second are not five pieces of evidence
 
 (a) What we saw (11/28)
-(그림: 큰 숫자 두 개 — p = 0.9999 after 223 looks at one cup / 0.70 → 0.10 after 2 missed frames)
+(그림: 큰 숫자 두 개 — p = 0.9999 after 223 looks at one cup / 0.70 → 0.10 after 2 missed frames (computed))
 (b) Why
 (그림: 거의 같은 장면 5장 → 증거 하나를 5번 셈)
+$$ p(z_{1:t} \mid x) = \prod_{i=1}^{t} p(z_i \mid x) $$
+The filter assumes independent looks; five near-identical frames per second are not.
 (c) What we changed (not yet run on the robot)
 - One update of p per **20 cm** driven
 - p(z | present) by **distance**, measured
@@ -151,26 +154,24 @@ Near-identical frames were counted as independent evidence [8], so the belief ra
 
 >> Count evidence, not frames
 
-> 11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 베이즈 필터는 관측이 서로 독립이라고 가정하는데, 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합침, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.
+> 11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999. 못 본 장면 두 번이면 0.70 → 0.10(갱신식으로 계산한 값, 관측값 아님). 원인: 강의의 이진 베이즈 필터는 식처럼 관측이 서로 독립이라고 보고 곱하는데(로그 오즈에서는 더하는데), 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 셈 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합치고, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별 실측 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움, 그 전까지 [ ___ ]. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.
+
 ---
+
 § How It Works
 ## Where Exactly Is It?
-### Kalman filter correction: the cup does not move [1]
+### Kalman correction : every look shrinks Σ, even past what is real [1]
 
-$$ K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1} $$
-$$ \mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t) $$
 $$ \Sigma_t = (I - K_t)\,\bar{\Sigma}_t $$
+Every look multiplies Σ by (I − K_t) < 1.
 
-(그림: 1D 가우시안 세 개 — 기억 N(8, 4), 새 관측 N(6, 1), 합친 결과 N(6.4, 0.8))
+(그림: 왼쪽 아래 상자 "11/28 memory file" — σ = 3 mm after 223 looks / robot pose error AMCL 1–2° / → floor σ ≥ 3 cm (not yet run on the robot). 오른쪽 1D 가우시안 세 개 — 기억 N(8, 4), 새 관측 N(6, 1), 합친 결과 N(6.4, 0.8))
 
-1D example from the lecture [7]: the fused estimate is a weighted mean.
+1D example from the lecture [7]: the fused estimate is a weighted mean, and narrower than both.
 
-- 223 looks → σ 3 mm → floor at **3 cm**
-- One cup, two memories → merge within **20 cm**
+>> Every look shrinks Σ, so we set a floor
 
->> Every look shrinks Σ
-
-> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 Case 4. 11/28 기억 파일: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 위치 표준편차 하한 3 cm. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개, 코사인 0.74)는 20 cm 안이면 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.
+> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 식은 결과 하나만: 볼 때마다 Σ에 (I − K_t)를 곱하므로, 1보다 작은 수를 계속 곱하는 셈이라 Σ는 계속 줄어듦. 오른쪽은 강의 1D 예제 숫자(기억 N(8,4) + 새 관측 N(6,1) → N(6.4,0.8)). 측정 잡음 Q_t는 강의 표기대로, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 11/28 기억 파일: 컵을 223번 본 뒤 위치 표준편차 σ = 3 mm. 로봇 자세 오차(AMCL 1~2°)보다 훨씬 작은 과신 → 위치 표준편차 하한 3 cm. 줄어든 Σ가 같은 물체를 다른 물체로 판단하게 만드는 이야기는 Case 4. ※ 하한은 로봇 확인 전.
 
 ---
 § How It Works
@@ -243,7 +244,7 @@ Four cases and the assumption each one broke.
 | 1 Hardware | robot too low for desk tops | sensors see what we need | sensor mounting (B) |
 | 2 Odometry | L-shaped drive → straight map | odom follows the wheels | odometry motion model |
 | 3 Localization | pose 1.8 m off | the map is informative | MCL weights |
-| 4 Association | one cup → 3 memories | Q_t matches real noise | Kalman filter |
+| 4 Association | one cup → 3 memories | one gate fits every view | data association, Kalman filter |
 
 >> Find the layer first, then the bug
 
@@ -323,30 +324,34 @@ $$ w_t^{[m]} = p\big(z_t \mid x_t^{[m]},\, m\big) $$
 > 가정: 식 (9)의 likelihood field가 파티클을 구별해 준다. (a) 몇 m 주행 뒤 지도 화면의 로봇이 실제와 다른 책상 줄(1.8 m 차이), 그 위치로 기억한 컵도 엉뚱한 곳. AMCL에 통로만 남긴 지도를 줬음. (b) 통로 밖이 전부 벽이라 어느 파티클이든 스캔이 잘 맞아 보임 → 가중치가 고만고만 → 사실상 바퀴 기록만 따라감. 확인: 현재 스캔을 원본 지도 전체에 맞춰 봄. AMCL이 믿는 위치는 스캔의 38%만 벽에 닿고, 다시 찾은 위치는 86%. (c) 위치 추정은 원본 지도, 경로 계획만 통로 지도. 주행 후 AMCL과 스캔 맞춤 차이 3 cm, 2°. 위치 보정 도구 relocalize.sh: 처음 위치를 몰라도 스캔을 지도 전체에 맞춰 AMCL에 알려 줌(9초). (트러블슈팅 34)
 
 ---
+
 § What Broke
 ## Case 4 : One Cup, Many Memories
-### Q_t smaller than reality → one cup splits
+### Same object only if both gates pass : position and appearance
 
 (a) Symptom
 [[사진 7]]
 (실시간 영상: 컵 하나에 상자 두 개 — 몸통 / 빨대까지)
-(그림: 같은 컵을 두 위치에서 봄 — 작은 타원 두 개가 겹치지 않아 기억 2개)
+(그림: 숫자 두 줄 — cup : 2–3 memories, 1 cm and 10–20 cm apart / laptop : 2 memories, 9 cm apart)
 (b) Diagnosis
-$$ d = \sqrt{(z_t - \mu)^{\top} (\Sigma + Q_t)^{-1} (z_t - \mu)} \;\le\; \gamma $$
+$$ \text{same} \iff d \le \gamma \ \wedge\ \cos(e, e_i) \ge \tau $$
+A view from the other side fails the appearance gate : laptop ==0.74== < 0.75.
 (c) Fix
-Parameters before → after.
+Before → after. Top: 11/28, ran once. Bottom: not yet run on the robot.
 | | before | after |
 |---|---|---|
 | box IoU (dedup) | 0.7 | 0.5 |
 | σ_bearing (rad) | 0.03 | 0.06 |
 | σ_range (m) | 0.02 | 0.05 |
 | gate γ | 3.0 | 4.0 |
+| appearance τ, same label | 0.75 | 0.5 |
+| merge, same label | none | 20 cm |
 
-(a) One cup became 2–3 memories 10–20 cm apart. (b) With Q_t too small, the gate rejects the same cup seen from elsewhere. (c) Q_t raised to the real error.
+(a) One object became several memories. (b) Both gates must pass, and the back of an object does not look like its front. (c) Loosen the appearance gate for the same label, merge twins within 20 cm.
 
->> An overconfident Q_t splits one object
+>> Seen from the back, it's still the same cup
 
-> 가정: 식 (5)의 Q_t가 실제 잡음과 같다. (a) 11/28: 같은 컵이 10~20 cm 간격으로 기억 2~3개. (b) 원인 1: NanoOWL이 컵 몸통과 빨대까지 포함한 컵을 각각 상자로 냄, 두 상자 IoU 약 0.5라 기존 기준 0.7로는 둘 다 남음. 원인 2: 새 관측을 같은 물체로 볼지는 식 (10)의 마할라노비스 거리. Q_t(방향 1.7°, 거리 2 cm)가 실제 오차(AMCL 방향만 1~2°, 여기에 장착 오차)보다 작아서 다른 위치에서 본 같은 컵을 "다른 물체"로 판단. (c) 표 4: IoU 0.5(작은 상자가 80% 이상 큰 상자 안이면 제거), σ_bearing 0.03→0.06 rad, σ_range 0.02→0.05 m, γ 3.0→4.0, CLIP 유사도 기준 0.80→0.75. 효과는 한 번의 주행에서만 확인(한계).
+> (a) 11/28: 같은 컵이 1 cm, 10~20 cm 간격으로 기억 2~3개. 같은 노트북이 9 cm 떨어진 기억 2개로 남음. (b) 강의의 데이터 연관: 새 관측을 기존 기억과 같은 물체로 보려면 위치 기준(마할라노비스 거리 d = √((z−μ)ᵀ(Σ+Q_t)⁻¹(z−μ)) ≤ γ)과 외형 기준(CLIP 코사인 ≥ τ)을 둘 다 통과해야 함. 다른 쪽에서 본 같은 물체는 외형이 달라 외형 기준에 걸림: 노트북은 0.74로 기준 0.75에 0.01 모자람. 앞 장의 줄어든 Σ(223번 뒤 3 mm)와 실제보다 작은 Q_t는 위치 기준까지 좁힘. 같은 컵에 NanoOWL 상자가 두 개(몸통, 빨대까지, IoU 약 0.5) 나온 것도 원인. (c) 위 네 줄은 11/28에 고쳐 한 번의 주행에서 확인: 상자 제거 IoU 0.7 → 0.5, σ_bearing 0.03 → 0.06 rad, σ_range 0.02 → 0.05 m, γ 3.0 → 4.0(CLIP 기준 0.80 → 0.75도 함께). 아래 두 줄은 그 뒤 수정: 검출 이름이 같으면 외형 기준 0.5로 완화, 20 cm 안의 같은 이름 기억은 하나로 합침(11/28 기억 파일에 적용하면 9 cm 떨어진 노트북 2개만 합쳐짐), 위치 표준편차 하한 3 cm(앞 장). ※ 아래 두 줄과 하한은 로봇 확인 전.
 
 ---
 § Wrap-up

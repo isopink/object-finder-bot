@@ -445,22 +445,23 @@
 </section>
 
 <!-- 9 Filter too sure -->
-<section class="slide content dense" data-notes="11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 베이즈 필터는 관측이 서로 독립이라고 가정하는데, 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합침, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.">
+<section class="slide content dense" data-notes="11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999. 못 본 장면 두 번이면 0.70 → 0.10(갱신식으로 계산한 값, 관측값 아님). 원인: 강의의 이진 베이즈 필터는 식처럼 관측이 서로 독립이라고 보고 곱하는데(로그 오즈에서는 더하는데), 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 셈 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합치고, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별 실측 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움, 그 전까지 [ ___ ]. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.">
   <div><div class="sec">How It Works</div><h2>When the Filter Is Too Sure</h2><div class="sum">Five looks per second are not five pieces of evidence</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="gap:18px;justify-content:center"><div class="plab">(a) <span>What we saw (11/28)</span></div>
         <div class="stat"><div class="n" style="color:var(--maroon)">0.9999</div><div class="l">p after 223 looks at one cup</div></div>
-        <div class="stat"><div class="n" style="font-size:44px">0.70 → 0.10</div><div class="l">after 2 missed frames</div></div></div>
+        <div class="stat"><div class="n" style="font-size:44px">0.70 → 0.10</div><div class="l">after 2 missed frames (computed)</div></div></div>
       <div class="parrow">→</div>
-      <div class="panel" style="justify-content:center;gap:10px"><div class="plab">(b) <span>Why</span></div>
-        <svg width="330" height="170" viewBox="0 0 330 170" style="font-family:'Pretendard',sans-serif">
+      <div class="panel" style="justify-content:center;gap:8px"><div class="plab">(b) <span>Why</span></div>
+        <svg width="330" height="146" viewBox="0 0 330 146" style="font-family:'Pretendard',sans-serif">
           <text x="165" y="26" font-size="17" fill="#6b6b6b" text-anchor="middle">5 frames, a few cm apart</text>
           <rect x="14" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 32 52 L 34 70 L 46 70 L 48 52 Z" fill="#2b2b2b"/><rect x="76" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 94 52 L 96 70 L 108 70 L 110 52 Z" fill="#2b2b2b"/><rect x="138" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 156 52 L 158 70 L 170 70 L 172 52 Z" fill="#2b2b2b"/><rect x="200" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 218 52 L 220 70 L 232 70 L 234 52 Z" fill="#2b2b2b"/><rect x="262" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 280 52 L 282 70 L 294 70 L 296 52 Z" fill="#2b2b2b"/>
           <path d="M 14 92 Q 14 104 26 104 L 152 104 Q 165 104 165 116 Q 165 104 178 104 L 304 104 Q 316 104 316 92" fill="none" stroke="#2b2b2b" stroke-width="2"/>
           <text x="165" y="142" font-size="19" fill="#8C2D2D" text-anchor="middle">counted as 5 pieces of evidence</text>
-          <text x="165" y="164" font-size="16" fill="#6b6b6b" text-anchor="middle">the filter assumes independent looks</text>
-        </svg></div>
+        </svg>
+        <div class="eq xs" style="align-self:stretch" data-tex="p(z_{1:t} \mid x) = \prod_{i=1}^{t} p(z_i \mid x)"></div>
+        <div style="font-size:17px;color:var(--d-label);text-align:center">assumes independent looks; 5 near-identical frames per second are not</div></div>
       <div class="parrow">→</div>
       <div class="panel" style="gap:10px"><div class="plab">(c) <span>What we changed</span></div>
         <div class="bl sm" style="gap:6px;align-self:stretch">
@@ -476,24 +477,25 @@
 </section>
 
 <!-- 10 Kalman -->
-<section class="slide content dense" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 Case 4. 11/28 기억 파일: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 위치 표준편차 하한 3 cm. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개, 코사인 0.74)는 20 cm 안이면 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.">
-  <div><div class="sec">How It Works</div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction: the cup does not move <span class="cite">[1]</span></div></div>
+<section class="slide content dense" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 식은 결과 하나만: 볼 때마다 Σ에 (I − K_t)를 곱하므로, 1보다 작은 수를 계속 곱하는 셈이라 Σ는 계속 줄어듦. 오른쪽은 강의 1D 예제 숫자(기억 N(8,4) + 새 관측 N(6,1) → N(6.4,0.8)). 측정 잡음 Q_t는 강의 표기대로, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 11/28 기억 파일: 컵을 223번 본 뒤 위치 표준편차 σ = 3 mm. 로봇 자세 오차(AMCL 1~2°)보다 훨씬 작은 과신 → 위치 표준편차 하한 3 cm. 줄어든 Σ가 같은 물체를 다른 물체로 판단하게 만드는 이야기는 Case 4. ※ 하한은 로봇 확인 전.">
+  <div><div class="sec">How It Works</div><h2>Where Exactly Is It?</h2><div class="sum">Kalman correction : every look shrinks <span class="m">Σ</span>, even past what is real <span class="cite">[1]</span></div></div>
   <div class="body" style="gap:14px">
     <div style="display:flex;align-items:center;gap:40px">
-      <div style="flex:1;display:flex;flex-direction:column;gap:26px">
-        <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
-        <div class="eq sm" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:14px">
         <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
-        <div class="cards" style="gap:12px;flex-wrap:wrap">
-          <div class="chip">223 looks → <span class="m" style="margin:0 6px">σ</span> 3 mm → floor at <b style="margin-left:6px">3 cm</b></div>
-          <div class="chip">one cup, two memories → merge within <b style="margin-left:6px">20 cm</b></div>
+        <div style="font-size:21px;color:#444;text-align:center">every look multiplies <span class="m">Σ</span> by (<span class="m">I</span> − <span class="m">K</span><sub>t</sub>) &lt; 1</div>
+        <div class="panel" style="flex:none;align-items:stretch;gap:10px;margin-top:10px">
+          <div class="plab">11/28 <span>memory file</span></div>
+          <div style="display:flex;align-items:baseline;gap:14px"><div style="font-size:40px;font-weight:700;color:var(--maroon);line-height:1">σ = 3 mm</div><div style="font-size:19px;color:var(--d-label)">after 223 looks at one cup</div></div>
+          <div style="display:flex;align-items:baseline;gap:14px"><div style="font-size:26px;font-weight:700;line-height:1">AMCL 1–2°</div><div style="font-size:19px;color:var(--d-label)">the robot's own pose error</div></div>
+          <div style="font-size:21px;border-top:1px solid var(--rule);padding-top:8px">→ floor <strong><span class="m">σ</span> ≥ 3 cm</strong> <span style="font-size:17px;color:var(--d-label)">(not yet run on the robot)</span></div>
         </div>
       </div>
       <svg id="gauss" width="600" height="340" style="font-family:'Pretendard',sans-serif;flex:none"></svg>
     </div>
-    <div class="figcap">1D example from the lecture <span class="cite">[7]</span>: memory N(8, 4) and a new look N(6, 1) fuse to N(6.4, 0.8), a weighted mean.</div>
+    <div class="figcap">1D example from the lecture <span class="cite">[7]</span>: memory N(8, 4) and a new look N(6, 1) fuse to N(6.4, 0.8), a weighted mean narrower than both.</div>
   </div>
-  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span></div></div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span>, so we set a floor</div></div>
 </section>
 
 <!-- 11 Localization and navigation -->
@@ -626,7 +628,7 @@
         <tr><td><strong>1</strong> Hardware</td><td>robot too low for desk tops</td><td>sensors see what we need</td><td>sensor mounting (<span class="m">B</span>)</td></tr>
         <tr><td><strong>2</strong> Odometry</td><td>L-shaped drive → straight map</td><td>odom follows the wheels</td><td>odometry motion model</td></tr>
         <tr><td><strong>3</strong> Localization</td><td>pose 1.8 m off</td><td>the map is informative</td><td>MCL weights</td></tr>
-        <tr><td><strong>4</strong> Association</td><td>one cup → 3 memories</td><td><span class="m">Q<sub>t</sub></span> matches real noise</td><td>Kalman filter</td></tr>
+        <tr><td><strong>4</strong> Association</td><td>one cup → 3 memories</td><td>one gate fits every view</td><td>data association, Kalman filter</td></tr>
       </table>
     </div>
   </div>
@@ -747,42 +749,39 @@
 </section>
 
 <!-- 19 Case 4 -->
-<section class="slide content dense" data-notes="가정: 식 (5)의 Q_t가 실제 잡음과 같다. (a) 11/28: 같은 컵이 10~20 cm 간격으로 기억 2~3개. (b) 원인 1: NanoOWL이 컵 몸통과 빨대까지 포함한 컵을 각각 상자로 냄, 두 상자 IoU 약 0.5라 기존 기준 0.7로는 둘 다 남음. 원인 2: 새 관측을 같은 물체로 볼지는 식 (10)의 마할라노비스 거리. Q_t(방향 1.7°, 거리 2 cm)가 실제 오차(AMCL 방향만 1~2°, 여기에 장착 오차)보다 작아서 다른 위치에서 본 같은 컵을 &quot;다른 물체&quot;로 판단. (c) 표 4: IoU 0.5(작은 상자가 80% 이상 큰 상자 안이면 제거), σ_bearing 0.03→0.06 rad, σ_range 0.02→0.05 m, γ 3.0→4.0, CLIP 유사도 기준 0.80→0.75. 효과는 한 번의 주행에서만 확인(한계).">
-  <div><div class="sec">What Broke</div><h2>Case 4 : One Cup, Many Memories</h2><div class="sum"><span class="m">Q<sub>t</sub></span> smaller than reality → one cup splits</div></div>
+<section class="slide content dense" data-notes="(a) 11/28: 같은 컵이 1 cm, 10~20 cm 간격으로 기억 2~3개. 같은 노트북이 9 cm 떨어진 기억 2개로 남음. (b) 강의의 데이터 연관: 새 관측을 기존 기억과 같은 물체로 보려면 위치 기준(마할라노비스 거리 d = √((z−μ)ᵀ(Σ+Q_t)⁻¹(z−μ)) ≤ γ)과 외형 기준(CLIP 코사인 ≥ τ)을 둘 다 통과해야 함. 다른 쪽에서 본 같은 물체는 외형이 달라 외형 기준에 걸림: 노트북은 0.74로 기준 0.75에 0.01 모자람. 앞 장의 줄어든 Σ(223번 뒤 3 mm)와 실제보다 작은 Q_t는 위치 기준까지 좁힘. 같은 컵에 NanoOWL 상자가 두 개(몸통, 빨대까지, IoU 약 0.5) 나온 것도 원인. (c) 위 네 줄은 11/28에 고쳐 한 번의 주행에서 확인: 상자 제거 IoU 0.7 → 0.5, σ_bearing 0.03 → 0.06 rad, σ_range 0.02 → 0.05 m, γ 3.0 → 4.0(CLIP 기준 0.80 → 0.75도 함께). 아래 두 줄은 그 뒤 수정: 검출 이름이 같으면 외형 기준 0.5로 완화, 20 cm 안의 같은 이름 기억은 하나로 합침(11/28 기억 파일에 적용하면 9 cm 떨어진 노트북 2개만 합쳐짐), 위치 표준편차 하한 3 cm(앞 장). ※ 아래 두 줄과 하한은 로봇 확인 전.">
+  <div><div class="sec">What Broke</div><h2>Case 4 : One Cup, Many Memories</h2><div class="sum">Same object only if both gates pass : position and appearance</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
-      <div class="panel" style="flex:none;width:300px"><div class="plab">(a) <span>Symptom</span></div>
+      <div class="panel" style="flex:none;width:300px;gap:12px"><div class="plab">(a) <span>Symptom</span></div>
         <div class="ph" style="width:270px;height:120px;flex:none"><div class="pl">[ Photo 7 ]</div><div class="pd">Live view : one cup,<br>two boxes</div></div>
-        <svg width="216" height="200" viewBox="0 0 270 250" style="font-family:'Pretendard',sans-serif">
-          <ellipse cx="85" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(-20 85 110)"/>
-          <ellipse cx="185" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(20 185 110)"/>
-          <circle cx="85" cy="110" r="7" fill="#8C2D2D"/><circle cx="185" cy="110" r="7" fill="#8C2D2D"/>
-          <text x="85" y="168" font-size="18" fill="#6b6b6b" text-anchor="middle">memory 1</text>
-          <text x="185" y="168" font-size="18" fill="#6b6b6b" text-anchor="middle">memory 2</text>
-          <text x="135" y="40" font-size="19" fill="#2b2b2b" text-anchor="middle">same cup, two views</text>
-          <text x="135" y="220" font-size="18" fill="#8C2D2D" text-anchor="middle">2–3 memories, 10–20 cm apart</text>
-        </svg></div>
-      <div class="parrow">→</div>
-      <div class="panel" style="gap:16px;justify-content:center;flex:1.3"><div class="plab">(b) <span>Diagnosis</span></div>
-        <div class="eq xs" style="align-self:stretch" data-tex="d = \sqrt{(z_t - \mu)^{\top} (\Sigma + Q_t)^{-1} (z_t - \mu)} \;\le\; \gamma"></div>
-        <div class="bl sm" style="gap:10px;align-self:stretch">
-          <div class="b" style="font-size:21px"><span class="dot">•</span><span><span class="m">Q<sub>t</sub></span> : 1.7°, 2 cm &nbsp;&lt;&nbsp; real : AMCL alone 1–2°</span></div>
-          <div class="b" style="font-size:21px"><span class="dot">•</span><span>Two boxes per cup (IoU ≈ 0.5)</span></div>
+        <div style="align-self:stretch;display:flex;flex-direction:column;gap:8px;font-size:19px">
+          <div><strong>cup</strong> : 2–3 memories<br><span style="color:var(--d-label)">1 cm and 10–20 cm apart</span></div>
+          <div><strong>laptop</strong> : 2 memories<br><span style="color:var(--d-label)">9 cm apart</span></div>
         </div></div>
       <div class="parrow">→</div>
-      <div class="panel" style="flex:none;gap:8px"><div class="plab">(c) <span>Fix</span></div>
-        <div class="tcap" style="align-self:flex-start">Before → after.</div>
-        <table class="bt">
+      <div class="panel" style="gap:14px;justify-content:center;flex:1.2"><div class="plab">(b) <span>Diagnosis</span></div>
+        <div class="eq xs" style="align-self:stretch" data-tex="\text{same} \iff d \le \gamma \;\wedge\; \cos(e, e_i) \ge \tau"></div>
+        <div style="font-size:18px;color:var(--d-label);text-align:center">position gate (Mahalanobis <span class="m">d</span>) and appearance gate (CLIP cosine)</div>
+        <div style="display:flex;align-items:baseline;gap:12px;justify-content:center;margin-top:6px"><div style="font-size:19px">laptop, other side :</div><div style="font-size:34px;font-weight:700;color:var(--maroon);line-height:1">0.74</div><div style="font-size:21px">&lt; <span class="m">τ</span> = 0.75</div></div>
+        <div style="font-size:18px;color:var(--d-label);text-align:center">the back of an object does not look like its front</div></div>
+      <div class="parrow">→</div>
+      <div class="panel" style="flex:none;gap:6px"><div class="plab">(c) <span>Fix</span></div>
+        <div class="tcap" style="align-self:flex-start;margin:0">Before → after</div>
+        <table class="bt" style="font-size:19px">
           <tr><th></th><th class="num">before</th><th class="num">after</th></tr>
           <tr><td>box IoU</td><td class="num">0.7</td><td class="num"><strong>0.5</strong></td></tr>
           <tr><td><span class="m">σ</span><sub>bearing</sub> (rad)</td><td class="num">0.03</td><td class="num"><strong>0.06</strong></td></tr>
           <tr><td><span class="m">σ</span><sub>range</sub> (m)</td><td class="num">0.02</td><td class="num"><strong>0.05</strong></td></tr>
           <tr><td>gate <span class="m">γ</span></td><td class="num">3.0</td><td class="num"><strong>4.0</strong></td></tr>
-        </table></div>
+          <tr class="sep"><td style="color:var(--ink)"><span class="m">τ</span>, same label</td><td class="num" style="color:var(--ink)">0.75</td><td class="num" style="color:var(--ink)"><strong>0.5</strong></td></tr>
+          <tr><td>merge, same label</td><td class="num">none</td><td class="num"><strong>20 cm</strong></td></tr>
+        </table>
+        <div style="font-size:16px;color:var(--d-label);align-self:flex-start">top : 11/28, ran once<br>bottom : not yet run on the robot</div></div>
     </div>
-    <div class="figcap">(a) One cup became several memories. (b) With <span class="m">Q<sub>t</sub></span> too small, the gate rejects the same cup seen from elsewhere. (c) <span class="m">Q<sub>t</sub></span> raised to the real error.</div>
+    <div class="figcap">(a) One object became several memories. (b) Both gates must pass, and a view from the other side fails the appearance gate. (c) Loosen the appearance gate for the same label, merge twins within 20 cm.</div>
   </div>
-  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">An overconfident <span class="m">Q<sub>t</sub></span> splits one object</div></div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Seen from the back, it's still the same cup</div></div>
 </section>
 
 <!-- 20 Limitations and conclusion -->
