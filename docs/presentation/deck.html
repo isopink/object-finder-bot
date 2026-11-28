@@ -607,7 +607,7 @@
 </section>
 
 <!-- 14 Failure analysis overview -->
-<section class="slide content dense" data-notes="트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network &amp; tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 이론의 가정을 깬 네 사례를 다음 네 장에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.">
+<section class="slide content dense" data-notes="트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network &amp; tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 다섯 사례(네 개는 이론의 가정이 깨진 것, 하나는 걱정했지만 아니었던 것)를 다음 장들에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.">
   <div><div class="sec">What Broke</div><h2>40 Things That Broke</h2><div class="sum">Most of them broke an assumption the theory makes</div></div>
   <div class="body" style="gap:22px">
     <div style="display:flex;gap:44px;align-items:flex-end">
@@ -622,13 +622,14 @@
       </div>
     </div>
     <div>
-      <div class="tcap">Four cases and the assumption each one broke.</div>
+      <div class="tcap">Five cases and the assumption behind each.</div>
       <table class="bt" style="width:100%">
         <tr><th>Case</th><th>Symptom</th><th>Broken assumption</th><th>Theory</th></tr>
         <tr><td><strong>1</strong> Hardware</td><td>robot too low for desk tops</td><td>sensors see what we need</td><td>sensor mounting (<span class="m">B</span>)</td></tr>
-        <tr><td><strong>2</strong> Odometry</td><td>L-shaped drive → straight map</td><td>odom follows the wheels</td><td>odometry motion model</td></tr>
-        <tr><td><strong>3</strong> Localization</td><td>pose 1.8 m off</td><td>the map is informative</td><td>MCL weights</td></tr>
-        <tr><td><strong>4</strong> Association</td><td>one cup → 3 memories</td><td>one gate fits every view</td><td>data association, Kalman filter</td></tr>
+        <tr><td><strong>2</strong> Sensing check</td><td>mast expected in the scan</td><td>(feared, not true) the scan sees the mast</td><td>measure the sensor first</td></tr>
+        <tr><td><strong>3</strong> Odometry</td><td>L-shaped drive → straight map</td><td>odom follows the wheels</td><td>odometry motion model</td></tr>
+        <tr><td><strong>4</strong> Localization</td><td>pose 1.8 m off</td><td>the map is informative</td><td>MCL weights</td></tr>
+        <tr><td><strong>5</strong> Association</td><td>one cup → 3 memories</td><td>one gate fits every view</td><td>data association, Kalman filter</td></tr>
       </table>
     </div>
   </div>
@@ -636,7 +637,7 @@
 </section>
 
 <!-- 15 Case 1 -->
-<section class="slide content dense" data-notes="기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.">
+<section class="slide content dense" data-notes="기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡히지 않을까 하는 걱정은 다음 장(Case 2). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.">
   <div><div class="sec">What Broke</div><h2>Case 1 : Raising the Robot</h2><div class="sum">Too low to see desk tops → add a mast</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
@@ -675,9 +676,54 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Fix the body before the code</div></div>
 </section>
 
-<!-- 16 Case 2 -->
+<!-- 16 Case 2 posts -->
+<section class="slide content dense" data-notes="트러블슈팅 16번(11/25). 걱정: 카메라 기둥의 막대 네 개가 LiDAR 스캔 높이에 서 있으면 로봇이 자기 몸을 장애물로 봐서 항상 충돌 상태가 되거나 지도에 유령 점이 생김. 그래서 가까운 점을 지우는 필터(OFB_SCAN_MIN)를 미리 만들어 두었고, 줄자로 재서 값을 정할 계획이었음. 측정: 줄자 대신 LiDAR 자신의 데이터. 로봇을 세워 두고 스캔 60개를 모아 &quot;매번 같은 방향, 같은 가까운 거리에 찍히는 점&quot;을 찾음. 결과: 0.418 m 안쪽에 지속적인 반환이 하나도 없음, 가장 가까운 점은 왼쪽 책상과 의자. 값이 안 돌아오는 빔은 245개 중 1개뿐이라 기둥이 가린 곳도 없음. 로봇 몸체 앞 끝(15 cm)도 안 잡힘: 판이 스캔 높이보다 아래. 결론: 필터를 끔(OFB_SCAN_MIN=0, 지금도 기본값 0). 가는 기둥은 이 LiDAR에 보이지 않음. 배운 점: 고치기 전에 센서가 실제로 무엇을 보는지 먼저 본다. 5분 만에 필터가 필요 없다는 것을 알았음. 그림은 위에서 본 개념도(축척 아님): 점선 막대 네 개가 &quot;보일 거라 예상한 것&quot;, 실선 원과 실선 호가 측정 결과.">
+  <div><div class="sec">What Broke</div><h2>Case 2 : The Posts That Weren't There</h2><div class="sum">We built a filter for the mast, then looked first</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;justify-content:center;gap:48px">
+    <svg width="560" height="560" viewBox="0 0 560 560" style="font-family:'Pretendard',sans-serif;flex:none">
+      <!-- measured: empty disc of radius 0.418 m -->
+      <circle cx="280" cy="290" r="190" fill="#f5eae9" stroke="#8C2D2D" stroke-width="3"/>
+      <text x="280" y="60" font-size="19" fill="#8C2D2D" text-anchor="middle" font-weight="700">nothing within 0.418 m</text>
+      <text x="280" y="84" font-size="16" fill="#8C2D2D" text-anchor="middle">measured, 60 scans</text>
+      <!-- measured: nearest returns, left desk and chair -->
+      <path d="M 70 170 Q 52 290 74 410" fill="none" stroke="#8C2D2D" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 44 214 Q 32 290 46 366" fill="none" stroke="#8C2D2D" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 10"/>
+      <text x="24" y="460" font-size="16" fill="#8C2D2D">nearest :</text>
+      <text x="24" y="480" font-size="16" fill="#8C2D2D">left desk, chair</text>
+      <!-- robot plate (below the scan plane) -->
+      <rect x="219" y="229" width="122" height="122" rx="14" fill="#fafafa" stroke="#cccccc" stroke-width="2"/>
+      <line x1="280" y1="229" x2="280" y2="196" stroke="#2b2b2b" stroke-width="2.5"/>
+      <path d="M 272 204 L 280 190 L 288 204 Z" fill="#2b2b2b"/>
+      <text x="268" y="196" font-size="15" fill="#6b6b6b" text-anchor="end">front edge 15 cm</text><text x="268" y="214" font-size="15" fill="#6b6b6b" text-anchor="end">not seen</text>
+      <!-- expected: 4 rods (plan = dashed) -->
+      <circle cx="244" cy="254" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5" stroke-dasharray="4 4"/>
+      <circle cx="316" cy="254" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5" stroke-dasharray="4 4"/>
+      <circle cx="244" cy="326" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5" stroke-dasharray="4 4"/>
+      <circle cx="316" cy="326" r="10" fill="none" stroke="#2b2b2b" stroke-width="2.5" stroke-dasharray="4 4"/>
+      <!-- LiDAR -->
+      <circle cx="280" cy="290" r="13" fill="#2b2b2b"/>
+      <text x="280" y="378" font-size="16" fill="#2b2b2b" text-anchor="middle">LiDAR</text>
+      <!-- legend -->
+      <circle cx="146" cy="526" r="8" fill="none" stroke="#2b2b2b" stroke-width="2.5" stroke-dasharray="4 4"/>
+      <text x="162" y="532" font-size="17" fill="#444">expected : 4 rods</text>
+      <line x1="320" y1="526" x2="350" y2="526" stroke="#8C2D2D" stroke-width="3"/>
+      <text x="358" y="532" font-size="17" fill="#444">measured</text>
+    </svg>
+    <div style="flex:1;display:flex;flex-direction:column;gap:26px;max-width:640px">
+      <div class="bl" style="gap:22px">
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span><span style="color:var(--d-label)">Expected :</span> mast rods in the scan → always “colliding”</span></div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span><span style="color:var(--d-label)">Measured :</span> 60 scans, nothing within <strong class="acc">0.418 m</strong>, 1 of 245 beams without return</span></div>
+        <div class="b" style="font-size:25px"><span class="dot">•</span><span><span style="color:var(--d-label)">Decision :</span> filter <strong>off</strong> (OFB_SCAN_MIN = 0)</span></div>
+      </div>
+      <div class="figcap">Top view, not to scale. Even the front edge 15 cm away never shows up: the plate sits below the scan plane.</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Five minutes of looking saved us a filter</div></div>
+</section>
+
+<!-- 17 Case 2 -->
 <section class="slide content dense" data-notes="(a) 보정 전 실패한 SLAM: ㄱ자로 운전했는데 지도는 일자(11/25), 벽이 겹치기도 함(assets/map_straight.png, map_doubled.png가 후보). (b) 원인 1: 로봇 드라이버의 odom 방향이 멈춤. 11/25(바퀴 +97.7°, IMU +91.7°, odom 0°), 11/27, 11/28 세 번 반복. 11/28: 바퀴 29° 회전에 odom +0.0°, 바퀴 각도(/joint_states)는 항상 맞음. 원인 2(11/27): LiDAR가 180° 반대로 달림. 앞 0.44 m 물체가 185°에 보였고, 10.7 cm 전진하자 10.5 cm 가까워짐 → 0°가 로봇 뒤. (c) 보정 후 성공한 SLAM: 바퀴 각도로 odom을 직접 계산(+28.4°, 바퀴 계산 29°), 스캔은 소프트웨어로 180° 돌림 → room_l4 13.9 × 7.8 m, 벽 직선, 출발점 복귀 오차 0.14 m(assets/room_l4_full.png가 후보). 다음 장에서 그 지도가 만들어지는 과정을 배속으로.">
-  <div><div class="sec">What Broke</div><h2>Case 2 : The Map That Wouldn't Turn</h2><div class="sum">The wheels turned, odometry did not</div></div>
+  <div><div class="sec">What Broke</div><h2>Case 3 : The Map That Wouldn't Turn</h2><div class="sum">The wheels turned, odometry did not</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="flex:none"><div class="plab">(a) <span>Before : failed SLAM</span></div>
@@ -713,7 +759,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Check odometry before blaming SLAM</div></div>
 </section>
 
-<!-- 17 Time-lapse -->
+<!-- 18 Time-lapse -->
 <section class="slide content dense" data-notes="보정이 끝난 뒤 Cartographer로 room_l4를 만드는 과정을 배속으로. 네 가지 명령 조종기(직진, 좌우 90°, 정지)로만 운전해서 회전이 넘치지 않음. 지도가 자라면서 벽이 곧게 이어지고, 출발점으로 돌아오면 고리가 닫힘(복귀 오차 0.14 m). 배속 배율은 영상에 맞춰 [ ___ ×]로 말하기. 영상이 도는 동안은 짧게: &quot;이번엔 벽이 곧습니다.&quot;">
   <div><div class="sec">What Broke</div><h2>Building the Map, Fast-Forward</h2><div class="sum">After the fixes : room_l4, 13.9 × 7.8 m, loop closes within 0.14 m</div></div>
   <div class="body">
@@ -722,9 +768,9 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Straight walls, and the loop closes</div></div>
 </section>
 
-<!-- 18 Case 3 -->
+<!-- 19 Case 3 -->
 <section class="slide content dense" data-notes="가정: 식 (9)의 likelihood field가 파티클을 구별해 준다. (a) 몇 m 주행 뒤 지도 화면의 로봇이 실제와 다른 책상 줄(1.8 m 차이), 그 위치로 기억한 컵도 엉뚱한 곳. AMCL에 통로만 남긴 지도를 줬음. (b) 통로 밖이 전부 벽이라 어느 파티클이든 스캔이 잘 맞아 보임 → 가중치가 고만고만 → 사실상 바퀴 기록만 따라감. 확인: 현재 스캔을 원본 지도 전체에 맞춰 봄. AMCL이 믿는 위치는 스캔의 38%만 벽에 닿고, 다시 찾은 위치는 86%. (c) 위치 추정은 원본 지도, 경로 계획만 통로 지도. 주행 후 AMCL과 스캔 맞춤 차이 3 cm, 2°. 위치 보정 도구 relocalize.sh: 처음 위치를 몰라도 스캔을 지도 전체에 맞춰 AMCL에 알려 줌(9초). (트러블슈팅 34)">
-  <div><div class="sec">What Broke</div><h2>Case 3 : Right Map, Wrong Place</h2><div class="sum">AMCL on the aisle-only map → <strong class="acc">1.8 m</strong> off</div></div>
+  <div><div class="sec">What Broke</div><h2>Case 4 : Right Map, Wrong Place</h2><div class="sum">AMCL on the aisle-only map → <strong class="acc">1.8 m</strong> off</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="gap:10px"><div class="plab">(a) <span>Symptom</span></div>
@@ -748,9 +794,9 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">A map that fits everywhere tells nothing</div></div>
 </section>
 
-<!-- 19 Case 4 -->
+<!-- 20 Case 4 -->
 <section class="slide content dense" data-notes="(a) 11/28: 같은 컵이 1 cm, 10~20 cm 간격으로 기억 2~3개. 같은 노트북이 9 cm 떨어진 기억 2개로 남음. (b) 강의의 데이터 연관: 새 관측을 기존 기억과 같은 물체로 보려면 위치 기준(마할라노비스 거리 d = √((z−μ)ᵀ(Σ+Q_t)⁻¹(z−μ)) ≤ γ)과 외형 기준(CLIP 코사인 ≥ τ)을 둘 다 통과해야 함. 다른 쪽에서 본 같은 물체는 외형이 달라 외형 기준에 걸림: 노트북은 0.74로 기준 0.75에 0.01 모자람. 앞 장의 줄어든 Σ(223번 뒤 3 mm)와 실제보다 작은 Q_t는 위치 기준까지 좁힘. 같은 컵에 NanoOWL 상자가 두 개(몸통, 빨대까지, IoU 약 0.5) 나온 것도 원인. (c) 위 네 줄은 11/28에 고쳐 한 번의 주행에서 확인: 상자 제거 IoU 0.7 → 0.5, σ_bearing 0.03 → 0.06 rad, σ_range 0.02 → 0.05 m, γ 3.0 → 4.0(CLIP 기준 0.80 → 0.75도 함께). 아래 두 줄은 그 뒤 수정: 검출 이름이 같으면 외형 기준 0.5로 완화, 20 cm 안의 같은 이름 기억은 하나로 합침(11/28 기억 파일에 적용하면 9 cm 떨어진 노트북 2개만 합쳐짐), 위치 표준편차 하한 3 cm(앞 장). ※ 아래 두 줄과 하한은 로봇 확인 전.">
-  <div><div class="sec">What Broke</div><h2>Case 4 : One Cup, Many Memories</h2><div class="sum">Same object only if both gates pass : position and appearance</div></div>
+  <div><div class="sec">What Broke</div><h2>Case 5 : One Cup, Many Memories</h2><div class="sum">Same object only if both gates pass : position and appearance</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="flex:none;width:300px;gap:12px"><div class="plab">(a) <span>Symptom</span></div>
@@ -784,7 +830,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Seen from the back, it's still the same cup</div></div>
 </section>
 
-<!-- 20 Limitations and conclusion -->
+<!-- 21 Limitations and conclusion -->
 <section class="slide content" data-notes="한계: (1) 11/28 이후 고친 것들은 아직 로봇에서 안 돌려 봄: 모니터 대책(NanoOWL에 &quot;a computer monitor&quot;도 물어보고 그 상자는 버림, 11/28에는 노트북 기억 19개 중 대부분이 모니터), 20 cm마다 한 번 갱신, 3 cm 하한, 20 cm 합치기. 같은 물체가 나뉘던 문제(Case 4)의 수정도 한 번의 주행으로만 확인. (2) 거리별 검출 확률 표는 이 교실, 이 카메라 높이, 컵 하나로 잰 값. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.">
   <div><div class="sec">Wrap-up</div><h2>What's Left &amp; Takeaways</h2></div>
   <div class="body" style="gap:40px">
@@ -811,7 +857,7 @@
   <div class="callout"><div class="bar"></div><div class="tx">Thank you</div></div>
 </section>
 
-<!-- 21 References -->
+<!-- 22 References -->
 <section class="slide content" data-notes="참고 문헌. ※ [8]의 저자와 학회는 원문으로 확인 필요.">
   <h2 style="margin-bottom:24px">References</h2>
   <div class="refs">

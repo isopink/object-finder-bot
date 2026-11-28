@@ -238,17 +238,18 @@ Queries (planned path turns, drive time, belief at the found object).
 
 (그림: 왼쪽 막대그래프 "Problems per lab day" — 11/20 8, 11/24 4, 11/25 10, 11/27 11, 11/28 7(마룬, first full run) / 오른쪽 "By layer" 구간 막대 — Software 21, Hardware 7, Network & tools 7, Middleware 5)
 
-Four cases and the assumption each one broke.
+Five cases and the assumption behind each.
 | Case | Symptom | Broken assumption | Theory |
 |---|---|---|---|
 | 1 Hardware | robot too low for desk tops | sensors see what we need | sensor mounting (B) |
-| 2 Odometry | L-shaped drive → straight map | odom follows the wheels | odometry motion model |
-| 3 Localization | pose 1.8 m off | the map is informative | MCL weights |
-| 4 Association | one cup → 3 memories | one gate fits every view | data association, Kalman filter |
+| 2 Sensing check | mast expected in the scan | (feared, not true) the scan sees the mast | measure the sensor first |
+| 3 Odometry | L-shaped drive → straight map | odom follows the wheels | odometry motion model |
+| 4 Localization | pose 1.8 m off | the map is informative | MCL weights |
+| 5 Association | one cup → 3 memories | one gate fits every view | data association, Kalman filter |
 
 >> Find the layer first, then the bug
 
-> 트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network & tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 이론의 가정을 깬 네 사례를 다음 네 장에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.
+> 트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network & tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 다섯 사례(네 개는 이론의 가정이 깨진 것, 하나는 걱정했지만 아니었던 것)를 다음 장들에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.
 
 ---
 § What Broke
@@ -268,10 +269,26 @@ Low, the robot can't see desk tops, and a desk's lower panel can look like a wal
 
 >> Fix the body before the code
 
-> 기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.
+> 기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡히지 않을까 하는 걱정은 다음 장(Case 2). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.
+
 ---
 § What Broke
-## Case 2 : The Map That Wouldn't Turn
+## Case 2 : The Posts That Weren't There
+### We built a filter for the mast, then looked first
+
+(그림: 위에서 본 로봇 개념도, 축척 아님 — 점선 막대 4개 = 예상 "4 rods in the scan" / 마룬 실선 원 반지름 0.418 m = "nothing within 0.418 m (60 scans)" / 원 밖 왼쪽 마룬 실선 호 = "nearest : left desk and chair" / 앞 끝 = "front edge 15 cm : not seen")
+- Expected : mast rods in the scan → always "colliding"
+- Measured : 60 scans, nothing within **0.418 m**, 1 of 245 beams without return
+- Decision : filter **off** (OFB_SCAN_MIN = 0)
+
+Top view, not to scale. Even the front edge 15 cm away never shows up: the plate sits below the scan plane.
+
+>> Five minutes of looking saved us a filter
+
+> 트러블슈팅 16번(11/25). 걱정: 카메라 기둥의 막대 네 개가 LiDAR 스캔 높이에 서 있으면 로봇이 자기 몸을 장애물로 봐서 항상 충돌 상태가 되거나 지도에 유령 점이 생김. 그래서 가까운 점을 지우는 필터(OFB_SCAN_MIN)를 미리 만들어 두었고, 줄자로 재서 값을 정할 계획이었음. 측정: 줄자 대신 LiDAR 자신의 데이터. 로봇을 세워 두고 스캔 60개를 모아 "매번 같은 방향, 같은 가까운 거리에 찍히는 점"을 찾음. 결과: 0.418 m 안쪽에 지속적인 반환이 하나도 없음, 가장 가까운 점은 왼쪽 책상과 의자. 값이 안 돌아오는 빔은 245개 중 1개뿐이라 기둥이 가린 곳도 없음. 로봇 몸체 앞 끝(15 cm)도 안 잡힘: 판이 스캔 높이보다 아래. 결론: 필터를 끔(OFB_SCAN_MIN=0, 지금도 기본값 0). 가는 기둥은 이 LiDAR에 보이지 않음. 배운 점: 고치기 전에 센서가 실제로 무엇을 보는지 먼저 본다. 5분 만에 필터가 필요 없다는 것을 알았음. 그림은 위에서 본 개념도(축척 아님): 점선 막대 네 개가 "보일 거라 예상한 것", 실선 원과 실선 호가 측정 결과.
+---
+§ What Broke
+## Case 3 : The Map That Wouldn't Turn
 ### The wheels turned, odometry did not
 
 (a) Before : failed SLAM
@@ -305,7 +322,7 @@ Low, the robot can't see desk tops, and a desk's lower panel can look like a wal
 > 보정이 끝난 뒤 Cartographer로 room_l4를 만드는 과정을 배속으로. 네 가지 명령 조종기(직진, 좌우 90°, 정지)로만 운전해서 회전이 넘치지 않음. 지도가 자라면서 벽이 곧게 이어지고, 출발점으로 돌아오면 고리가 닫힘(복귀 오차 0.14 m). 배속 배율은 영상에 맞춰 [ ___ ×]로 말하기. 영상이 도는 동안은 짧게: "이번엔 벽이 곧습니다."
 ---
 § What Broke
-## Case 3 : Right Map, Wrong Place
+## Case 4 : Right Map, Wrong Place
 ### AMCL on the aisle-only map → ==1.8 m== off
 
 (a) Symptom
@@ -326,7 +343,7 @@ $$ w_t^{[m]} = p\big(z_t \mid x_t^{[m]},\, m\big) $$
 ---
 
 § What Broke
-## Case 4 : One Cup, Many Memories
+## Case 5 : One Cup, Many Memories
 ### Same object only if both gates pass : position and appearance
 
 (a) Symptom
