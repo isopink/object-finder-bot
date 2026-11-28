@@ -44,14 +44,14 @@ cover-caption: "The robot's memory and path after asking “Where is the cup?”
 
 - **Probabilistic object memory** : Bayes + Kalman
 - **4-command navigation** for narrow aisles
-- **Failure analysis** of 40 real-robot problems
+- **Failure analysis** of 39 real-robot problems
 
 [[사진 1]]
 (오른쪽: 실습실 장면 — 통로의 로봇, 책상 위 컵)
 
 >> Remember with **probability**, not certainty
 
-> 문제: 돌아다니며 본 물건을 기억했다가, 말로 물으면 그 자리로 가서 확인. 입력은 질문 q, 지도 m, 주행 중 쌓은 기억 M. 출력은 그 물건 앞까지 이동하고 found / not found 보고. 제약은 좁은 통로, 2D LiDAR, Jetson 8 GB(워커 약 4.2 GB / 전체 6.8 GB). 기여 세 가지: (1) "있나?"는 베이즈 필터, "어디?"는 칼만 필터로 기억, (2) 좁은 통로용 네 가지 명령 이동, (3) 실제 로봇에서 만난 문제 40건의 분석.
+> 문제: 돌아다니며 본 물건을 기억했다가, 말로 물으면 그 자리로 가서 확인. 입력은 질문 q, 지도 m, 주행 중 쌓은 기억 M. 출력은 그 물건 앞까지 이동하고 found / not found 보고. 제약은 좁은 통로, 2D LiDAR, Jetson 8 GB(워커 약 4.2 GB / 전체 6.8 GB). 기여 세 가지: (1) "있나?"는 베이즈 필터, "어디?"는 칼만 필터로 기억, (2) 좁은 통로용 네 가지 명령 이동, (3) 실제 로봇에서 만난 문제 39건의 분석.
 
 ---
 § How It Works
@@ -233,10 +233,10 @@ Queries (planned path turns, drive time, belief at the found object).
 
 ---
 § What Broke
-## 40 Things That Broke
+## 39 Things That Broke
 ### Most of them broke an assumption the theory makes
 
-(그림: 왼쪽 막대그래프 "Problems per lab day" — 11/20 8, 11/24 4, 11/25 10, 11/27 11, 11/28 7(마룬, first full run) / 오른쪽 "By layer" 구간 막대 — Software 21, Hardware 7, Network & tools 7, Middleware 5)
+(그림: 왼쪽 막대그래프 "Problems per lab day" — 11/20 8, 11/24 4, 11/25 9, 11/27 11, 11/28 7(마룬, first full run) / 오른쪽 "By layer" 구간 막대 — Software 21, Hardware 6, Network & tools 7, Middleware 5)
 
 Five cases and the assumption behind each.
 | Case | Symptom | Broken assumption | Theory |
@@ -249,7 +249,7 @@ Five cases and the assumption behind each.
 
 >> Find the layer first, then the bug
 
-> 트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network & tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 다섯 사례(네 개는 이론의 가정이 깨진 것, 하나는 걱정했지만 아니었던 것)를 다음 장들에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.
+> 트러블슈팅 기록 40건 중 16번(카메라 기둥이 LiDAR에 잡히는지 측정)은 문제가 아니라 확인이었으므로 빼고 39건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 9건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 6: 7, 8, 13, 17, 27, 33 / Network & tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류하고 34~40번을 더한 뒤 16번을 뺌. 그중 다섯 사례(네 개는 이론의 가정이 깨진 것, 하나는 걱정했지만 아니었던 것)를 다음 장들에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.
 
 ---
 § What Broke
