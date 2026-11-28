@@ -132,8 +132,8 @@ def E(px):
 def font_name(family):
     first = family.split(",")[0].strip().strip("'\"")
     if first.lower() in ("katex_main", "katex_math"):
-        return "Noto Serif"
-    return first or "Noto Serif"
+        return "Pretendard"
+    return first or "Pretendard"
 
 
 def add_shape(slide, it):
@@ -237,7 +237,7 @@ def add_text(slide, it):
         if ea is None:
             ea = rpr.makeelement(qn("a:ea"), {})
             rpr.append(ea)
-        ea.set("typeface", "Noto Sans KR")
+        ea.set("typeface", "Pretendard")
         if r["ls"]:
             rpr.set("spc", str(int(round(r["ls"] * 0.5 * 100))))
 

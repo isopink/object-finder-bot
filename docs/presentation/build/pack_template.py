@@ -8,7 +8,7 @@ Contents:
     DESIGN.md          design rules (colors, type, layout, paper-review style)
     Rules.md           manuscript symbols (Text.md -> slides)
     build/export.py    deck.html -> PDF + editable PPTX
-    vendor/            KaTeX and Noto Serif, so the deck works offline
+    vendor/            KaTeX and Pretendard, so the deck works offline
     example/           this deck as a worked example: Text.md, deck.html and
                        only the images deck.html uses (example/vendor is a copy
                        of vendor/ so the example opens on its own)
@@ -36,10 +36,10 @@ def readme(ver, today, slides):
 `python build/pack_template.py` 로 이 zip을 다시 만든다.
 
 ## 들어 있는 것
-- `DESIGN.md` : 디자인 규칙. 정갈한 겉모습과 가벼운 분위기(9장), 흑백 톤과 강조색 하나(10장), 표지 대표 이미지(11장), 사진과 영상 칸(12장)
+- `DESIGN.md` : 디자인 규칙. 정갈한 겉모습과 가벼운 분위기(9장), 흑백 톤과 강조색 하나(10장), 표지 대표 이미지(11장), 사진과 영상 칸(12장), 표와 차트(13장), 글꼴 Pretendard(14장)
 - `Rules.md` : 원고(Text.md) 기호 → 슬라이드 요소
 - `build/export.py` : deck.html → PDF + 편집 가능한 PPTX (`pip install python-pptx playwright`, 설치된 Chrome 사용)
-- `vendor/` : KaTeX와 Noto Serif (오프라인에서도 같은 모양)
+- `vendor/` : KaTeX와 Pretendard (오프라인에서도 같은 모양)
 - `example/` : 실제로 쓴 덱 한 벌 (Where Is My Cup?, {slides}장). 새 덱은 이 폴더를 복사해서 시작
 
 ## 새 덱 만드는 순서

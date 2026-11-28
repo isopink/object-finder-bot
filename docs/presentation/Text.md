@@ -12,7 +12,7 @@ cover-caption: "The robot's memory and path after asking “Where is the cup?”
 
 <!-- 원고 규칙: Rules.md. 겉모습은 논문 리뷰처럼 정갈하게(그림·캡션·패널·3선 표), 분위기는 가볍게(번호 없음, 쉬운 섹션 이름). **굵게**는 검정, ==강조==만 마룬. DESIGN.md 9~11장. 슬라이드 글자는 키워드만, 설명은 > 노트로. -->
 <!-- 빈 자리: [[사진 n]] / [[영상 n]] = 나중에 채울 사진·영상, [ ___ ] = 나중에 채울 숫자. 목록은 사진 소싱 가이드.md -->
-<!-- 사진 칸: 사진 1~7, 영상 1~3 (나오는 순서). 꼭 넣을 것: 사진 2→3 하드웨어 전·후, 사진 4→5 SLAM 실패·성공, 영상 3 SLAM 배속. -->
+<!-- 설계도: assets/robot_exploded.svg(원본, 머리글 제거), 덱에는 같은 그림의 PNG. 사진 칸: 사진 1~7, 영상 1~3 (나오는 순서). 꼭 넣을 것: 사진 2→3 하드웨어 전·후, 사진 4→5 SLAM 실패·성공, 영상 3 SLAM 배속. -->
 
 # Title
 
@@ -80,6 +80,20 @@ Pipeline. Maroon (the only accent color) = what we built; the rest is off-the-sh
 
 > 가운데 파란 축이 진행 단계. 0단계(점선)는 질문 전에 돌아다니며 기억해 두는 단계: D455f depth로 물체 위치를 재고, 직진 중에도 기억(회전 중만 건너뜀). 질문은 노트북 faster-whisper → SSH → /query. CLIP × 믿음으로 순위(식 1). 이동은 Cartographer 지도 위에서 AMCL로 위치를 잡고 gridnav(직진·좌90°·우90°·정지 네 가지 명령)로. 도착하면 좌우 15°씩 3번 둘러보고 NanoOWL+CLIP으로 재확인. 마룬이 직접 만든 부분.
 
+
+---
+§ How It Works
+## Design Drawing
+### Three floors : drive at the bottom, LiDAR in the middle, camera on top
+
+![[robot_exploded.png]]
+(그림: 오른쪽 층별 요약 — 3F D455f depth camera, on a ball head / ↕ 450 mm / 2F LDS-02 LiDAR / ↕ 350 mm / 1F wheels, OpenCR, Li-Po 11.1 V, power bank; Jetson Xavier NX between 1F and 2F / overall ≈ 850 mm)
+
+Exploded view: gaps and screws are exaggerated, dimensions are as assembled.
+
+>> Every sensor gets its own floor
+
+> 설계도(조립도). 아래에서부터 1F 바닥판: 바퀴(DYNAMIXEL), OpenCR, 그 밑 Li-Po 11.1 V 배터리, Jetson용 보조배터리. 1F와 2F 사이: Jetson Xavier NX(ASUS PE1000N). 2F: LDS-02 LiDAR, 바닥판에서 350 mm 위. 3F: D455f 깊이 카메라, 볼헤드로 고정, 2F에서 450 mm 위. 전체 약 850 mm(조립 상태). 카메라 높이 실측은 0.815 m. 틈과 나사 크기는 보기 좋게 과장, 치수는 조립 상태 그대로. 왜 이렇게 높게 쌓았는지는 Case 1에서.
 ---
 § How It Works
 ## From Camera to Map
@@ -118,6 +132,26 @@ Example: two looks, then the cup is moved, and three misses bring p below 0.5.
 
 > 강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8 = +2.08, 시야 안인데 못 보면 ln(2/9) = −1.50. 그림은 이 두 값으로 계산한 예시(l: 0 → 2.08 → 4.16 → 2.66 → 1.16 → −0.34). 시간 감쇠는 강의 밖 추가분: 물건은 "world is static" 가정을 깨므로 예측 단계를 넣음.
 
+
+---
+§ How It Works
+## When the Filter Is Too Sure
+### Five looks per second are not five pieces of evidence
+
+(a) What we saw (11/28)
+(그림: 큰 숫자 두 개 — p = 0.9999 after 223 looks at one cup / 0.70 → 0.10 after 2 missed frames)
+(b) Why
+(그림: 거의 같은 장면 5장 → 증거 하나를 5번 셈)
+(c) What we changed (not yet run on the robot)
+- One update of p per **20 cm** driven
+- p(z | present) by **distance**, measured
+(그림: 가로 막대 4개 — 0–1 m [ ___ ], 1–2 m [ ___ ], 2–3 m [ ___ ], 3–4 m [ ___ ]. 컵을 찾은 비율, 12/1 실측)
+
+Near-identical frames were counted as independent evidence [8], so the belief ran away.
+
+>> Count evidence, not frames
+
+> 11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 베이즈 필터는 관측이 서로 독립이라고 가정하는데, 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합침, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.
 ---
 § How It Works
 ## Where Exactly Is It?
@@ -131,9 +165,12 @@ $$ \Sigma_t = (I - K_t)\,\bar{\Sigma}_t $$
 
 1D example from the lecture [7]: the fused estimate is a weighted mean.
 
+- 223 looks → σ 3 mm → floor at **3 cm**
+- One cup, two memories → merge within **20 cm**
+
 >> Every look shrinks Σ
 
-> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 §5 Case 4.
+> 강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 Case 4. 11/28 기억 파일: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 위치 표준편차 하한 3 cm. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개, 코사인 0.74)는 20 cm 안이면 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.
 
 ---
 § How It Works
@@ -230,7 +267,7 @@ Low, the robot can't see desk tops, and a desk's lower panel can look like a wal
 
 >> Fix the body before the code
 
-> 기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 팀 설명: 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤[실습 기록에는 없는 설명 — 발표 전 확인]. 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.
+> 기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.
 ---
 § What Broke
 ## Case 2 : The Map That Wouldn't Turn
@@ -317,8 +354,8 @@ Parameters before → after.
 
 |||
 **Limitations**
-- Monitor detected as a **laptop**
-- Merge fix checked in **one run** only
+- Latest fixes **not yet run** on the robot
+- Detection table : one object, one room
 - 2D LiDAR : aisles only, desk tops unseen
 |||
 **Takeaways**
@@ -330,7 +367,7 @@ Future work : VIO (not tried)
 
 >> Thank you
 
-> 한계: (1) 실습실 모니터가 "a laptop"으로 잡혀 노트북 기억이 여러 개(11/28 노트북 기억 19개 중 대부분) → 질문 때 모니터로 갈 수 있음. (2) 같은 물체가 기억 여러 개로 나뉘던 문제의 수정 효과는 한 번의 주행으로만 확인. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.
+> 한계: (1) 11/28 이후 고친 것들은 아직 로봇에서 안 돌려 봄: 모니터 대책(NanoOWL에 "a computer monitor"도 물어보고 그 상자는 버림, 11/28에는 노트북 기억 19개 중 대부분이 모니터), 20 cm마다 한 번 갱신, 3 cm 하한, 20 cm 합치기. 같은 물체가 나뉘던 문제(Case 4)의 수정도 한 번의 주행으로만 확인. (2) 거리별 검출 확률 표는 이 교실, 이 카메라 높이, 컵 하나로 잰 값. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.
 
 ---
 ## References
@@ -342,5 +379,6 @@ Future work : VIO (not tried)
 - [5] S. Macenski, F. Martín, R. White, and J. Ginés Clavero, "The Marathon 2: A navigation system," in *Proc. IROS*, 2020.
 - [6] A. Radford et al., "Robust speech recognition via large-scale weak supervision," in *Proc. ICML*, 2023.
 - [7] Intelligent Robotics lecture slides, University of Seoul, Fall 2026.
+- [8] J. M. C. Marques et al., "On the overconfidence problem in semantic 3D mapping," in *Proc. ICRA*, 2024.
 
-> 참고 문헌.
+> 참고 문헌. ※ [8]의 저자와 학회는 원문으로 확인 필요.

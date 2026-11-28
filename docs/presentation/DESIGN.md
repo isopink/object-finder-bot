@@ -1,10 +1,10 @@
 ---
-version: 3.2
+version: 3.3
 name: uos-seminar
-description: 서울시립대 발표 덱 표준. 겉모습은 논문 리뷰처럼 정갈하게(그림 중심, 짧은 캡션, (a)(b)(c) 패널, 3선 표), 분위기는 유쾌하고 가볍게(번호 없음, 쉬운 섹션 이름, 질문형 제목). 흑백 톤에 강조색 마룬 하나. Noto Serif. 표지는 프로젝트 대표 이미지.
+description: 서울시립대 발표 덱 표준. 겉모습은 논문 리뷰처럼 정갈하게(그림 중심, 짧은 캡션, (a)(b)(c) 패널, 3선 표), 분위기는 유쾌하고 가볍게(번호 없음, 쉬운 섹션 이름, 질문형 제목). 흑백 톤에 강조색 마룬 하나. 글꼴 Pretendard. 표지는 프로젝트 대표 이미지.
 source: "Seminar_8_05 (2026-08-05 'Trajectory Tracking and Control', 36장) 최종본 HTML에서 실제 값을 추출. 7/15 ISAC 덱과 handoff/template.md로 교차 확인."
 confirmed: 2026-11-27
-revised: 2026-11-28 (v2.0 논문 리뷰 형식 / v3.0 흑백 톤, 표지 이미지 / v3.1 가벼운 분위기, 번호 없음, 가운뎃점과 줄표 금지, 사진 칸 / v3.2 표와 차트 적극 활용)
+revised: 2026-11-28 (v2.0 논문 리뷰 형식 / v3.0 흑백 톤, 표지 이미지 / v3.1 가벼운 분위기, 번호 없음, 가운뎃점과 줄표 금지, 사진 칸 / v3.2 표와 차트 적극 활용 / v3.3 글꼴 Pretendard)
 
 canvas:
   size: 1920x1080px        # 16:9. PPTX: 13.333in x 7.5in
@@ -46,8 +46,8 @@ colors:
     math: "#1a1a1a"
 
 fonts:
-  serif: "'Noto Serif', serif"   # v2.0: 슬라이드 글꼴. 한글(노트)은 Noto Sans KR
-  math: "Georgia, 'Times New Roman', serif"           # 본문 속 그리스 문자·변수는 이탤릭 세리프
+  sans: "'Pretendard', sans-serif"   # v3.3: 슬라이드와 노트 글꼴 하나로 (영문과 한글 모두). v2.0~3.2는 Noto Serif
+  math: "'KaTeX_Math', 'Times New Roman', serif"      # v3.3: 본문 속 변수와 그리스 문자는 수식과 같은 KaTeX 이탤릭
   display-math: KaTeX
   weights: { regular: 400, medium: 500, semibold: 600, bold: 700 }  # 700은 슬라이드 제목·라벨에만
 
@@ -146,7 +146,7 @@ type:                      # px (pt = px x 0.5)
 ## 5. 수식
 
 - 한 장에 **결과 수식 1개 + 한 줄 해석**. 유도는 Appendix로.
-- 본문 속 변수와 그리스 문자는 Georgia 이탤릭. 독립 수식은 KaTeX.
+- 본문 속 변수와 그리스 문자는 KaTeX_Math 이탤릭(독립 수식과 같은 모양). 독립 수식은 KaTeX.
 - 수식 밑에 각 항의 뜻을 작은 회색 글씨로 단다 (8/5 덱 13장 방식).
 - PPTX에는 수식을 이미지로 넣는다.
 
@@ -165,7 +165,7 @@ type:                      # px (pt = px x 0.5)
 - 원고 `Text.md` 하나에서 HTML, PDF, PPTX(편집형)를 뽑는다.
 - 발표자 노트(`>`)는 HTML `data-speaker-notes`와 PPTX 노트란에 넣는다.
 - 동반 문서 `발표 노트.md`, `발표 대본.md`, `사진 소싱 가이드.md`는 원고가 바뀌면 함께 고친다.
-- PPTX 글꼴: Source Sans 3, Noto Sans KR (둘 다 Google Fonts 무료). 받는 PC에도 설치되어 있어야 같은 모양으로 열린다.
+- PPTX 글꼴: Pretendard (무료, OFL). 발표할 PC에 설치되어 있어야 PPTX가 같은 모양으로 열린다(PDF와 HTML은 글꼴을 품고 있어 그대로). 설치 파일: github.com/orioncactus/pretendard 릴리스.
 
 ## 8. 하지 말 것
 
@@ -270,3 +270,10 @@ type:                      # px (pt = px x 0.5)
 - 글자는 글자 색(#222, #444, #6b6b6b)으로. 계열 색으로 글자를 칠하지 않는다(강조 숫자 하나만 예외).
 - 계열이 둘 이상이면 범례를 단다(색 견본 12px + 이름). 차트 위에 짧은 제목 한 줄(18px #444).
 - 슬라이드용이므로 마우스 올림 효과는 넣지 않는다. 대신 숫자를 그림에 직접 적는다.
+
+## 14. 글꼴 (v3.3)
+
+- 슬라이드 글꼴은 **Pretendard** 하나. 영문과 한글을 같이 지원해 노트까지 한 글꼴로 맞는다. 튀지 않고 호불호가 적은 산세리프.
+- 굵기: 본문 400, 결론 문구 500, 요약·표지 제목 600, 제목·라벨 700. 300 이하와 800 이상은 쓰지 않는다.
+- 수식과 본문 속 변수(`q`, `p`, `K`, `Q_t`)는 KaTeX(세리프 이탤릭). 글꼴은 이 둘만.
+- `vendor/fonts/`에 subset woff2 네 굵기(Regular, Medium, SemiBold, Bold, 각 약 260 KB)를 두어 오프라인에서도 같은 모양.

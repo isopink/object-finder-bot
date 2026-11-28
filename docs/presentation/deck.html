@@ -9,19 +9,17 @@
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <script defer src="vendor/katex/katex.min.js"></script>
 <style>
-  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:400;src:url(vendor/fonts/noto-serif-latin-400-normal.woff2) format('woff2')}
-  @font-face{font-family:'Noto Serif';font-style:italic;font-weight:400;src:url(vendor/fonts/noto-serif-latin-400-italic.woff2) format('woff2')}
-  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:500;src:url(vendor/fonts/noto-serif-latin-500-normal.woff2) format('woff2')}
-  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:600;src:url(vendor/fonts/noto-serif-latin-600-normal.woff2) format('woff2')}
-  @font-face{font-family:'Noto Serif';font-style:normal;font-weight:700;src:url(vendor/fonts/noto-serif-latin-700-normal.woff2) format('woff2')}
-  @font-face{font-family:'Noto Serif';font-style:italic;font-weight:700;src:url(vendor/fonts/noto-serif-latin-700-italic.woff2) format('woff2')}
+  @font-face{font-family:'Pretendard';font-style:normal;font-weight:400;src:url(vendor/fonts/Pretendard-Regular.subset.woff2) format('woff2')}
+  @font-face{font-family:'Pretendard';font-style:normal;font-weight:500;src:url(vendor/fonts/Pretendard-Medium.subset.woff2) format('woff2')}
+  @font-face{font-family:'Pretendard';font-style:normal;font-weight:600;src:url(vendor/fonts/Pretendard-SemiBold.subset.woff2) format('woff2')}
+  @font-face{font-family:'Pretendard';font-style:normal;font-weight:700;src:url(vendor/fonts/Pretendard-Bold.subset.woff2) format('woff2')}
   :root{
     --blue:#1a1a1a; --maroon:#8C2D2D; --ink:#222222; --summary:#8c8c8c; --footer:#a6a6a6;
     --rule:#e5e5e5; --rule-soft:#ececec; --card:#fafafa; --sub:#444444; --callout:#2a2a2a;
     --d-ink:#2b2b2b; --d-line:#b3b3b3; --d-flow:#9a9a9a; --d-label:#6b6b6b;
   }
   html,body{margin:0;background:#ebebeb}
-  body{font-family:'Noto Serif',serif;color:var(--ink)}
+  body{font-family:'Pretendard',sans-serif;color:var(--ink)}
   .deck{display:flex;flex-direction:column;align-items:center;gap:40px;padding:40px 0}
   .slide{width:1920px;height:1080px;box-sizing:border-box;padding:52px 316px 60px;display:flex;flex-direction:column;
     background:#fff;position:relative;overflow:hidden;flex:none}
@@ -76,7 +74,7 @@
   .bl.sm .b{font-size:28px}
   strong{color:inherit;font-weight:700}
   .acc,strong.acc{color:var(--maroon)}
-  .m{font-family:'Noto Serif',serif;font-style:italic}
+  .m{font-family:'KaTeX_Math','Times New Roman',serif;font-style:italic}
   .callout{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:34px;flex:none}
   .callout .bar{width:56px;height:3px;background:var(--ink);border-radius:2px}
   .callout .tx{font-size:29px;font-weight:500;color:var(--callout);text-align:center}
@@ -181,7 +179,7 @@
   .plab span{font-weight:400;color:var(--d-label)}
   .parrow{align-self:center;font-size:34px;color:var(--summary);flex:none}
   .eq[data-n]{position:relative;padding:0 64px}
-  .eq[data-n]::after{content:"(" attr(data-n) ")";position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:22px;color:var(--summary);font-family:'Noto Serif',serif}
+  .eq[data-n]::after{content:"(" attr(data-n) ")";position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:22px;color:var(--summary);font-family:'Pretendard',sans-serif}
   .eq.xs .katex{font-size:24px}
   .eq.xs[data-n]{padding:0 50px}
   table.bt{border-collapse:collapse;border-top:2px solid #222;border-bottom:2px solid #222;font-size:20px}
@@ -260,7 +258,7 @@
   <div><div class="sec">How It Works</div><h2>Each Memory : What, Where, How Sure</h2><div class="sum">A query is ranked by meaning × belief</div></div>
   <div class="body" style="gap:16px">
     <div style="display:flex;align-items:center;justify-content:center;gap:44px">
-      <svg width="600" height="300" viewBox="0 0 600 300" style="font-family:'Noto Serif',serif;flex:none">
+      <svg width="600" height="300" viewBox="0 0 600 300" style="font-family:'Pretendard',sans-serif;flex:none">
         <rect x="2" y="2" width="596" height="296" rx="10" fill="#fafafa" stroke="#cccccc" stroke-width="2"/>
         <line x1="40" y1="150" x2="560" y2="150" stroke="#e5e5e5" stroke-width="18" stroke-linecap="round"/>
         <line x1="300" y1="40" x2="300" y2="260" stroke="#e5e5e5" stroke-width="18" stroke-linecap="round"/>
@@ -355,7 +353,27 @@
   <div class="callout"><div class="bar"></div><div class="tx">Off-the-shelf perception, our own memory and motion</div></div>
 </section>
 
-<!-- 6 Camera to Map -->
+<!-- 6 Design drawing -->
+<section class="slide content dense" data-notes="설계도(조립도). 아래에서부터 1F 바닥판: 바퀴(DYNAMIXEL), OpenCR, 그 밑 Li-Po 11.1 V 배터리, Jetson용 보조배터리. 1F와 2F 사이: Jetson Xavier NX(ASUS PE1000N). 2F: LDS-02 LiDAR, 바닥판에서 350 mm 위. 3F: D455f 깊이 카메라, 볼헤드로 고정, 2F에서 450 mm 위. 전체 약 850 mm(조립 상태). 카메라 높이 실측은 0.815 m. 틈과 나사 크기는 보기 좋게 과장, 치수는 조립 상태 그대로. 왜 이렇게 높게 쌓았는지는 Case 1에서.">
+  <div><div class="sec">How It Works</div><h2>Design Drawing</h2><div class="sum">Three floors : drive at the bottom, LiDAR in the middle, camera on top</div></div>
+  <div class="body" style="flex-direction:row;align-items:center;justify-content:center;gap:56px">
+    <div style="flex:none;display:flex;flex-direction:column;gap:6px">
+      <img class="frame" src="assets/robot_exploded.png" style="height:572px;display:block">
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:12px;max-width:560px">
+      <div style="display:flex;gap:18px;align-items:flex-start"><div class="chip" style="flex:none;width:64px;justify-content:center;font-size:24px;padding:8px 0">3F</div><div><div style="font-size:26px;font-weight:700;color:var(--ink)">D455f depth camera</div><div style="font-size:20px;color:var(--d-label);margin-top:2px">on a ball head, front of the top plate</div></div></div>
+      <div style="padding-left:26px;font-size:20px;color:var(--d-label)">↕ 450 mm</div>
+      <div style="display:flex;gap:18px;align-items:flex-start"><div class="chip" style="flex:none;width:64px;justify-content:center;font-size:24px;padding:8px 0">2F</div><div><div style="font-size:26px;font-weight:700;color:var(--ink)">LDS-02 LiDAR</div><div style="font-size:20px;color:var(--d-label);margin-top:2px">360° scan, raised off the base</div></div></div>
+      <div style="padding-left:26px;font-size:20px;color:var(--d-label)">↕ 350 mm</div>
+      <div style="display:flex;gap:18px;align-items:flex-start"><div class="chip" style="flex:none;width:64px;justify-content:center;font-size:24px;padding:8px 0">1F</div><div><div style="font-size:26px;font-weight:700;color:var(--ink)">Wheels, OpenCR, battery</div><div style="font-size:20px;color:var(--d-label);margin-top:2px">Jetson Xavier NX sits between 1F and 2F</div></div></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--rule);font-size:24px">Overall <strong class="acc">≈ 850 mm</strong> <span style="font-size:19px;color:var(--d-label)">as assembled</span></div>
+      <div class="figcap" style="margin-top:6px">Exploded view: gaps and screws are exaggerated, dimensions are as assembled.</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Every sensor gets its own floor</div></div>
+</section>
+
+<!-- 7 Camera to Map -->
 <section class="slide content dense" data-notes="(a) 11/24 실측 화면: NanoOWL 상자 + D455f 거리. 검출+거리 한 장 약 0.08초. (b) 식 (2) 역투영은 강의 밖 우리 추가분. 식 (3)은 강의의 Combining Transformations 그대로. A = AMCL 로봇 자세, B = 카메라 장착 위치(실측), K = 카메라 내부 값. K의 함정(트러블슈팅 33): 설정 파일의 fx 615는 D435 기준 임시값, D455F 640×480 실측은 386.98(시야각 79.2°). 임시값이었으면 좌우 방향이 약 60% 어긋남. B(장착 위치)는 Case 1에서.">
   <div><div class="sec">How It Works</div><h2>From Camera to Map</h2><div class="sum">Pixel + depth → one point on the map</div></div>
   <div class="body" style="gap:12px">
@@ -382,7 +400,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Homogeneous coordinates: one matrix per hop</div></div>
 </section>
 
-<!-- 7 Bayes -->
+<!-- 8 Bayes -->
 <section class="slide content dense" data-notes="강의(L06)의 static state binary Bayes filter와 같은 필터. p(z|present)=0.8, p(z|absent)=0.1 → 보면 ln 8 = +2.08, 시야 안인데 못 보면 ln(2/9) = −1.50. 그림은 이 두 값으로 계산한 예시(l: 0 → 2.08 → 4.16 → 2.66 → 1.16 → −0.34). 시간 감쇠는 강의 밖 추가분: 물건은 &quot;world is static&quot; 가정을 깨므로 예측 단계를 넣음.">
   <div><div class="sec">How It Works</div><h2>Is the Cup Still There?</h2><div class="sum">Static state binary Bayes filter, in log odds <span class="cite">[1]</span></div></div>
   <div class="body" style="gap:14px">
@@ -395,7 +413,7 @@
           <div class="b"><span class="dot">•</span><span>Objects move → prediction step (decay)</span></div>
         </div>
       </div>
-      <svg width="600" height="330" viewBox="0 0 600 330" style="font-family:'Noto Serif',serif;flex:none">
+      <svg width="600" height="330" viewBox="0 0 600 330" style="font-family:'Pretendard',sans-serif;flex:none">
         <rect x="285" y="30" width="290" height="250" fill="#f5eae9"/>
         <text x="430" y="268" font-size="18" fill="#8C2D2D" text-anchor="middle">cup moved</text>
         <line x1="60" y1="280" x2="575" y2="280" stroke="#b3b3b3" stroke-width="2"/>
@@ -426,8 +444,39 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Seen raises the belief, missing lowers it</div></div>
 </section>
 
-<!-- 8 Kalman -->
-<section class="slide content dense" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 §5 Case 4.">
+<!-- 9 Filter too sure -->
+<section class="slide content dense" data-notes="11/28 기억 파일: 컵 하나를 223번 보고 나니 p = 0.9999, 위치 표준편차 3 mm. 0.70 → 0.10은 갱신식으로 계산한 값(못 본 장면 두 번). 원인: 강의의 베이즈 필터는 관측이 서로 독립이라고 가정하는데, 초당 5장의 영상은 몇 cm 차이의 거의 같은 장면이라 같은 증거를 여러 번 센 것 [8]. 수정 1: 로봇이 20 cm 움직일 때마다 그 기억의 p를 한 번만 갱신(위치와 임베딩은 매 장면 합침, 도착 후 재확인은 항상 반영). 수정 2: p(z|present)를 0.8 하나로 두지 않고 거리별로 실측한 표를 씀(멀리서 못 본 것은 약한 증거). 막대 값은 12/1 실습에서 robot/fit_detection.sh로 채움. ※ 두 수정 모두 로봇 확인 전. [8]의 저자와 학회는 원문으로 확인 필요.">
+  <div><div class="sec">How It Works</div><h2>When the Filter Is Too Sure</h2><div class="sum">Five looks per second are not five pieces of evidence</div></div>
+  <div class="body" style="gap:12px">
+    <div class="panels">
+      <div class="panel" style="gap:18px;justify-content:center"><div class="plab">(a) <span>What we saw (11/28)</span></div>
+        <div class="stat"><div class="n" style="color:var(--maroon)">0.9999</div><div class="l">p after 223 looks at one cup</div></div>
+        <div class="stat"><div class="n" style="font-size:44px">0.70 → 0.10</div><div class="l">after 2 missed frames</div></div></div>
+      <div class="parrow">→</div>
+      <div class="panel" style="justify-content:center;gap:10px"><div class="plab">(b) <span>Why</span></div>
+        <svg width="330" height="170" viewBox="0 0 330 170" style="font-family:'Pretendard',sans-serif">
+          <text x="165" y="26" font-size="17" fill="#6b6b6b" text-anchor="middle">5 frames, a few cm apart</text>
+          <rect x="14" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 32 52 L 34 70 L 46 70 L 48 52 Z" fill="#2b2b2b"/><rect x="76" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 94 52 L 96 70 L 108 70 L 110 52 Z" fill="#2b2b2b"/><rect x="138" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 156 52 L 158 70 L 170 70 L 172 52 Z" fill="#2b2b2b"/><rect x="200" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 218 52 L 220 70 L 232 70 L 234 52 Z" fill="#2b2b2b"/><rect x="262" y="40" width="52" height="40" rx="5" fill="#fafafa" stroke="#b3b3b3" stroke-width="2"/><path d="M 280 52 L 282 70 L 294 70 L 296 52 Z" fill="#2b2b2b"/>
+          <path d="M 14 92 Q 14 104 26 104 L 152 104 Q 165 104 165 116 Q 165 104 178 104 L 304 104 Q 316 104 316 92" fill="none" stroke="#2b2b2b" stroke-width="2"/>
+          <text x="165" y="142" font-size="19" fill="#8C2D2D" text-anchor="middle">counted as 5 pieces of evidence</text>
+          <text x="165" y="164" font-size="16" fill="#6b6b6b" text-anchor="middle">the filter assumes independent looks</text>
+        </svg></div>
+      <div class="parrow">→</div>
+      <div class="panel" style="gap:10px"><div class="plab">(c) <span>What we changed</span></div>
+        <div class="bl sm" style="gap:6px;align-self:stretch">
+          <div class="b" style="font-size:21px"><span class="dot">•</span><span>One update of <span class="m">p</span> per <strong>20 cm</strong> driven</span></div>
+          <div class="b" style="font-size:21px"><span class="dot">•</span><span><span class="m">p</span>(<span class="m">z</span> | present) by <strong>distance</strong></span></div>
+        </div>
+        <div class="bars" style="gap:6px;align-self:stretch"><div class="brow"><div class="bn" style="width:90px;font-size:19px">0–1 m</div><div class="track"><div class="fill" style="width:150px;height:22px;background:#f1f1f1;border:1px dashed #b3b3b3;box-sizing:border-box"></div><div class="bv blank" style="font-size:19px">[ ___ ]</div></div></div><div class="brow"><div class="bn" style="width:90px;font-size:19px">1–2 m</div><div class="track"><div class="fill" style="width:150px;height:22px;background:#f1f1f1;border:1px dashed #b3b3b3;box-sizing:border-box"></div><div class="bv blank" style="font-size:19px">[ ___ ]</div></div></div><div class="brow"><div class="bn" style="width:90px;font-size:19px">2–3 m</div><div class="track"><div class="fill" style="width:150px;height:22px;background:#f1f1f1;border:1px dashed #b3b3b3;box-sizing:border-box"></div><div class="bv blank" style="font-size:19px">[ ___ ]</div></div></div><div class="brow"><div class="bn" style="width:90px;font-size:19px">3–4 m</div><div class="track"><div class="fill" style="width:150px;height:22px;background:#f1f1f1;border:1px dashed #b3b3b3;box-sizing:border-box"></div><div class="bv blank" style="font-size:19px">[ ___ ]</div></div></div></div>
+        <div style="font-size:16px;color:var(--d-label)">cup found, by distance (to be measured 12/1), not yet run on the robot</div></div>
+    </div>
+    <div class="figcap">Near-identical frames were counted as independent evidence <span class="cite">[8]</span>, so the belief ran away.</div>
+  </div>
+  <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Count evidence, not frames</div></div>
+</section>
+
+<!-- 10 Kalman -->
+<section class="slide content dense" data-notes="강의 칼만 필터의 correction step에서 C_t = I, 예측은 그대로(물체는 정지). 측정 잡음은 강의 표기대로 Q_t, 멀수록 커짐(거리 σ = a + b·r², 방향 σ = r·σ_bearing). 그림은 강의 1D 예제 숫자. 새 관측을 어느 기억에 합칠지는 마할라노비스 거리로 정함 → Q_t를 실제보다 작게 잡으면 생기는 일은 Case 4. 11/28 기억 파일: 컵을 223번 본 뒤 σ = 3 mm, 로봇 자세 오차(AMCL 1~2°)보다 작은 과신 → 위치 표준편차 하한 3 cm. 같은 물체가 기억 두 개로 나뉜 경우(9 cm 떨어진 노트북 2개, 코사인 0.74)는 20 cm 안이면 하나로 합침. ※ 하한과 합치기는 로봇 확인 전.">
   <div><div class="sec">How It Works</div><h2>Where Exactly Is It?</h2><div class="sum">Kalman filter correction: the cup does not move <span class="cite">[1]</span></div></div>
   <div class="body" style="gap:14px">
     <div style="display:flex;align-items:center;gap:40px">
@@ -435,19 +484,23 @@
         <div class="eq sm" data-tex="K_t = \bar{\Sigma}_t\,(\bar{\Sigma}_t + Q_t)^{-1}"></div>
         <div class="eq sm" data-tex="\mu_t = \bar{\mu}_t + K_t\,(z_t - \bar{\mu}_t)"></div>
         <div class="eq sm" data-tex="\Sigma_t = (I - K_t)\,\bar{\Sigma}_t"></div>
+        <div class="cards" style="gap:12px;flex-wrap:wrap">
+          <div class="chip">223 looks → <span class="m" style="margin:0 6px">σ</span> 3 mm → floor at <b style="margin-left:6px">3 cm</b></div>
+          <div class="chip">one cup, two memories → merge within <b style="margin-left:6px">20 cm</b></div>
+        </div>
       </div>
-      <svg id="gauss" width="600" height="340" style="font-family:'Noto Serif',serif;flex:none"></svg>
+      <svg id="gauss" width="600" height="340" style="font-family:'Pretendard',sans-serif;flex:none"></svg>
     </div>
     <div class="figcap">1D example from the lecture <span class="cite">[7]</span>: memory N(8, 4) and a new look N(6, 1) fuse to N(6.4, 0.8), a weighted mean.</div>
   </div>
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Every look shrinks <span class="m">Σ</span></div></div>
 </section>
 
-<!-- 9 Localization and navigation -->
+<!-- 11 Localization and navigation -->
 <section class="slide content dense" data-notes="Cartographer = 강의 Three Traditional Paradigms 중 graph-based. 2D LiDAR는 책상 윗판을 못 보고, 회색(unknown)을 빈 곳으로 읽으면 안 됨 → 실제 지나간 통로만 남긴 지도를 따로 만듦. 단, 통로 지도는 경로 계획에만 쓰고 AMCL에는 원본 지도를 줌(이유는 Case 3). AMCL은 강의의 MCL 그대로. 식 (8)은 강의 odometry motion model: 회전할 때마다 방향 오차, 이동 거리가 그걸 옆 오차로 키움(5 m: 1° → 9 cm, 5° → 44 cm). Nav2는 좁은 통로에서 경로를 못 만들거나 목표 0.31 m 앞에서 포기 → gridnav: A*로 직진과 90° 꺾임만 있는 경로, AMCL 자세를 보며 &quot;축 방향으로 회전 → 모서리까지 직진&quot; 반복. 보내는 명령은 네 가지뿐.">
   <div><div class="sec">How It Works</div><h2>Localization and Navigation</h2><div class="sum">Two maps, two jobs : full map → AMCL, aisle map → planning</div></div>
   <div class="body" style="gap:10px">
-    <svg width="1300" height="318" viewBox="0 0 1300 318" style="font-family:'Noto Serif',serif">
+    <svg width="1300" height="318" viewBox="0 0 1300 318" style="font-family:'Pretendard',sans-serif">
       <defs><marker id="fa" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9a9a9a"/></marker></defs>
       <!-- row 1 -->
       <rect x="0" y="20" width="200" height="90" rx="10" fill="#f1f1f1" stroke="#a6a6a6" stroke-width="2"/>
@@ -498,7 +551,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Known map → errors stop piling up</div></div>
 </section>
 
-<!-- 10 Experiments -->
+<!-- 12 Experiments -->
 <section class="slide content dense" data-notes="11/28 새벽 실제 로봇에서 처음으로 전체 흐름 성공. 질문 3개 모두 found: 00:43 컵 93초 확신도 0.84(경로 +x → −y → +x, 꺾임 2번), 01:31 노트북 112초 + 42초 확신도 0.67(꺾임 3번), 01:35 컵 100초 확신도 0.87(꺾임 3번). 실시간 영상 초당 10장. 데모데이(12/03) 결과로 마지막 줄을 채움.">
   <div><div class="sec">Does It Work?</div><h2>Did It Work? (11/28)</h2><div class="sum">First full run : see → remember → ask → drive → re-check</div></div>
   <div class="body" style="flex-direction:row;align-items:center;justify-content:center;gap:56px">
@@ -527,7 +580,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx"><strong class="acc">3 / 3</strong> found on the first full run</div></div>
 </section>
 
-<!-- 11 Ablation -->
+<!-- 13 Ablation -->
 <section class="slide content dense" data-notes="장난감 세계 시뮬레이션(depth 카메라 설정): 위치가 완벽하고 가림이 없어서 절대값보다 비교가 의미. (a) 검색: CLIP 95.0% vs 라벨 일치 43.0%(top-1). CLIP이 틀린 5%는 &quot;phone charger&quot;를 물으면 phone이 1등. (b) 물체 4개를 옮기고 다시 순찰한 뒤: 확률 메모리는 옮긴 물체를 첫 방문에 100% 찾고(질문당 방문 1.00), 유사도만 쓰면 50%(1.80). 데모데이 영상으로 실제 확인.">
   <div><div class="sec">Does It Work?</div><h2>Is Probability Worth It?</h2><div class="sum">Toy world, 5 seeds × 20 queries. Compare, don't trust absolute numbers</div></div>
   <div class="body" style="gap:12px">
@@ -551,14 +604,14 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Lowering the old belief finds the new place</div></div>
 </section>
 
-<!-- 12 Failure analysis overview -->
+<!-- 14 Failure analysis overview -->
 <section class="slide content dense" data-notes="트러블슈팅 기록 40건. 날짜별로는 11/20 8건, 11/24 4건, 11/25 10건, 11/27 11건(가장 많음), 11/28 7건이고, 11/28에 처음으로 전체 흐름이 성공. 층별 분류: Software 21: 6, 10, 11, 12, 15, 18, 22, 24, 25, 26, 28~32, 34~38, 40 / Hardware 7: 7, 8, 13, 16, 17, 27, 33 / Network &amp; tools 7: 1~5, 9, 39 / Middleware 5: 14, 19, 20, 21, 23(나중에 켠 노드가 /odom을 못 찾던 DDS 문제 포함). 1~33번은 이전 개수(15/7/6/5)에 맞게 분류, 34~40번을 더함. 그중 이론의 가정을 깬 네 사례를 다음 네 장에서 (a) 증상 → (b) 진단 → (c) 해결 순서로. 그 밖에 설계를 바꾼 것: 음성인식은 메모리 한계로 노트북으로, 워커 재시작 시 GPU 메모리 부족은 파일 캐시 1.3 GB를 모델 로딩 중 비워서 해결.">
   <div><div class="sec">What Broke</div><h2>40 Things That Broke</h2><div class="sum">Most of them broke an assumption the theory makes</div></div>
   <div class="body" style="gap:22px">
     <div style="display:flex;gap:44px;align-items:flex-end">
       <div style="display:flex;flex-direction:column;gap:4px;flex:none">
         <div class="tcap" style="margin:0">Problems per lab day</div>
-        <svg width="560" height="214" viewBox="0 0 560 214" style="font-family:'Noto Serif',serif"><line x1="20" y1="180" x2="560" y2="180" stroke="#b3b3b3" stroke-width="2"/><rect x="40" y="68" width="64" height="112" rx="4" fill="#a6a6a6"/><rect x="40" y="176" width="64" height="4" fill="#a6a6a6"/><text x="72" y="60" font-size="19" font-weight="700" fill="#222" text-anchor="middle">8</text><text x="72" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/20</text><rect x="144" y="124" width="64" height="56" rx="4" fill="#a6a6a6"/><rect x="144" y="176" width="64" height="4" fill="#a6a6a6"/><text x="176" y="116" font-size="19" font-weight="700" fill="#222" text-anchor="middle">4</text><text x="176" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/24</text><rect x="248" y="40" width="64" height="140" rx="4" fill="#a6a6a6"/><rect x="248" y="176" width="64" height="4" fill="#a6a6a6"/><text x="280" y="32" font-size="19" font-weight="700" fill="#222" text-anchor="middle">10</text><text x="280" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/25</text><rect x="352" y="26" width="64" height="154" rx="4" fill="#a6a6a6"/><rect x="352" y="176" width="64" height="4" fill="#a6a6a6"/><text x="384" y="18" font-size="19" font-weight="700" fill="#222" text-anchor="middle">11</text><text x="384" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/27</text><rect x="456" y="82" width="64" height="98" rx="4" fill="#8C2D2D"/><rect x="456" y="176" width="64" height="4" fill="#8C2D2D"/><text x="488" y="74" font-size="19" font-weight="700" fill="#222" text-anchor="middle">7</text><text x="488" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/28</text><text x="488" y="52" font-size="16" fill="#8C2D2D" text-anchor="middle">first full run</text></svg>
+        <svg width="560" height="214" viewBox="0 0 560 214" style="font-family:'Pretendard',sans-serif"><line x1="20" y1="180" x2="560" y2="180" stroke="#b3b3b3" stroke-width="2"/><rect x="40" y="68" width="64" height="112" rx="4" fill="#a6a6a6"/><rect x="40" y="176" width="64" height="4" fill="#a6a6a6"/><text x="72" y="60" font-size="19" font-weight="700" fill="#222" text-anchor="middle">8</text><text x="72" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/20</text><rect x="144" y="124" width="64" height="56" rx="4" fill="#a6a6a6"/><rect x="144" y="176" width="64" height="4" fill="#a6a6a6"/><text x="176" y="116" font-size="19" font-weight="700" fill="#222" text-anchor="middle">4</text><text x="176" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/24</text><rect x="248" y="40" width="64" height="140" rx="4" fill="#a6a6a6"/><rect x="248" y="176" width="64" height="4" fill="#a6a6a6"/><text x="280" y="32" font-size="19" font-weight="700" fill="#222" text-anchor="middle">10</text><text x="280" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/25</text><rect x="352" y="26" width="64" height="154" rx="4" fill="#a6a6a6"/><rect x="352" y="176" width="64" height="4" fill="#a6a6a6"/><text x="384" y="18" font-size="19" font-weight="700" fill="#222" text-anchor="middle">11</text><text x="384" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/27</text><rect x="456" y="82" width="64" height="98" rx="4" fill="#8C2D2D"/><rect x="456" y="176" width="64" height="4" fill="#8C2D2D"/><text x="488" y="74" font-size="19" font-weight="700" fill="#222" text-anchor="middle">7</text><text x="488" y="204" font-size="17" fill="#6b6b6b" text-anchor="middle">11/28</text><text x="488" y="52" font-size="16" fill="#8C2D2D" text-anchor="middle">first full run</text></svg>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;flex:1;padding-bottom:30px">
         <div class="tcap" style="margin:0">By layer</div>
@@ -580,8 +633,8 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Find the layer first, then the bug</div></div>
 </section>
 
-<!-- 13 Case 1 -->
-<section class="slide content dense" data-notes="기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 팀 설명: 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤[실습 기록에는 없는 설명 — 발표 전 확인]. 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.">
+<!-- 15 Case 1 -->
+<section class="slide content dense" data-notes="기본 카메라 자리는 너무 낮아 책상 윗면이 안 보임(목표 물체는 책상 위 컵·노트북). (a) 보정 전: 낮은 기본 상태. (b) 보정 후: 기둥을 세워 높이를 올림, 카메라 높이 실측 0.815 m(수평). 낮은 높이에서는 실내 책상 하판을 벽으로 인식할 수 있어서 센서 높이를 맞춤(설계도 기준: LiDAR는 2F, 바닥판에서 350 mm 위, 카메라는 3F, 전체 약 850 mm. 앞의 Design Drawing 장). 기둥이 LiDAR에 잡힐까 봐 필터를 만들어 뒀지만 LiDAR 데이터로 먼저 확인: 스캔 60개, 0.418 m 안쪽에 반복해서 찍히는 점 없음 → 필터 끔(16번). C920(약 160 g)이 흔들려 기둥 보강(17번). 책상 밑으로 들어가면 기둥이 부딪힘 → 목표 지점은 통로에만. 같은 시기에 C920(방향만) → D455f(거리+방향)로 바꿈: 통로에서 두 시선이 거의 평행하면 3 m 앞 물체가 약 0.5 m 오차.">
   <div><div class="sec">What Broke</div><h2>Case 1 : Raising the Robot</h2><div class="sum">Too low to see desk tops → add a mast</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
@@ -592,7 +645,7 @@
         <div class="ph" style="width:400px;height:300px;flex:none"><div class="pl">[ Photo 3 ]</div><div class="pd">After : mast up, sensor heights matched<br>(same angle as Photo 2)</div></div></div>
       <div class="parrow">→</div>
       <div class="panel" style="flex:none"><div class="plab">(c) <span>Why</span></div>
-        <svg width="330" height="287" viewBox="0 0 620 540" style="font-family:'Noto Serif',serif">
+        <svg width="330" height="287" viewBox="0 0 620 540" style="font-family:'Pretendard',sans-serif">
           <line x1="10" y1="500" x2="610" y2="500" stroke="#b3b3b3" stroke-width="3"/>
           <rect x="380" y="250" width="220" height="16" rx="3" fill="#fafafa" stroke="#b3b3b3" stroke-width="3"/>
           <line x1="395" y1="266" x2="395" y2="500" stroke="#b3b3b3" stroke-width="3"/>
@@ -620,7 +673,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Fix the body before the code</div></div>
 </section>
 
-<!-- 14 Case 2 -->
+<!-- 16 Case 2 -->
 <section class="slide content dense" data-notes="(a) 보정 전 실패한 SLAM: ㄱ자로 운전했는데 지도는 일자(11/25), 벽이 겹치기도 함(assets/map_straight.png, map_doubled.png가 후보). (b) 원인 1: 로봇 드라이버의 odom 방향이 멈춤. 11/25(바퀴 +97.7°, IMU +91.7°, odom 0°), 11/27, 11/28 세 번 반복. 11/28: 바퀴 29° 회전에 odom +0.0°, 바퀴 각도(/joint_states)는 항상 맞음. 원인 2(11/27): LiDAR가 180° 반대로 달림. 앞 0.44 m 물체가 185°에 보였고, 10.7 cm 전진하자 10.5 cm 가까워짐 → 0°가 로봇 뒤. (c) 보정 후 성공한 SLAM: 바퀴 각도로 odom을 직접 계산(+28.4°, 바퀴 계산 29°), 스캔은 소프트웨어로 180° 돌림 → room_l4 13.9 × 7.8 m, 벽 직선, 출발점 복귀 오차 0.14 m(assets/room_l4_full.png가 후보). 다음 장에서 그 지도가 만들어지는 과정을 배속으로.">
   <div><div class="sec">What Broke</div><h2>Case 2 : The Map That Wouldn't Turn</h2><div class="sum">The wheels turned, odometry did not</div></div>
   <div class="body" style="gap:12px">
@@ -634,7 +687,7 @@
           <div class="brow"><div class="bn" style="width:150px;font-size:19px">wheels</div><div class="track"><div class="fill" style="width:174px;height:30px;background:#6b6b6b"></div><div class="bv" style="font-size:21px">+29°</div></div></div>
           <div class="brow"><div class="bn" style="width:150px;font-size:19px;white-space:nowrap">odom (driver)</div><div class="track"><div class="fill mar" style="width:3px;height:30px"></div><div class="bv acc" style="font-size:21px">+0.0°</div></div></div>
         </div>
-        <svg width="330" height="190" viewBox="0 0 330 190" style="font-family:'Noto Serif',serif">
+        <svg width="330" height="190" viewBox="0 0 330 190" style="font-family:'Pretendard',sans-serif">
           <rect x="105" y="60" width="90" height="80" rx="10" fill="#fafafa" stroke="#cccccc" stroke-width="2"/>
           <line x1="150" y1="100" x2="290" y2="100" stroke="#1a1a1a" stroke-width="3" marker-end="url(#fa2)"/>
           <defs><marker id="fa2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/></marker></defs>
@@ -658,7 +711,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Check odometry before blaming SLAM</div></div>
 </section>
 
-<!-- 15 Time-lapse -->
+<!-- 17 Time-lapse -->
 <section class="slide content dense" data-notes="보정이 끝난 뒤 Cartographer로 room_l4를 만드는 과정을 배속으로. 네 가지 명령 조종기(직진, 좌우 90°, 정지)로만 운전해서 회전이 넘치지 않음. 지도가 자라면서 벽이 곧게 이어지고, 출발점으로 돌아오면 고리가 닫힘(복귀 오차 0.14 m). 배속 배율은 영상에 맞춰 [ ___ ×]로 말하기. 영상이 도는 동안은 짧게: &quot;이번엔 벽이 곧습니다.&quot;">
   <div><div class="sec">What Broke</div><h2>Building the Map, Fast-Forward</h2><div class="sum">After the fixes : room_l4, 13.9 × 7.8 m, loop closes within 0.14 m</div></div>
   <div class="body">
@@ -667,7 +720,7 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">Straight walls, and the loop closes</div></div>
 </section>
 
-<!-- 16 Case 3 -->
+<!-- 18 Case 3 -->
 <section class="slide content dense" data-notes="가정: 식 (9)의 likelihood field가 파티클을 구별해 준다. (a) 몇 m 주행 뒤 지도 화면의 로봇이 실제와 다른 책상 줄(1.8 m 차이), 그 위치로 기억한 컵도 엉뚱한 곳. AMCL에 통로만 남긴 지도를 줬음. (b) 통로 밖이 전부 벽이라 어느 파티클이든 스캔이 잘 맞아 보임 → 가중치가 고만고만 → 사실상 바퀴 기록만 따라감. 확인: 현재 스캔을 원본 지도 전체에 맞춰 봄. AMCL이 믿는 위치는 스캔의 38%만 벽에 닿고, 다시 찾은 위치는 86%. (c) 위치 추정은 원본 지도, 경로 계획만 통로 지도. 주행 후 AMCL과 스캔 맞춤 차이 3 cm, 2°. 위치 보정 도구 relocalize.sh: 처음 위치를 몰라도 스캔을 지도 전체에 맞춰 AMCL에 알려 줌(9초). (트러블슈팅 34)">
   <div><div class="sec">What Broke</div><h2>Case 3 : Right Map, Wrong Place</h2><div class="sum">AMCL on the aisle-only map → <strong class="acc">1.8 m</strong> off</div></div>
   <div class="body" style="gap:12px">
@@ -693,14 +746,14 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">A map that fits everywhere tells nothing</div></div>
 </section>
 
-<!-- 17 Case 4 -->
+<!-- 19 Case 4 -->
 <section class="slide content dense" data-notes="가정: 식 (5)의 Q_t가 실제 잡음과 같다. (a) 11/28: 같은 컵이 10~20 cm 간격으로 기억 2~3개. (b) 원인 1: NanoOWL이 컵 몸통과 빨대까지 포함한 컵을 각각 상자로 냄, 두 상자 IoU 약 0.5라 기존 기준 0.7로는 둘 다 남음. 원인 2: 새 관측을 같은 물체로 볼지는 식 (10)의 마할라노비스 거리. Q_t(방향 1.7°, 거리 2 cm)가 실제 오차(AMCL 방향만 1~2°, 여기에 장착 오차)보다 작아서 다른 위치에서 본 같은 컵을 &quot;다른 물체&quot;로 판단. (c) 표 4: IoU 0.5(작은 상자가 80% 이상 큰 상자 안이면 제거), σ_bearing 0.03→0.06 rad, σ_range 0.02→0.05 m, γ 3.0→4.0, CLIP 유사도 기준 0.80→0.75. 효과는 한 번의 주행에서만 확인(한계).">
   <div><div class="sec">What Broke</div><h2>Case 4 : One Cup, Many Memories</h2><div class="sum"><span class="m">Q<sub>t</sub></span> smaller than reality → one cup splits</div></div>
   <div class="body" style="gap:12px">
     <div class="panels">
       <div class="panel" style="flex:none;width:300px"><div class="plab">(a) <span>Symptom</span></div>
         <div class="ph" style="width:270px;height:120px;flex:none"><div class="pl">[ Photo 7 ]</div><div class="pd">Live view : one cup,<br>two boxes</div></div>
-        <svg width="216" height="200" viewBox="0 0 270 250" style="font-family:'Noto Serif',serif">
+        <svg width="216" height="200" viewBox="0 0 270 250" style="font-family:'Pretendard',sans-serif">
           <ellipse cx="85" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(-20 85 110)"/>
           <ellipse cx="185" cy="110" rx="46" ry="26" fill="#f0dedd" stroke="#8C2D2D" stroke-width="2.5" transform="rotate(20 185 110)"/>
           <circle cx="85" cy="110" r="7" fill="#8C2D2D"/><circle cx="185" cy="110" r="7" fill="#8C2D2D"/>
@@ -732,16 +785,16 @@
   <div class="callout" style="margin-bottom:22px"><div class="bar"></div><div class="tx">An overconfident <span class="m">Q<sub>t</sub></span> splits one object</div></div>
 </section>
 
-<!-- 18 Limitations and conclusion -->
-<section class="slide content" data-notes="한계: (1) 실습실 모니터가 &quot;a laptop&quot;으로 잡혀 노트북 기억이 여러 개(11/28 노트북 기억 19개 중 대부분) → 질문 때 모니터로 갈 수 있음. (2) 같은 물체가 기억 여러 개로 나뉘던 문제의 수정 효과는 한 번의 주행으로만 확인. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.">
+<!-- 20 Limitations and conclusion -->
+<section class="slide content" data-notes="한계: (1) 11/28 이후 고친 것들은 아직 로봇에서 안 돌려 봄: 모니터 대책(NanoOWL에 &quot;a computer monitor&quot;도 물어보고 그 상자는 버림, 11/28에는 노트북 기억 19개 중 대부분이 모니터), 20 cm마다 한 번 갱신, 3 cm 하한, 20 cm 합치기. 같은 물체가 나뉘던 문제(Case 4)의 수정도 한 번의 주행으로만 확인. (2) 거리별 검출 확률 표는 이 교실, 이 카메라 높이, 컵 하나로 잰 값. (3) 2D LiDAR라 통로만 다니고 책상 윗판은 못 봄. 투명한 컵은 depth가 깨짐. 결론: 확률 기억은 실제 로봇에서 동작(3/3), 문제 대부분은 이론의 가정(B·K, odom, 지도, Q_t)이 깨진 것, 불확실성은 명시적으로 그리고 실제만큼 크게. 향후 과제: VIO(카메라+IMU 위치 추정)는 시도하지 않았음. 질문 받는 동안 이 화면 유지.">
   <div><div class="sec">Wrap-up</div><h2>What's Left &amp; Takeaways</h2></div>
   <div class="body" style="gap:40px">
     <div class="cols">
       <div class="col">
         <div class="ct">Limitations</div>
         <div class="bl">
-          <div class="b"><span class="dot">•</span><span>Monitor detected as a <strong>laptop</strong></span></div>
-          <div class="b"><span class="dot">•</span><span>Merge fix checked in <strong>one run</strong> only</span></div>
+          <div class="b"><span class="dot">•</span><span>Latest fixes <strong>not yet run</strong> on the robot</span></div>
+          <div class="b"><span class="dot">•</span><span>Detection table : one object, one room</span></div>
           <div class="b"><span class="dot">•</span><span>2D LiDAR : aisles only, desk tops unseen</span></div>
         </div>
       </div>
@@ -759,8 +812,8 @@
   <div class="callout"><div class="bar"></div><div class="tx">Thank you</div></div>
 </section>
 
-<!-- 19 References -->
-<section class="slide content" data-notes="참고 문헌.">
+<!-- 21 References -->
+<section class="slide content" data-notes="참고 문헌. ※ [8]의 저자와 학회는 원문으로 확인 필요.">
   <h2 style="margin-bottom:24px">References</h2>
   <div class="refs">
     <div class="r"><span class="rn">[1]</span><span>S. Thrun, W. Burgard, and D. Fox, <em>Probabilistic Robotics</em>. MIT Press, 2005.</span></div>
@@ -770,6 +823,7 @@
     <div class="r"><span class="rn">[5]</span><span>S. Macenski, F. Martín, R. White, and J. Ginés Clavero, “The Marathon 2: A navigation system,” in <em>Proc. IROS</em>, 2020.</span></div>
     <div class="r"><span class="rn">[6]</span><span>A. Radford et al., “Robust speech recognition via large-scale weak supervision,” in <em>Proc. ICML</em>, 2023.</span></div>
     <div class="r"><span class="rn">[7]</span><span>Intelligent Robotics lecture slides, University of Seoul, Fall 2026.</span></div>
+    <div class="r"><span class="rn">[8]</span><span>J. M. C. Marques et al., “On the overconfidence problem in semantic 3D mapping,” in <em>Proc. ICRA</em>, 2024.</span></div>
   </div>
 </section>
 
